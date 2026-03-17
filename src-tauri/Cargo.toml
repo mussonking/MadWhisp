@@ -1,8 +1,12 @@
 [package]
 name = "madwhisp"
-version = "0.7.10"
+version = "0.7.11"
 description = "MadWhisp — Speech-to-text by madera.tools"
 authors = ["cjpais", "madera.tools"]
+name = "handy"
+version = "0.7.11"
+description = "Handy"
+authors = ["cjpais"]
 edition = "2021"
 license = "MIT"
 default-run = "madwhisp"
