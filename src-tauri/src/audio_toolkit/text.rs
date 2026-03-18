@@ -1,6 +1,8 @@
+use crate::settings::CustomWordEntry;
 use natural::phonetics::soundex;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use std::collections::{HashMap, HashSet};
 use strsim::levenshtein;
 
 /// Builds an n-gram string by cleaning and concatenating words
@@ -22,21 +24,17 @@ fn build_ngram(words: &[&str]) -> String {
 ///
 /// Uses Levenshtein distance and Soundex phonetic matching to find
 /// the best match above the given threshold.
-///
-/// # Arguments
-/// * `candidate` - The cleaned/lowercased candidate string to match
-/// * `custom_words` - Original custom words (for returning the replacement)
-/// * `custom_words_nospace` - Custom words with spaces removed, lowercased (for comparison)
-/// * `threshold` - Maximum similarity score to accept
-///
-/// # Returns
-/// The best matching custom word and its score, if any match was found
 fn find_best_match<'a>(
     candidate: &str,
-    custom_words: &'a [String],
+    word_strings: &'a [String],
     custom_words_nospace: &[String],
     threshold: f64,
+    blacklist: &HashSet<String>,
 ) -> Option<(&'a String, f64)> {
+    // Skip if the candidate is blacklisted
+    if blacklist.contains(candidate) {
+        return None;
+    }
     if candidate.is_empty() || candidate.len() > 50 {
         return None;
     }
@@ -76,7 +74,7 @@ fn find_best_match<'a>(
 
         // Accept if the score is good enough (configurable threshold)
         if combined_score < threshold && combined_score < best_score {
-            best_match = Some(&custom_words[i]);
+            best_match = Some(&word_strings[i]);
             best_score = combined_score;
         }
     }
@@ -84,71 +82,142 @@ fn find_best_match<'a>(
     best_match.map(|m| (m, best_score))
 }
 
-/// Applies custom word corrections to transcribed text using fuzzy matching
+/// Applies custom word corrections to transcribed text.
 ///
-/// This function corrects words in the input text by finding the best matches
-/// from a list of custom words using a combination of:
-/// - Levenshtein distance for string similarity
-/// - Soundex phonetic matching for pronunciation similarity
-/// - N-gram matching for multi-word speech artifacts (e.g., "Charge B" -> "ChargeBee")
+/// Two-phase correction:
+/// 1. **Hard aliases** — exact case-insensitive replacement (e.g., "Jiminy" → "Gemini")
+/// 2. **Fuzzy matching** — Levenshtein + Soundex with blacklist protection
 ///
 /// # Arguments
 /// * `text` - The input text to correct
-/// * `custom_words` - List of custom words to match against
-/// * `threshold` - Maximum similarity score to accept (0.0 = exact match, 1.0 = any match)
-///
-/// # Returns
-/// The corrected text with custom words applied
-pub fn apply_custom_words(text: &str, custom_words: &[String], threshold: f64) -> String {
+/// * `custom_words` - List of custom word entries (with optional aliases and blacklist)
+/// * `threshold` - Maximum similarity score for fuzzy matching
+pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshold: f64) -> String {
     if custom_words.is_empty() {
         return text.to_string();
     }
 
-    // Pre-compute lowercase versions to avoid repeated allocations
-    let custom_words_lower: Vec<String> = custom_words.iter().map(|w| w.to_lowercase()).collect();
+    // === Phase 0: Hard alias replacement ===
+    // Build alias map: lowercased alias → target word
+    let mut alias_map: HashMap<String, &str> = HashMap::new();
+    for entry in custom_words {
+        for alias in &entry.aliases {
+            alias_map.insert(alias.to_lowercase(), &entry.word);
+        }
+    }
 
-    // Pre-compute versions with spaces removed for n-gram comparison
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut phase0_result: Vec<String> = Vec::new();
+    let mut consumed: Vec<bool> = vec![false; words.len()];
+    let mut i = 0;
+
+    while i < words.len() {
+        let mut alias_matched = false;
+
+        if !alias_map.is_empty() {
+            // Try n-grams from longest (3) to shortest (1)
+            for n in (1..=3).rev() {
+                if i + n > words.len() {
+                    continue;
+                }
+                let ngram_words = &words[i..i + n];
+                let ngram = build_ngram(ngram_words);
+
+                if let Some(target) = alias_map.get(&ngram) {
+                    let (prefix, _) = extract_punctuation(ngram_words[0]);
+                    let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
+                    let corrected = preserve_case_pattern(ngram_words[0], target);
+                    phase0_result.push(format!("{}{}{}", prefix, corrected, suffix));
+                    for j in i..i + n {
+                        consumed[j] = true;
+                    }
+                    i += n;
+                    alias_matched = true;
+                    break;
+                }
+            }
+        }
+
+        if !alias_matched {
+            phase0_result.push(words[i].to_string());
+            i += 1;
+        }
+    }
+
+    // === Phase 1: Fuzzy matching with blacklist ===
+    // Extract word strings for fuzzy comparison
+    let word_strings: Vec<String> = custom_words.iter().map(|e| e.word.clone()).collect();
+    let custom_words_lower: Vec<String> = word_strings.iter().map(|w| w.to_lowercase()).collect();
     let custom_words_nospace: Vec<String> = custom_words_lower
         .iter()
         .map(|w| w.replace(' ', ""))
         .collect();
 
-    let words: Vec<&str> = text.split_whitespace().collect();
-    let mut result = Vec::new();
-    let mut i = 0;
+    // Build global blacklist from all entries
+    let blacklist: HashSet<String> = custom_words
+        .iter()
+        .flat_map(|e| e.blacklist.iter().map(|b| b.to_lowercase()))
+        .collect();
 
-    while i < words.len() {
+    let phase0_words: Vec<&str> = phase0_result.iter().map(|s| s.as_str()).collect();
+    let mut result = Vec::new();
+    let mut j = 0;
+    // Track which phase0 words were already consumed by alias replacement
+    // We need to map back: consumed[orig_idx] but phase0 may have fewer words
+    // Instead, we skip fuzzy matching for words that came from alias replacement
+    let mut orig_idx = 0;
+    let mut phase0_consumed: Vec<bool> = Vec::new();
+    {
+        let mut oi = 0;
+        for pi in 0..phase0_words.len() {
+            if oi < consumed.len() && consumed[oi] {
+                phase0_consumed.push(true);
+                // Alias replaced n words into 1, skip ahead
+                while oi < consumed.len() && consumed[oi] {
+                    oi += 1;
+                }
+            } else {
+                phase0_consumed.push(false);
+                oi += 1;
+            }
+        }
+    }
+
+    while j < phase0_words.len() {
+        // Skip fuzzy matching for words already handled by alias replacement
+        if j < phase0_consumed.len() && phase0_consumed[j] {
+            result.push(phase0_words[j].to_string());
+            j += 1;
+            continue;
+        }
+
         let mut matched = false;
 
         // Try n-grams from longest (3) to shortest (1) - greedy matching
         for n in (1..=3).rev() {
-            if i + n > words.len() {
+            if j + n > phase0_words.len() {
                 continue;
             }
 
-            let ngram_words = &words[i..i + n];
+            let ngram_words = &phase0_words[j..j + n];
             let ngram = build_ngram(ngram_words);
 
             if let Some((replacement, _score)) =
-                find_best_match(&ngram, custom_words, &custom_words_nospace, threshold)
+                find_best_match(&ngram, &word_strings, &custom_words_nospace, threshold, &blacklist)
             {
-                // Extract punctuation from first and last words of the n-gram
                 let (prefix, _) = extract_punctuation(ngram_words[0]);
                 let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
-
-                // Preserve case from first word
                 let corrected = preserve_case_pattern(ngram_words[0], replacement);
-
                 result.push(format!("{}{}{}", prefix, corrected, suffix));
-                i += n;
+                j += n;
                 matched = true;
                 break;
             }
         }
 
         if !matched {
-            result.push(words[i].to_string());
-            i += 1;
+            result.push(phase0_words[j].to_string());
+            j += 1;
         }
     }
 
@@ -324,10 +393,37 @@ pub fn filter_transcription_output(
 mod tests {
     use super::*;
 
+    /// Helper: create simple CustomWordEntry with no aliases/blacklist
+    fn word(s: &str) -> CustomWordEntry {
+        CustomWordEntry {
+            word: s.to_string(),
+            aliases: Vec::new(),
+            blacklist: Vec::new(),
+        }
+    }
+
+    /// Helper: create CustomWordEntry with aliases
+    fn word_with_aliases(s: &str, aliases: &[&str]) -> CustomWordEntry {
+        CustomWordEntry {
+            word: s.to_string(),
+            aliases: aliases.iter().map(|a| a.to_string()).collect(),
+            blacklist: Vec::new(),
+        }
+    }
+
+    /// Helper: create CustomWordEntry with blacklist
+    fn word_with_blacklist(s: &str, blacklist: &[&str]) -> CustomWordEntry {
+        CustomWordEntry {
+            word: s.to_string(),
+            aliases: Vec::new(),
+            blacklist: blacklist.iter().map(|b| b.to_string()).collect(),
+        }
+    }
+
     #[test]
     fn test_apply_custom_words_exact_match() {
         let text = "hello world";
-        let custom_words = vec!["Hello".to_string(), "World".to_string()];
+        let custom_words = vec![word("Hello"), word("World")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "Hello World");
     }
@@ -335,7 +431,7 @@ mod tests {
     #[test]
     fn test_apply_custom_words_fuzzy_match() {
         let text = "helo wrold";
-        let custom_words = vec!["hello".to_string(), "world".to_string()];
+        let custom_words = vec![word("hello"), word("world")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "hello world");
     }
@@ -357,7 +453,7 @@ mod tests {
     #[test]
     fn test_empty_custom_words() {
         let text = "hello world";
-        let custom_words = vec![];
+        let custom_words: Vec<CustomWordEntry> = vec![];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "hello world");
     }
@@ -505,7 +601,7 @@ mod tests {
     #[test]
     fn test_apply_custom_words_ngram_two_words() {
         let text = "il cui nome è Charge B, che permette";
-        let custom_words = vec!["ChargeBee".to_string()];
+        let custom_words = vec![word("ChargeBee")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert!(result.contains("ChargeBee,"));
         assert!(!result.contains("Charge B"));
@@ -514,7 +610,7 @@ mod tests {
     #[test]
     fn test_apply_custom_words_ngram_three_words() {
         let text = "use Chat G P T for this";
-        let custom_words = vec!["ChatGPT".to_string()];
+        let custom_words = vec![word("ChatGPT")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert!(result.contains("ChatGPT"));
     }
@@ -522,7 +618,7 @@ mod tests {
     #[test]
     fn test_apply_custom_words_prefers_longer_ngram() {
         let text = "Open AI GPT model";
-        let custom_words = vec!["OpenAI".to_string(), "GPT".to_string()];
+        let custom_words = vec![word("OpenAI"), word("GPT")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "OpenAI GPT model");
     }
@@ -530,32 +626,100 @@ mod tests {
     #[test]
     fn test_apply_custom_words_ngram_preserves_case() {
         let text = "CHARGE B is great";
-        let custom_words = vec!["ChargeBee".to_string()];
+        let custom_words = vec![word("ChargeBee")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert!(result.contains("CHARGEBEE"));
     }
 
     #[test]
     fn test_apply_custom_words_ngram_with_spaces_in_custom() {
-        // Custom word with space should also match against split words
         let text = "using Mac Book Pro";
-        let custom_words = vec!["MacBook Pro".to_string()];
+        let custom_words = vec![word("MacBook Pro")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert!(result.contains("MacBook"));
     }
 
     #[test]
     fn test_apply_custom_words_trailing_number_not_doubled() {
-        // Verify that trailing non-alpha chars (like numbers) aren't double-counted
-        // between build_ngram stripping them and extract_punctuation capturing them
         let text = "use GPT4 for this";
-        let custom_words = vec!["GPT-4".to_string()];
+        let custom_words = vec![word("GPT-4")];
         let result = apply_custom_words(text, &custom_words, 0.5);
-        // Should NOT produce "GPT-44" (double-counting the trailing 4)
         assert!(
             !result.contains("GPT-44"),
             "got double-counted result: {}",
             result
         );
+    }
+
+    // === Hard alias tests ===
+
+    #[test]
+    fn test_hard_alias_exact_replacement() {
+        let text = "Ask Jiminy about this";
+        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
+        let result = apply_custom_words(text, &custom_words, 0.18);
+        assert_eq!(result, "Ask Gemini about this");
+    }
+
+    #[test]
+    fn test_hard_alias_case_insensitive() {
+        let text = "ask JIMINY about this";
+        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
+        let result = apply_custom_words(text, &custom_words, 0.18);
+        assert_eq!(result, "ask GEMINI about this");
+    }
+
+    #[test]
+    fn test_hard_alias_multiple() {
+        let text = "Jimmy said hello";
+        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy", "Jimmy"])];
+        let result = apply_custom_words(text, &custom_words, 0.18);
+        assert_eq!(result, "Gemini said hello");
+    }
+
+    #[test]
+    fn test_hard_alias_preserves_punctuation() {
+        let text = "Ask Jiminy, please.";
+        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
+        let result = apply_custom_words(text, &custom_words, 0.18);
+        assert_eq!(result, "Ask Gemini, please.");
+    }
+
+    // === Blacklist tests ===
+
+    #[test]
+    fn test_blacklist_prevents_fuzzy_match() {
+        let text = "this feature is great";
+        let custom_words = vec![word_with_blacklist("FOOTER", &["feature"])];
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "this feature is great");
+    }
+
+    #[test]
+    fn test_blacklist_case_insensitive() {
+        let text = "this Feature is great";
+        let custom_words = vec![word_with_blacklist("FOOTER", &["feature"])];
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "this Feature is great");
+    }
+
+    #[test]
+    fn test_blacklist_doesnt_block_other_words() {
+        // "feature" is blacklisted for FOOTER, but "fotter" should still match FOOTER
+        let text = "check the fotter please";
+        let custom_words = vec![word_with_blacklist("FOOTER", &["feature"])];
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "check the FOOTER please");
+    }
+
+    #[test]
+    fn test_alias_and_blacklist_combined() {
+        let custom_words = vec![
+            word_with_aliases("Gemini", &["Jiminy"]),
+            word_with_blacklist("FOOTER", &["feature"]),
+        ];
+        let text = "Jiminy said the feature is in the fotter";
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "Gemini said the feature is in the FOOTER");
     }
 }

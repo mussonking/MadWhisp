@@ -304,6 +304,72 @@ impl Default for OrtAcceleratorSetting {
     }
 }
 
+/// A custom word entry with optional hard aliases and blacklist.
+/// Backward-compatible: deserializes from both plain strings and full objects.
+#[derive(Serialize, Debug, Clone, Type)]
+pub struct CustomWordEntry {
+    /// The target word (what it should become after correction)
+    pub word: String,
+    /// Hard aliases: transcription fragments that ALWAYS map to this word.
+    /// e.g., aliases=["Jiminy"] for word="Gemini" → "Jiminy" always becomes "Gemini"
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    /// Blacklisted words: words that must NEVER be fuzzy-matched to this custom word.
+    /// e.g., blacklist=["feature"] for word="FOOTER" → "feature" stays untouched
+    #[serde(default)]
+    pub blacklist: Vec<String>,
+}
+
+impl<'de> Deserialize<'de> for CustomWordEntry {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct CustomWordEntryVisitor;
+
+        impl<'de> Visitor<'de> for CustomWordEntryVisitor {
+            type Value = CustomWordEntry;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a string or object representing a custom word entry")
+            }
+
+            // Old format: plain string "word"
+            fn visit_str<E: de::Error>(self, value: &str) -> Result<CustomWordEntry, E> {
+                Ok(CustomWordEntry {
+                    word: value.to_string(),
+                    aliases: Vec::new(),
+                    blacklist: Vec::new(),
+                })
+            }
+
+            // New format: { "word": "...", "aliases": [...], "blacklist": [...] }
+            fn visit_map<M>(self, map: M) -> Result<CustomWordEntry, M::Error>
+            where
+                M: de::MapAccess<'de>,
+            {
+                #[derive(Deserialize)]
+                struct Inner {
+                    word: String,
+                    #[serde(default)]
+                    aliases: Vec<String>,
+                    #[serde(default)]
+                    blacklist: Vec<String>,
+                }
+                let inner =
+                    Inner::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(CustomWordEntry {
+                    word: inner.word,
+                    aliases: inner.aliases,
+                    blacklist: inner.blacklist,
+                })
+            }
+        }
+
+        deserializer.deserialize_any(CustomWordEntryVisitor)
+    }
+}
+
 /* still handy for composing the initial JSON in the store ------------- */
 #[derive(Serialize, Deserialize, Debug, Clone, Type)]
 pub struct AppSettings {
@@ -341,7 +407,7 @@ pub struct AppSettings {
     #[serde(default = "default_log_level")]
     pub log_level: LogLevel,
     #[serde(default)]
-    pub custom_words: Vec<String>,
+    pub custom_words: Vec<CustomWordEntry>,
     #[serde(default)]
     pub model_unload_timeout: ModelUnloadTimeout,
     #[serde(default = "default_word_correction_threshold")]
