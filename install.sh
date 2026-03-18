@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="madera-tools"
-APP_DISPLAY="Madera Tools"
+APP_NAME="madwhisp"
+APP_DISPLAY="MadWhisp"
 INSTALL_DIR="$HOME/.local/bin"
 
 echo "=== $APP_DISPLAY installer ==="
@@ -92,7 +92,7 @@ if [ -n "$MISSING" ]; then
             echo "Skipping. You may need to install manually."
         fi
     elif [ "$PM" = "nix" ]; then
-        echo "NixOS detected — add these to your system config or use nix-shell."
+        echo "NixOS detected -- add these to your system config or use nix-shell."
     fi
 else
     echo "All runtime dependencies found."

@@ -197,6 +197,9 @@ struct SettingsApp {
     history_entries: Vec<HistoryEntry>,
     custom_words_text: String,
     new_word_input: String,
+    selected_word_index: Option<usize>,
+    new_alias_input: String,
+    new_blacklist_input: String,
     status_message: Option<(String, std::time::Instant)>,
     history_dirty: Arc<AtomicBool>,
     new_prompt_name: String,
@@ -211,7 +214,7 @@ struct SettingsApp {
 impl SettingsApp {
     fn new(app_handle: tauri::AppHandle) -> Self {
         let settings = settings::get_settings(&app_handle);
-        let custom_words_text = settings.custom_words.join(", ");
+        let custom_words_text = settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", ");
 
         let model_manager = app_handle.state::<Arc<ModelManager>>();
         let models = model_manager.get_available_models();
@@ -239,6 +242,9 @@ impl SettingsApp {
             history_entries,
             custom_words_text,
             new_word_input: String::new(),
+            selected_word_index: None,
+            new_alias_input: String::new(),
+            new_blacklist_input: String::new(),
             status_message: None,
             history_dirty,
             new_prompt_name: String::new(),
@@ -304,7 +310,7 @@ impl SettingsApp {
         let cursor = if (time * 2.0) as i32 % 2 == 0 { "\u{2588}" } else { " " };
         ui.vertical_centered(|ui| {
             ui.label(
-                egui::RichText::new(format!("> Handy{}", cursor))
+                egui::RichText::new(format!("> MadWhisp{}", cursor))
                     .size(18.0)
                     .color(ACCENT_GREEN)
                     .monospace()
@@ -764,10 +770,14 @@ impl SettingsApp {
                 let response = ui.text_edit_singleline(&mut self.new_word_input);
                 let enter_pressed = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                 if (ui.button("Add").clicked() || enter_pressed) && !self.new_word_input.trim().is_empty() {
-                    let word = self.new_word_input.trim().to_string();
-                    if !self.settings.custom_words.contains(&word) {
-                        self.settings.custom_words.push(word);
-                        self.custom_words_text = self.settings.custom_words.join(", ");
+                    let word_str = self.new_word_input.trim().to_string();
+                    if !self.settings.custom_words.iter().any(|e| e.word == word_str) {
+                        self.settings.custom_words.push(settings::CustomWordEntry {
+                            word: word_str,
+                            aliases: Vec::new(),
+                            blacklist: Vec::new(),
+                        });
+                        self.update_custom_words_text();
                         self.save_settings();
                     }
                     self.new_word_input.clear();
@@ -776,6 +786,10 @@ impl SettingsApp {
         });
 
         let mut word_to_remove: Option<usize> = None;
+        let mut alias_to_add: Option<(usize, String)> = None;
+        let mut alias_to_remove: Option<(usize, usize)> = None;
+        let mut blacklist_to_add: Option<(usize, String)> = None;
+        let mut blacklist_to_remove: Option<(usize, usize)> = None;
 
         if self.settings.custom_words.is_empty() {
             ui.add_space(16.0);
@@ -784,16 +798,103 @@ impl SettingsApp {
             });
         } else {
             section(ui, "Word List", |ui| {
-                egui::ScrollArea::vertical().max_height(400.0).show(ui, |ui| {
-                    for (i, word) in self.settings.custom_words.iter().enumerate() {
+                egui::ScrollArea::vertical().max_height(450.0).show(ui, |ui| {
+                    for i in 0..self.settings.custom_words.len() {
+                        let is_expanded = self.selected_word_index == Some(i);
+                        let word_name = self.settings.custom_words[i].word.clone();
+                        let alias_count = self.settings.custom_words[i].aliases.len();
+                        let blacklist_count = self.settings.custom_words[i].blacklist.len();
+
+                        // Word header row
                         ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new(word).strong().monospace().color(ACCENT_CYAN));
+                            let arrow = if is_expanded { "\u{25BC}" } else { "\u{25B6}" };
+                            if ui.small_button(egui::RichText::new(arrow).monospace().color(TEXT_DIM)).clicked() {
+                                self.selected_word_index = if is_expanded { None } else { Some(i) };
+                            }
+                            ui.label(egui::RichText::new(&word_name).strong().monospace().color(ACCENT_CYAN));
+                            // Show badge counts
+                            if alias_count > 0 {
+                                ui.label(egui::RichText::new(format!("{}a", alias_count)).monospace().color(ACCENT_YELLOW).size(10.0));
+                            }
+                            if blacklist_count > 0 {
+                                ui.label(egui::RichText::new(format!("{}b", blacklist_count)).monospace().color(ACCENT_RED).size(10.0));
+                            }
                             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                                 if ui.small_button(egui::RichText::new("x").color(ACCENT_RED)).clicked() {
                                     word_to_remove = Some(i);
                                 }
                             });
                         });
+
+                        // Expanded: aliases + blacklist
+                        if is_expanded {
+                            ui.indent(format!("word_{}", i), |ui| {
+                                // --- Aliases section ---
+                                ui.horizontal(|ui| {
+                                    ui.label(egui::RichText::new("Aliases").monospace().color(ACCENT_YELLOW).size(11.0));
+                                    hint_label(ui, "(exact replacements)");
+                                });
+                                if self.settings.custom_words[i].aliases.is_empty() {
+                                    ui.horizontal(|ui| {
+                                        ui.add_space(8.0);
+                                        ui.label(egui::RichText::new("none").italics().color(TEXT_DIM).monospace().size(11.0));
+                                    });
+                                } else {
+                                    for (j, alias) in self.settings.custom_words[i].aliases.iter().enumerate() {
+                                        ui.horizontal(|ui| {
+                                            ui.add_space(8.0);
+                                            ui.label(egui::RichText::new(format!("{} \u{2192} {}", alias, word_name)).monospace().color(ACCENT_YELLOW).size(11.0));
+                                            if ui.small_button(egui::RichText::new("x").color(ACCENT_RED).size(10.0)).clicked() {
+                                                alias_to_remove = Some((i, j));
+                                            }
+                                        });
+                                    }
+                                }
+                                ui.horizontal(|ui| {
+                                    ui.add_space(8.0);
+                                    let resp = ui.add(egui::TextEdit::singleline(&mut self.new_alias_input).desired_width(120.0).hint_text("add alias..."));
+                                    let enter = resp.lost_focus() && ui.input(|inp| inp.key_pressed(egui::Key::Enter));
+                                    if (ui.small_button("+").clicked() || enter) && !self.new_alias_input.trim().is_empty() {
+                                        alias_to_add = Some((i, self.new_alias_input.trim().to_string()));
+                                        self.new_alias_input.clear();
+                                    }
+                                });
+
+                                ui.add_space(4.0);
+
+                                // --- Blacklist section ---
+                                ui.horizontal(|ui| {
+                                    ui.label(egui::RichText::new("Blacklist").monospace().color(ACCENT_RED).size(11.0));
+                                    hint_label(ui, "(never fuzzy-match these)");
+                                });
+                                if self.settings.custom_words[i].blacklist.is_empty() {
+                                    ui.horizontal(|ui| {
+                                        ui.add_space(8.0);
+                                        ui.label(egui::RichText::new("none").italics().color(TEXT_DIM).monospace().size(11.0));
+                                    });
+                                } else {
+                                    for (j, bl) in self.settings.custom_words[i].blacklist.iter().enumerate() {
+                                        ui.horizontal(|ui| {
+                                            ui.add_space(8.0);
+                                            ui.label(egui::RichText::new(format!("\u{2718} {}", bl)).monospace().color(ACCENT_RED).size(11.0));
+                                            if ui.small_button(egui::RichText::new("x").color(ACCENT_RED).size(10.0)).clicked() {
+                                                blacklist_to_remove = Some((i, j));
+                                            }
+                                        });
+                                    }
+                                }
+                                ui.horizontal(|ui| {
+                                    ui.add_space(8.0);
+                                    let resp = ui.add(egui::TextEdit::singleline(&mut self.new_blacklist_input).desired_width(120.0).hint_text("add blacklist..."));
+                                    let enter = resp.lost_focus() && ui.input(|inp| inp.key_pressed(egui::Key::Enter));
+                                    if (ui.small_button("+").clicked() || enter) && !self.new_blacklist_input.trim().is_empty() {
+                                        blacklist_to_add = Some((i, self.new_blacklist_input.trim().to_string()));
+                                        self.new_blacklist_input.clear();
+                                    }
+                                });
+                            });
+                            ui.add_space(4.0);
+                        }
 
                         if i < self.settings.custom_words.len() - 1 {
                             ui.label(egui::RichText::new("\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}").color(BORDER_SUBTLE).monospace().size(8.0));
@@ -804,9 +905,36 @@ impl SettingsApp {
         }
 
         // Apply deferred mutations
+        let mut changed = false;
         if let Some(idx) = word_to_remove {
             self.settings.custom_words.remove(idx);
-            self.custom_words_text = self.settings.custom_words.join(", ");
+            if self.selected_word_index == Some(idx) {
+                self.selected_word_index = None;
+            }
+            changed = true;
+        }
+        if let Some((wi, alias)) = alias_to_add {
+            if !self.settings.custom_words[wi].aliases.iter().any(|a| a.eq_ignore_ascii_case(&alias)) {
+                self.settings.custom_words[wi].aliases.push(alias);
+                changed = true;
+            }
+        }
+        if let Some((wi, ai)) = alias_to_remove {
+            self.settings.custom_words[wi].aliases.remove(ai);
+            changed = true;
+        }
+        if let Some((wi, bl)) = blacklist_to_add {
+            if !self.settings.custom_words[wi].blacklist.iter().any(|b| b.eq_ignore_ascii_case(&bl)) {
+                self.settings.custom_words[wi].blacklist.push(bl);
+                changed = true;
+            }
+        }
+        if let Some((wi, bi)) = blacklist_to_remove {
+            self.settings.custom_words[wi].blacklist.remove(bi);
+            changed = true;
+        }
+        if changed {
+            self.update_custom_words_text();
             self.save_settings();
         }
 
@@ -822,6 +950,10 @@ impl SettingsApp {
             });
             hint_label(ui, "Low=strict. High=loose.");
         });
+    }
+
+    fn update_custom_words_text(&mut self) {
+        self.custom_words_text = self.settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", ");
     }
 
     // ═══════════════════════════════════════════════════════════
