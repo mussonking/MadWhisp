@@ -1,11 +1,11 @@
 [package]
-name = "handy"
+name = "madwhisp"
 version = "0.7.10"
-description = "Handy"
-authors = ["cjpais"]
+description = "MadWhisp — Speech-to-text by madera.tools"
+authors = ["cjpais", "madera.tools"]
 edition = "2021"
 license = "MIT"
-default-run = "handy"
+default-run = "madwhisp"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
