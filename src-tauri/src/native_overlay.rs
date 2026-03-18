@@ -21,6 +21,7 @@ pub struct NativeOverlayState {
     pub mode: Mutex<OverlayMode>,
     pub levels: Mutex<Vec<f32>>,
     pub smoothed_levels: Mutex<Vec<f32>>,
+    pub fancy: AtomicBool,
     window_ready: AtomicBool,
 }
 
@@ -30,6 +31,7 @@ impl NativeOverlayState {
             mode: Mutex::new(OverlayMode::Hidden),
             levels: Mutex::new(vec![0.0; 16]),
             smoothed_levels: Mutex::new(vec![0.0; 16]),
+            fancy: AtomicBool::new(false),
             window_ready: AtomicBool::new(false),
         }
     }
@@ -114,10 +116,11 @@ pub fn spawn_overlay(state: Arc<NativeOverlayState>) {
             cr.set_line_width(1.0);
             let _ = cr.stroke();
 
+            let fancy = state_draw.fancy.load(Ordering::Relaxed);
             match mode {
                 OverlayMode::Recording => draw_recording(cr, &state_draw, w, h),
-                OverlayMode::Transcribing => draw_status(cr, "Transcribing", 0.0, 0.824, 1.0, w, h),
-                OverlayMode::Processing => draw_status(cr, "Processing", 1.0, 0.851, 0.239, w, h),
+                OverlayMode::Transcribing => draw_status(cr, "Transcribing", 0.0, 0.824, 1.0, w, h, fancy),
+                OverlayMode::Processing => draw_status(cr, "Processing", 1.0, 0.851, 0.239, w, h, fancy),
                 OverlayMode::Hidden => {}
             }
 
@@ -208,23 +211,116 @@ fn draw_recording(cr: &gtk::cairo::Context, state: &NativeOverlayState, w: f64, 
     let _ = cr.show_text("REC");
 }
 
-fn draw_status(cr: &gtk::cairo::Context, text: &str, r: f64, g: f64, b: f64, w: f64, h: f64) {
+fn draw_status(cr: &gtk::cairo::Context, text: &str, r: f64, g: f64, b: f64, w: f64, h: f64, fancy: bool) {
     let cy = h / 2.0;
-
-    let now = std::time::SystemTime::now()
+    let now_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis();
-    let dot_count = ((now / 400) % 4) as usize;
+    let t = (now_ms % 10000) as f64 / 1000.0;
+
+    cr.select_font_face("monospace", gtk::cairo::FontSlant::Normal, gtk::cairo::FontWeight::Bold);
+
+    if fancy {
+        // === Matrix rain columns ===
+        cr.set_font_size(10.0);
+        let col_count = 18;
+        let matrix_chars = b"01{}[]<>|/\\:;~#$%&@!?*+=^";
+        for col in 0..col_count {
+            let seed = (col as u128 * 7919 + 31) % 997;
+            let speed = 1.5 + (seed % 5) as f64 * 0.6;
+            let x = 8.0 + col as f64 * ((w - 16.0) / col_count as f64);
+
+            for row in 0..4 {
+                let phase = seed.wrapping_mul((row + 1) as u128) % 1000;
+                let fall = ((now_ms + phase * 7) as f64 * speed / 1000.0) % 4.0;
+                let y = -10.0 + fall * (h + 20.0) / 3.0 + row as f64 * 16.0;
+
+                if y < 2.0 || y > h - 2.0 { continue; }
+
+                let char_idx = ((now_ms / (80 + seed as u128)) + phase) as usize % matrix_chars.len();
+                let ch = matrix_chars[char_idx] as char;
+
+                // Head char bright, trail chars fade
+                let age = fall.fract();
+                let alpha = if age < 0.3 { 0.7 } else { 0.12 + 0.15 * (1.0 - age) };
+                cr.set_source_rgba(r * 0.6 + 0.4 * 0.0, g * 0.6 + 0.4 * 1.0, b * 0.6 + 0.4 * 0.3, alpha);
+                cr.move_to(x, y);
+                let _ = cr.show_text(&ch.to_string());
+            }
+        }
+
+        // === Scanlines ===
+        let scanline_offset = (now_ms / 40) as f64 % 6.0;
+        cr.set_source_rgba(0.0, 1.0, 0.3, 0.04);
+        let mut sy = scanline_offset;
+        while sy < h {
+            cr.rectangle(0.0, sy, w, 1.0);
+            let _ = cr.fill();
+            sy += 6.0;
+        }
+
+        // === Glitch bar (occasional horizontal slice) ===
+        let glitch_cycle = (now_ms / 120) % 47;
+        if glitch_cycle < 3 {
+            let gy = ((now_ms / 60) % (h as u128).max(1)) as f64;
+            let gh = 2.0 + (glitch_cycle as f64) * 1.5;
+            cr.set_source_rgba(r, g, b, 0.15);
+            cr.rectangle(0.0, gy, w, gh);
+            let _ = cr.fill();
+        }
+
+        // === Terminal border (static, no pulse) ===
+        let corner_r = 10.0;
+        let inset = 1.5;
+        cr.new_path();
+        cr.arc(w - corner_r - inset, corner_r + inset, corner_r, -std::f64::consts::FRAC_PI_2, 0.0);
+        cr.arc(w - corner_r - inset, h - corner_r - inset, corner_r, 0.0, std::f64::consts::FRAC_PI_2);
+        cr.arc(corner_r + inset, h - corner_r - inset, corner_r, std::f64::consts::FRAC_PI_2, std::f64::consts::PI);
+        cr.arc(corner_r + inset, corner_r + inset, corner_r, std::f64::consts::PI, 3.0 * std::f64::consts::FRAC_PI_2);
+        cr.close_path();
+        cr.set_source_rgba(0.0, 1.0, 0.4, 0.12);
+        cr.set_line_width(1.0);
+        let _ = cr.stroke();
+    }
+
+    // === Spinning arc (terminal green tint) ===
+    let spin_cx = 24.0;
+    let spin_r = 8.0;
+    let spin_angle = t * 4.0;
+    let (sr, sg, sb) = if fancy { (0.0, 1.0, 0.4) } else { (r, g, b) };
+    cr.set_line_width(2.5);
+    cr.set_source_rgba(sr, sg, sb, 0.8);
+    cr.arc(spin_cx, cy, spin_r, spin_angle, spin_angle + std::f64::consts::PI * 1.2);
+    let _ = cr.stroke();
+    cr.set_source_rgba(sr, sg, sb, 0.15);
+    cr.arc(spin_cx, cy, spin_r, 0.0, std::f64::consts::TAU);
+    let _ = cr.stroke();
+
+    // === Main text ===
+    cr.set_font_size(15.0);
+    let dot_count = ((now_ms / 350) % 4) as usize;
     let dots: String = ".".repeat(dot_count);
 
-    cr.set_source_rgb(r, g, b);
-    cr.select_font_face("monospace", gtk::cairo::FontSlant::Normal, gtk::cairo::FontWeight::Normal);
-    cr.set_font_size(16.0);
+    let label = if fancy {
+        // Terminal prompt style: > TRANSCRIBING...
+        format!("> {}{}", text.to_uppercase(), dots)
+    } else {
+        format!("{}{}", text, dots)
+    };
 
-    let label = format!("{}{}", text, dots);
+    let (tr, tg, tb) = if fancy { (0.0, 1.0, 0.4) } else { (r, g, b) };
+    cr.set_source_rgb(tr, tg, tb);
+
     let extents = cr.text_extents(&label).unwrap();
-    let x = (w - extents.width()) / 2.0;
-    cr.move_to(x, cy + 6.0);
+    let tx = (w - extents.width()) / 2.0 + 8.0;
+    cr.move_to(tx, cy + 5.0);
     let _ = cr.show_text(&label);
+
+    // === Blinking cursor after text (fancy only) ===
+    if fancy && (now_ms / 500) % 2 == 0 {
+        cr.set_source_rgba(0.0, 1.0, 0.4, 0.9);
+        cr.rectangle(tx + extents.width() + 3.0, cy - 7.0, 8.0, 16.0);
+        let _ = cr.fill();
+    }
 }

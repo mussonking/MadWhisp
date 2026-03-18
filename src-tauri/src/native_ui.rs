@@ -1279,53 +1279,7 @@ impl SettingsApp {
                 }
             });
 
-            // ── RIGHT COLUMN ──
-            section(&mut cols[1], "Display & Model", |ui| {
-                ui.horizontal(|ui| {
-                    dim_label(ui, "Overlay");
-                    egui::ComboBox::from_id_salt("overlay_position")
-                        .selected_text(match self.settings.overlay_position {
-                            OverlayPosition::None => "None",
-                            OverlayPosition::Top => "Top",
-                            OverlayPosition::Bottom => "Bottom",
-                        })
-                        .show_ui(ui, |ui| {
-                            for (pos, label) in [(OverlayPosition::None, "None"), (OverlayPosition::Top, "Top"), (OverlayPosition::Bottom, "Bottom")] {
-                                if ui.selectable_value(&mut self.settings.overlay_position, pos, label).changed() { self.save_settings(); }
-                            }
-                        });
-                });
-
-                ui.horizontal(|ui| {
-                    dim_label(ui, "Unload");
-                    egui::ComboBox::from_id_salt("model_unload_timeout")
-                        .selected_text(match self.settings.model_unload_timeout {
-                            ModelUnloadTimeout::Never => "Never",
-                            ModelUnloadTimeout::Immediately => "Now",
-                            ModelUnloadTimeout::Min2 => "2m",
-                            ModelUnloadTimeout::Min5 => "5m",
-                            ModelUnloadTimeout::Min10 => "10m",
-                            ModelUnloadTimeout::Min15 => "15m",
-                            ModelUnloadTimeout::Hour1 => "1h",
-                            ModelUnloadTimeout::Sec5 => "5s",
-                        })
-                        .show_ui(ui, |ui| {
-                            for (timeout, label) in [
-                                (ModelUnloadTimeout::Never, "Never"),
-                                (ModelUnloadTimeout::Immediately, "Immediately"),
-                                (ModelUnloadTimeout::Min2, "2 min"),
-                                (ModelUnloadTimeout::Min5, "5 min"),
-                                (ModelUnloadTimeout::Min10, "10 min"),
-                                (ModelUnloadTimeout::Min15, "15 min"),
-                                (ModelUnloadTimeout::Hour1, "1 hour"),
-                            ] {
-                                if ui.selectable_value(&mut self.settings.model_unload_timeout, timeout, label).changed() { self.save_settings(); }
-                            }
-                        });
-                });
-            });
-
-            section(&mut cols[1], "Data", |ui| {
+            section(&mut cols[0], "Data", |ui| {
                 ui.horizontal(|ui| {
                     dim_label(ui, "History");
                     egui::ComboBox::from_id_salt("history_limit")
@@ -1353,6 +1307,59 @@ impl SettingsApp {
                         .show_ui(ui, |ui| {
                             for (value, label) in options {
                                 if ui.selectable_value(&mut self.settings.recording_retention_period, value, label).changed() { self.save_settings(); }
+                            }
+                        });
+                });
+            });
+
+            // ── RIGHT COLUMN ──
+            section(&mut cols[1], "Overlay", |ui| {
+                ui.horizontal(|ui| {
+                    dim_label(ui, "Position");
+                    egui::ComboBox::from_id_salt("overlay_position")
+                        .selected_text(match self.settings.overlay_position {
+                            OverlayPosition::None => "None",
+                            OverlayPosition::Top => "Top",
+                            OverlayPosition::Bottom => "Bottom",
+                        })
+                        .show_ui(ui, |ui| {
+                            for (pos, label) in [(OverlayPosition::None, "None"), (OverlayPosition::Top, "Top"), (OverlayPosition::Bottom, "Bottom")] {
+                                if ui.selectable_value(&mut self.settings.overlay_position, pos, label).changed() { self.save_settings(); }
+                            }
+                        });
+                });
+
+                ui.horizontal(|ui| {
+                    dim_label(ui, "Style");
+                    if ui.checkbox(&mut self.settings.overlay_animations, "Matrix mode").changed() { self.save_settings(); }
+                });
+            });
+
+            section(&mut cols[1], "Model", |ui| {
+                ui.horizontal(|ui| {
+                    dim_label(ui, "Unload");
+                    egui::ComboBox::from_id_salt("model_unload_timeout")
+                        .selected_text(match self.settings.model_unload_timeout {
+                            ModelUnloadTimeout::Never => "Never",
+                            ModelUnloadTimeout::Immediately => "Now",
+                            ModelUnloadTimeout::Min2 => "2m",
+                            ModelUnloadTimeout::Min5 => "5m",
+                            ModelUnloadTimeout::Min10 => "10m",
+                            ModelUnloadTimeout::Min15 => "15m",
+                            ModelUnloadTimeout::Hour1 => "1h",
+                            ModelUnloadTimeout::Sec5 => "5s",
+                        })
+                        .show_ui(ui, |ui| {
+                            for (timeout, label) in [
+                                (ModelUnloadTimeout::Never, "Never"),
+                                (ModelUnloadTimeout::Immediately, "Immediately"),
+                                (ModelUnloadTimeout::Min2, "2 min"),
+                                (ModelUnloadTimeout::Min5, "5 min"),
+                                (ModelUnloadTimeout::Min10, "10 min"),
+                                (ModelUnloadTimeout::Min15, "15 min"),
+                                (ModelUnloadTimeout::Hour1, "1 hour"),
+                            ] {
+                                if ui.selectable_value(&mut self.settings.model_unload_timeout, timeout, label).changed() { self.save_settings(); }
                             }
                         });
                 });

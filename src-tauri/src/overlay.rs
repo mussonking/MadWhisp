@@ -325,6 +325,8 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
     #[cfg(target_os = "linux")]
     {
         if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+            let settings = settings::get_settings(app_handle);
+            native_state.fancy.store(settings.overlay_animations, std::sync::atomic::Ordering::Relaxed);
             native_state.set_mode(match state {
                 "recording" => crate::native_overlay::OverlayMode::Recording,
                 "transcribing" => crate::native_overlay::OverlayMode::Transcribing,
