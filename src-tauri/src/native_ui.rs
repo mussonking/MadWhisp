@@ -1451,8 +1451,6 @@ impl SettingsApp {
                     .inner_margin(egui::Margin::symmetric(10, 6))
                     .show(ui, |ui| {
                         let text = entry.post_processed_text.as_deref().unwrap_or(&entry.transcription_text);
-                        let preview = if text.len() > 100 { format!("{}...", &text[..100]) } else { text.to_string() };
-
                         ui.horizontal(|ui| {
                             ui.label(egui::RichText::new(&entry.title).color(TEXT_DIM).monospace().size(10.0));
                             if entry.post_processed_text.is_some() {
@@ -1468,7 +1466,7 @@ impl SettingsApp {
                             });
                         });
 
-                        ui.label(egui::RichText::new(&preview).color(TEXT_PRIMARY).monospace().size(11.0));
+                        ui.label(egui::RichText::new(text).color(TEXT_PRIMARY).monospace().size(11.0));
                     });
             }
         });
