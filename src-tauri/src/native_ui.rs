@@ -390,7 +390,7 @@ impl SettingsApp {
 
             // Logo
             if let Some(texture) = self.get_or_load_logo(ctx) {
-                let size = egui::vec2(40.0, 40.0);
+                let size = egui::vec2(64.0, 64.0);
                 ui.image(egui::load::SizedTexture::new(texture.id(), size));
             }
 
@@ -1526,10 +1526,13 @@ impl eframe::App for SettingsApp {
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     if let Some((msg, _)) = &self.status_message {
-                        ui.label(egui::RichText::new(format!("> {}", msg)).color(ACCENT_GREEN).monospace().size(10.0));
+                        ui.label(egui::RichText::new(format!("> {}", msg)).color(ACCENT_GREEN).monospace().size(11.0));
                     } else {
-                        let model_name = if self.settings.selected_model.is_empty() { "none".to_string() } else { self.settings.selected_model.clone() };
-                        ui.label(egui::RichText::new(format!("[READY] model: {} | lang: {}", model_name, self.settings.selected_language)).color(TEXT_DIM).monospace().size(9.0));
+                        let model_name = if self.settings.selected_model.is_empty() { "none" } else { &self.settings.selected_model };
+                        ui.label(egui::RichText::new("[READY]").color(ACCENT_GREEN).monospace().size(11.0).strong());
+                        ui.label(egui::RichText::new(model_name).color(ACCENT_CYAN).monospace().size(11.0));
+                        ui.label(egui::RichText::new("|").color(BORDER_SUBTLE).monospace().size(11.0));
+                        ui.label(egui::RichText::new(&self.settings.selected_language).color(ACCENT_CYAN).monospace().size(11.0));
                     }
                 });
             });
