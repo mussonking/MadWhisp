@@ -218,6 +218,13 @@ fn calculate_overlay_position(app_handle: &AppHandle) -> Option<(f64, f64)> {
 /// Creates the recording overlay window and keeps it hidden by default
 #[cfg(not(target_os = "macos"))]
 pub fn create_recording_overlay(app_handle: &AppHandle) {
+    // On Linux, we use the native egui overlay instead of WebView
+    #[cfg(target_os = "linux")]
+    {
+        debug!("Skipping WebView overlay on Linux (native egui overlay used)");
+        return;
+    }
+
     // On Linux (Wayland), monitor detection often fails, but we don't need exact coordinates
     // for Layer Shell as we use anchors. On other platforms, we require a monitor.
     #[cfg(not(target_os = "linux"))]
@@ -314,7 +321,20 @@ pub fn create_recording_overlay(app_handle: &AppHandle) {
 }
 
 fn show_overlay_state(app_handle: &AppHandle, state: &str) {
-    // Check if overlay should be shown based on position setting
+    // On Linux, always update native GTK overlay (independent of overlay_position setting)
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+            native_state.set_mode(match state {
+                "recording" => crate::native_overlay::OverlayMode::Recording,
+                "transcribing" => crate::native_overlay::OverlayMode::Transcribing,
+                "processing" => crate::native_overlay::OverlayMode::Processing,
+                _ => crate::native_overlay::OverlayMode::Hidden,
+            });
+        }
+    }
+
+    // Check if WebView overlay should be shown based on position setting
     let settings = settings::get_settings(app_handle);
     if settings.overlay_position == OverlayPosition::None {
         return;
@@ -365,6 +385,14 @@ pub fn update_overlay_position(app_handle: &AppHandle) {
 
 /// Hides the recording overlay window with fade-out animation
 pub fn hide_recording_overlay(app_handle: &AppHandle) {
+    // On Linux, hide native egui overlay
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+            native_state.set_mode(crate::native_overlay::OverlayMode::Hidden);
+        }
+    }
+
     // Always hide the overlay regardless of settings - if setting was changed while recording,
     // we still want to hide it properly
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
@@ -382,6 +410,14 @@ pub fn hide_recording_overlay(app_handle: &AppHandle) {
 pub fn emit_levels(app_handle: &AppHandle, levels: &Vec<f32>) {
     // emit levels to main app
     let _ = app_handle.emit("mic-level", levels);
+
+    // On Linux, update native egui overlay levels
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+            native_state.update_levels(levels);
+        }
+    }
 
     // also emit to the recording overlay if it's open
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
