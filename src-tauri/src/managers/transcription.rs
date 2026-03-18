@@ -563,7 +563,7 @@ impl TranscriptionManager {
                                 initial_prompt: if settings.custom_words.is_empty() {
                                     None
                                 } else {
-                                    Some(settings.custom_words.join(", "))
+                                    Some(settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", "))
                                 },
                                 ..Default::default()
                             };

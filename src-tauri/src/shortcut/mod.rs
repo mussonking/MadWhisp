@@ -641,7 +641,7 @@ pub fn change_update_checks_setting(app: AppHandle, enabled: bool) -> Result<(),
 
 #[tauri::command]
 #[specta::specta]
-pub fn update_custom_words(app: AppHandle, words: Vec<String>) -> Result<(), String> {
+pub fn update_custom_words(app: AppHandle, words: Vec<settings::CustomWordEntry>) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.custom_words = words;
     settings::write_settings(&app, settings);
