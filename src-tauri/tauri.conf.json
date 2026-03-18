@@ -3,9 +3,6 @@
   "productName": "MadWhisp",
   "version": "0.7.11",
   "identifier": "tools.madera.madwhisp",
-  "productName": "Handy",
-  "version": "0.7.11",
-  "identifier": "com.pais.handy",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
