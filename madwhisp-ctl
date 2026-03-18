@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# MadWhisp trigger — sends commands via Unix socket
+# Usage: madwhisp-ctl [transcribe|post-process|download <model_id>|status]
+SOCKET="/tmp/madwhisp.sock"
+CMD="${1:-transcribe}"
+
+case "$CMD" in
+    transcribe|t) CMD="transcribe" ;;
+    post-process|pp) CMD="transcribe_with_post_process" ;;
+    download|dl)
+        if [ -z "$2" ]; then
+            echo "Usage: madwhisp-ctl download <model_id>"
+            exit 1
+        fi
+        CMD="download:$2"
+        ;;
+    status) CMD="status" ;;
+    *) echo "Usage: madwhisp-ctl [transcribe|post-process|download <model_id>|status]"; exit 1 ;;
+esac
+
+if [ ! -S "$SOCKET" ]; then
+    echo "MadWhisp is not running (no socket at $SOCKET)"
+    exit 1
+fi
+
+if [ "$CMD" = "status" ]; then
+    echo "$CMD" | socat - UNIX-CONNECT:"$SOCKET" 2>/dev/null
+else
+    echo "$CMD" | socat - UNIX-CONNECT:"$SOCKET" 2>/dev/null || \
+    echo "$CMD" > "$SOCKET"
+fi

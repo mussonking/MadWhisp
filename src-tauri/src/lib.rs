@@ -20,6 +20,8 @@ mod tray;
 mod tray_i18n;
 mod utils;
 #[cfg(target_os = "linux")]
+mod native_overlay;
+#[cfg(target_os = "linux")]
 mod native_ui;
 
 pub use cli::CliArgs;
@@ -190,6 +192,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     // Set up signal handlers for toggling transcription
     #[cfg(unix)]
     signal_handle::setup_signal_handler(app_handle.clone(), signals);
+
+    #[cfg(unix)]
+    signal_handle::setup_socket_listener(app_handle.clone());
 
     // Apply macOS Accessory policy if starting hidden and tray is available.
     // If the tray icon is disabled, keep the dock icon so the user can reopen.
@@ -586,6 +591,11 @@ pub fn run(cli_args: CliArgs) {
 
             #[cfg(target_os = "linux")]
             {
+                // Spawn native GTK overlay (layer-shell, stays on top)
+                let overlay_state = std::sync::Arc::new(native_overlay::NativeOverlayState::new());
+                app_handle.manage(overlay_state.clone());
+                native_overlay::spawn_overlay(overlay_state);
+
                 let handle = app_handle.clone();
                 std::thread::spawn(move || {
                     if let Err(e) = native_ui::run_settings_window(handle) {

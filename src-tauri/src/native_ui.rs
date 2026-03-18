@@ -1494,6 +1494,7 @@ impl eframe::App for SettingsApp {
 
 
 
+
         if self.history_dirty.swap(false, Ordering::Relaxed) {
             self.reload_history();
         }
