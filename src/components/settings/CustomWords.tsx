@@ -5,6 +5,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { SettingContainer } from "../ui/SettingContainer";
+import type { CustomWordEntry } from "../../bindings";
 
 interface CustomWordsProps {
   descriptionMode?: "inline" | "tooltip";
@@ -16,7 +17,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
     const { t } = useTranslation();
     const { getSetting, updateSetting, isUpdating } = useSettings();
     const [newWord, setNewWord] = useState("");
-    const customWords = getSetting("custom_words") || [];
+    const customWords: CustomWordEntry[] = getSetting("custom_words") || [];
 
     const handleAddWord = () => {
       const trimmedWord = newWord.trim();
@@ -26,7 +27,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
         !sanitizedWord.includes(" ") &&
         sanitizedWord.length <= 50
       ) {
-        if (customWords.includes(sanitizedWord)) {
+        if (customWords.some((e) => e.word === sanitizedWord)) {
           toast.error(
             t("settings.advanced.customWords.duplicate", {
               word: sanitizedWord,
@@ -34,7 +35,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           );
           return;
         }
-        updateSetting("custom_words", [...customWords, sanitizedWord]);
+        updateSetting("custom_words", [...customWords, { word: sanitizedWord }]);
         setNewWord("");
       }
     };
@@ -42,7 +43,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
     const handleRemoveWord = (wordToRemove: string) => {
       updateSetting(
         "custom_words",
-        customWords.filter((word) => word !== wordToRemove),
+        customWords.filter((e) => e.word !== wordToRemove),
       );
     };
 
@@ -91,17 +92,17 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           <div
             className={`px-4 p-2 ${grouped ? "" : "rounded-lg border border-mid-gray/20"} flex flex-wrap gap-1`}
           >
-            {customWords.map((word) => (
+            {customWords.map((entry) => (
               <Button
-                key={word}
-                onClick={() => handleRemoveWord(word)}
+                key={entry.word}
+                onClick={() => handleRemoveWord(entry.word)}
                 disabled={isUpdating("custom_words")}
                 variant="secondary"
                 size="sm"
                 className="inline-flex items-center gap-1 cursor-pointer"
-                aria-label={t("settings.advanced.customWords.remove", { word })}
+                aria-label={t("settings.advanced.customWords.remove", { word: entry.word })}
               >
-                <span>{word}</span>
+                <span>{entry.word}</span>
                 <svg
                   className="w-3 h-3"
                   fill="none"

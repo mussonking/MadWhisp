@@ -5,7 +5,8 @@ use crate::managers::model::{ModelInfo, ModelManager};
 use crate::managers::transcription::TranscriptionManager;
 use crate::settings::{
     self, AppSettings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LogLevel,
-    ModelUnloadTimeout, OverlayPosition, PasteMethod, SoundTheme, TypingTool,
+    ModelUnloadTimeout, OrtAcceleratorSetting, OverlayPosition, PasteMethod, SoundTheme,
+    TypingTool, WhisperAcceleratorSetting,
 };
 use eframe::egui;
 use egui::Color32;
@@ -209,12 +210,14 @@ struct SettingsApp {
     test_result: Arc<std::sync::Mutex<Option<String>>>,
     test_running: Arc<AtomicBool>,
     logo_texture: Option<egui::TextureHandle>,
+    filler_words_text: String,
 }
 
 impl SettingsApp {
     fn new(app_handle: tauri::AppHandle) -> Self {
         let settings = settings::get_settings(&app_handle);
         let custom_words_text = settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", ");
+        let filler_words_text = settings.custom_filler_words.as_ref().map(|w| w.join(", ")).unwrap_or_default();
 
         let model_manager = app_handle.state::<Arc<ModelManager>>();
         let models = model_manager.get_available_models();
@@ -254,6 +257,7 @@ impl SettingsApp {
             test_result: Arc::new(std::sync::Mutex::new(None)),
             test_running: Arc::new(AtomicBool::new(false)),
             logo_texture: None,
+            filler_words_text,
         }
     }
 
@@ -502,6 +506,9 @@ impl SettingsApp {
                 if ui.checkbox(&mut self.settings.translate_to_english, "Translate to English").changed() {
                     self.save_settings();
                 }
+                if ui.checkbox(&mut self.settings.always_on_microphone, "Always-on mic").changed() {
+                    self.save_settings();
+                }
                 if ui.checkbox(&mut self.settings.append_trailing_space, "Trailing space").changed() {
                     self.save_settings();
                 }
@@ -509,6 +516,9 @@ impl SettingsApp {
 
             section(&mut cols[0], "Startup", |ui| {
                 if ui.checkbox(&mut self.settings.autostart_enabled, "Launch at startup").changed() {
+                    self.save_settings();
+                }
+                if ui.checkbox(&mut self.settings.start_hidden, "Start hidden").changed() {
                     self.save_settings();
                 }
             });
@@ -950,6 +960,20 @@ impl SettingsApp {
             });
             hint_label(ui, "Low=strict. High=loose.");
         });
+
+        // Filler words
+        section(ui, "Filler Words", |ui| {
+            hint_label(ui, "Words to strip from transcription (comma-separated). Leave empty for defaults.");
+            if ui.add(egui::TextEdit::multiline(&mut self.filler_words_text).desired_rows(2).desired_width(f32::INFINITY).hint_text("um, uh, like, you know...")).changed() {
+                let words: Vec<String> = self.filler_words_text
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                self.settings.custom_filler_words = if words.is_empty() { None } else { Some(words) };
+                self.save_settings();
+            }
+        });
     }
 
     fn update_custom_words_text(&mut self) {
@@ -1360,6 +1384,47 @@ impl SettingsApp {
                                 (ModelUnloadTimeout::Hour1, "1 hour"),
                             ] {
                                 if ui.selectable_value(&mut self.settings.model_unload_timeout, timeout, label).changed() { self.save_settings(); }
+                            }
+                        });
+                });
+
+                ui.horizontal(|ui| {
+                    dim_label(ui, "Whisper");
+                    egui::ComboBox::from_id_salt("whisper_accel")
+                        .selected_text(match self.settings.whisper_accelerator {
+                            WhisperAcceleratorSetting::Auto => "Auto",
+                            WhisperAcceleratorSetting::Cpu => "CPU",
+                            WhisperAcceleratorSetting::Gpu => "GPU",
+                        })
+                        .show_ui(ui, |ui| {
+                            for (accel, label) in [
+                                (WhisperAcceleratorSetting::Auto, "Auto"),
+                                (WhisperAcceleratorSetting::Cpu, "CPU"),
+                                (WhisperAcceleratorSetting::Gpu, "GPU"),
+                            ] {
+                                if ui.selectable_value(&mut self.settings.whisper_accelerator, accel, label).changed() { self.save_settings(); }
+                            }
+                        });
+                });
+
+                ui.horizontal(|ui| {
+                    dim_label(ui, "ORT");
+                    egui::ComboBox::from_id_salt("ort_accel")
+                        .selected_text(match self.settings.ort_accelerator {
+                            OrtAcceleratorSetting::Auto => "Auto",
+                            OrtAcceleratorSetting::Cpu => "CPU",
+                            OrtAcceleratorSetting::Cuda => "CUDA",
+                            OrtAcceleratorSetting::DirectMl => "DirectML",
+                            OrtAcceleratorSetting::Rocm => "ROCm",
+                        })
+                        .show_ui(ui, |ui| {
+                            for (accel, label) in [
+                                (OrtAcceleratorSetting::Auto, "Auto"),
+                                (OrtAcceleratorSetting::Cpu, "CPU"),
+                                (OrtAcceleratorSetting::Cuda, "CUDA"),
+                                (OrtAcceleratorSetting::Rocm, "ROCm"),
+                            ] {
+                                if ui.selectable_value(&mut self.settings.ort_accelerator, accel, label).changed() { self.save_settings(); }
                             }
                         });
                 });
