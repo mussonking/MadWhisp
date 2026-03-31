@@ -277,8 +277,8 @@
         }
       },
       "pasteMethod": {
-        "title": "Paste Method",
-        "description": "Choose how text is inserted. Direct: simulates typing via system input. None: skips paste, only updates history/clipboard.",
+        "title": "Paste method",
+        "description": "Choose how the text is inserted. Clipboard (Recommended): Reliable for all characters and layouts. Direct: Simulates typing, but may cause issues with non-US keyboard layouts.",
         "options": {
           "clipboard": "Clipboard ({{modifier}}+V)",
           "clipboardCtrlShiftV": "Clipboard (Ctrl+Shift+V)",
