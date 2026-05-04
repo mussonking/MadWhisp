@@ -11,6 +11,7 @@ use signal_hook::iterator::Signals;
 #[cfg(unix)]
 use std::thread;
 
+#[cfg(unix)]
 const SOCKET_PATH: &str = "/tmp/madwhisp.sock";
 
 /// Send a transcription input to the coordinator.
@@ -72,10 +73,18 @@ pub fn setup_socket_listener(app_handle: AppHandle) {
                                 log::info!("Socket received command: {}", cmd);
                                 match cmd.as_str() {
                                     "transcribe" => {
-                                        send_transcription_input(&app_handle, "transcribe", "socket");
+                                        send_transcription_input(
+                                            &app_handle,
+                                            "transcribe",
+                                            "socket",
+                                        );
                                     }
                                     "transcribe_with_post_process" => {
-                                        send_transcription_input(&app_handle, "transcribe_with_post_process", "socket");
+                                        send_transcription_input(
+                                            &app_handle,
+                                            "transcribe_with_post_process",
+                                            "socket",
+                                        );
                                     }
                                     "cancel" => {
                                         crate::utils::cancel_current_operation(&app_handle);

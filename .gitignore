@@ -27,6 +27,7 @@ dist-ssr
 *.sw?
 
 /target/
+src-tauri/resources/onnxruntime/
 recording_*
 .crush/
 

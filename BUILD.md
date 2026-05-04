@@ -1,130 +1,104 @@
 # Build Instructions
 
-This guide covers how to set up the development environment and build Handy from source across different platforms.
+This guide covers local development and release builds for MadWhisp.
 
 ## Prerequisites
 
-### All Platforms
+All platforms:
 
-- [Rust](https://rustup.rs/) (latest stable)
-- [Bun](https://bun.sh/) package manager
-- [Tauri Prerequisites](https://tauri.app/start/prerequisites/)
+- Rust stable from https://rustup.rs/
+- Bun from https://bun.sh/
+- Tauri system prerequisites from https://tauri.app/start/prerequisites/
 
-### Platform-Specific Requirements
+Windows:
 
-#### macOS
+- Visual Studio 2019/2022 Build Tools with the C++ desktop workload
+- Vulkan-capable GPU driver for the Whisper Vulkan backend
+- Network access during the first build so the Windows script can download
+  ONNX Runtime and DirectML runtime DLLs from NuGet
 
-- Xcode Command Line Tools
-- Install with: `xcode-select --install`
-
-#### Windows
-
-- Microsoft C++ Build Tools
-- Visual Studio 2019/2022 with C++ development tools
-- Or Visual Studio Build Tools 2019/2022
-
-#### Linux
-
-- Build essentials
-- ALSA development libraries
-- Install with:
-
-  ```bash
-  # Ubuntu/Debian
-  sudo apt update
-  sudo apt install build-essential libasound2-dev pkg-config libssl-dev libvulkan-dev vulkan-tools glslc libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libgtk-layer-shell0 libgtk-layer-shell-dev patchelf cmake
-
-  # Fedora/RHEL
-  sudo dnf groupinstall "Development Tools"
-  sudo dnf install alsa-lib-devel pkgconf openssl-devel vulkan-devel \
-    gtk3-devel webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel \
-    gtk-layer-shell gtk-layer-shell-devel \
-    cmake
-
-  # Arch Linux
-  sudo pacman -S base-devel alsa-lib pkgconf openssl vulkan-devel \
-    gtk3 webkit2gtk-4.1 libappindicator-gtk3 librsvg gtk-layer-shell \
-    cmake
-  ```
-
-## Setup Instructions
-
-### 1. Clone the Repository
+Linux:
 
 ```bash
-git clone git@github.com:cjpais/Handy.git
-cd Handy
+# Ubuntu/Debian
+sudo apt update
+sudo apt install build-essential libasound2-dev pkg-config libssl-dev libvulkan-dev vulkan-tools glslc libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libgtk-layer-shell0 libgtk-layer-shell-dev patchelf cmake
+
+# Fedora/RHEL
+sudo dnf groupinstall "Development Tools"
+sudo dnf install alsa-lib-devel pkgconf openssl-devel vulkan-devel gtk3-devel webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel gtk-layer-shell gtk-layer-shell-devel cmake
+
+# Arch Linux
+sudo pacman -S base-devel alsa-lib pkgconf openssl vulkan-devel gtk3 webkit2gtk-4.1 libappindicator-gtk3 librsvg gtk-layer-shell cmake
 ```
 
-### 2. Install Dependencies
+macOS:
 
 ```bash
+xcode-select --install
+```
+
+## Setup
+
+```bash
+git clone https://github.com/mussonking/MadWhisp.git
+cd MadWhisp
 bun install
 ```
 
-### 3. Start Dev Server
+## Development
 
 ```bash
-bun tauri dev
+bun run tauri dev
 ```
 
-### 4. Build for Production
+## Production Builds
+
+Linux/macOS:
 
 ```bash
 bun run tauri build
 ```
 
-This compiles a release binary and generates platform-specific bundles (deb, rpm, AppImage on Linux; dmg on macOS; msi on Windows).
+Windows:
 
-## Linux Install (from source)
+```powershell
+bun run check:windows
+bun run build:windows
+```
 
-The raw binary (`src-tauri/target/release/handy`) cannot run standalone — it needs Tauri resource files (tray icons, sounds, VAD model) to be co-located at the expected path.
+The Windows script enters the Visual Studio C++ environment and uses
+`C:\mwtarget` as `CARGO_TARGET_DIR`. That short target path avoids MSBuild path
+length failures while building the Vulkan Whisper dependency. It also prepares
+the ignored `src-tauri\resources\onnxruntime\windows-x64` directory with the
+runtime DLLs needed by ONNX models such as Canary, Parakeet, Moonshine,
+SenseVoice, and GigaAM.
 
-**Install from the deb bundle** (works on any Linux distro):
+After a successful release build it syncs `madwhisp.exe`, runtime resources,
+the MSI, and the NSIS installer back to `src-tauri\target\release`.
+
+For Windows ARM64 packaging, prepare ARM64 runtime resources first:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-onnxruntime-windows.ps1 -Arch arm64
+```
+
+## Nix
+
+MadWhisp exposes the official flake package as `madwhisp`:
 
 ```bash
-cd /tmp
-ar x /path/to/Handy/src-tauri/target/release/bundle/deb/Handy_*_amd64.deb data.tar.gz
-tar xzf data.tar.gz
-sudo cp usr/bin/handy /usr/bin/
-sudo cp -r usr/lib/Handy /usr/lib/
-sudo cp -r usr/share/icons/hicolor/* /usr/share/icons/hicolor/
-sudo cp usr/share/applications/Handy.desktop /usr/share/applications/
+nix build .#madwhisp
 ```
 
-After subsequent rebuilds, only the binary needs re-copying:
+The old `.#handy` package name remains as a temporary compatibility alias.
 
-```bash
-sudo cp src-tauri/target/release/handy /usr/bin/
-```
+## Linux AppImage Note
 
-Resources only need re-copying if they change upstream (new icons, sounds, etc.).
-
-## Troubleshooting
-
-### AppImage build fails on Arch / rolling-release distros
-
-`linuxdeploy` bundles its own `strip` binary which is too old to process system libraries built with newer toolchains on rolling-release distros (Arch, CachyOS, Manjaro, EndeavourOS).
-
-The error from Tauri:
-
-```
-Bundling Handy_*_amd64.AppImage
-failed to bundle project `failed to run linuxdeploy`
-```
-
-Tauri swallows the real linuxdeploy error. To see it, run linuxdeploy manually:
-
-```bash
-cd src-tauri/target/release/bundle/appimage
-~/.cache/tauri/linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
-  --appdir Handy.AppDir --plugin gtk --output appimage
-```
-
-**Workaround:** The binary, deb, and rpm bundles all build fine — only the AppImage step fails. To skip it:
+On rolling-release distros, linuxdeploy can fail while processing newer system
+libraries. If AppImage bundling fails but deb/rpm builds are fine, build only the
+deb bundle:
 
 ```bash
 bun run tauri build -- --bundles deb
 ```
-
-Then install using the deb extraction method above.

@@ -15,7 +15,8 @@
     "postProcessing": "Postproces",
     "history": "Historia",
     "debug": "Debugowanie",
-    "about": "O programie"
+    "about": "O programie",
+    "words": "Words"
   },
   "onboarding": {
     "subtitle": "Aby rozpocząć, wybierz model transkrypcji",
@@ -96,7 +97,7 @@
     },
     "permissions": {
       "title": "Wymagane uprawnienia",
-      "description": "Handy potrzebuje kilku uprawnień, aby działać poprawnie.",
+      "description": "MadWhisp potrzebuje kilku uprawnień, aby działać poprawnie.",
       "microphone": {
         "title": "Dostęp do mikrofonu",
         "description": "Wymagany do słyszenia Twojego głosu w celu transkrypcji."
@@ -170,7 +171,7 @@
     "general": {
       "title": "Ogólne",
       "shortcut": {
-        "title": "Skróty Handy",
+        "title": "Skróty MadWhisp",
         "description": "Skonfiguruj skróty klawiaturowe do uruchamiania nagrywania mowy",
         "loading": "Wczytywanie skrótów...",
         "none": "Brak skonfigurowanych skrótów",
@@ -261,11 +262,11 @@
       },
       "autostart": {
         "label": "Uruchamiaj przy starcie",
-        "description": "Automatycznie uruchamiaj Handy po zalogowaniu."
+        "description": "Automatycznie uruchamiaj MadWhisp po zalogowaniu."
       },
       "showTrayIcon": {
         "label": "Pokaż ikonę w zasobniku",
-        "description": "Wyświetlaj ikonę Handy w zasobniku systemowym."
+        "description": "Wyświetlaj ikonę MadWhisp w zasobniku systemowym."
       },
       "overlay": {
         "title": "Pozycja nakładki",
@@ -340,7 +341,15 @@
         "placeholder": "Dodaj słowo",
         "add": "Dodaj",
         "remove": "Usuń {{word}}",
-        "duplicate": "\"{{word}}\" już istnieje"
+        "duplicate": "\"{{word}}\" już istnieje",
+        "aliases": "Aliases",
+        "aliasesHint": "Exact replacements.",
+        "aliasPlaceholder": "add alias...",
+        "blacklist": "Blacklist",
+        "blacklistHint": "Never fuzzy-match these.",
+        "blacklistPlaceholder": "add blacklist...",
+        "none": "none",
+        "empty": "No custom words yet."
       }
     },
     "postProcessing": {
@@ -426,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Sprawdzaj aktualizacje",
-        "description": "Automatycznie sprawdzaj nowe wersje Handy"
+        "description": "Automatycznie sprawdzaj nowe wersje MadWhisp"
       },
       "soundTheme": {
         "label": "Motyw dźwiękowy",
@@ -490,11 +499,11 @@
       "title": "O programie",
       "version": {
         "title": "Wersja",
-        "description": "Aktualna wersja Handy"
+        "description": "Aktualna wersja MadWhisp"
       },
       "appDataDirectory": {
         "title": "Katalog danych aplikacji",
-        "description": "Miejsce, gdzie Handy przechowuje swoje dane"
+        "description": "Miejsce, gdzie MadWhisp przechowuje swoje dane"
       },
       "sourceCode": {
         "title": "Kod źródłowy",
@@ -503,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Wspieraj rozwój",
-        "description": "Pomóż nam dalej rozwijać Handy",
+        "description": "Pomóż nam dalej rozwijać MadWhisp",
         "button": "Wesprzyj"
       },
       "acknowledgments": {
@@ -511,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Wydajne wykonywanie modelu rozpoznawania mowy Whisper od OpenAI",
-          "details": "Handy używa Whisper.cpp do szybkiego, lokalnego przetwarzania mowy na tekst. Dzięki niesamowitej pracy Georgi Gerganova i współtwórców."
+          "details": "MadWhisp używa Whisper.cpp do szybkiego, lokalnego przetwarzania mowy na tekst. Dzięki niesamowitej pracy Georgi Gerganova i współtwórców."
         }
       }
     }
@@ -554,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Wymagane uprawnienia dostępności",
-    "permissionsDescription": "Handy potrzebuje uprawnień dostępności, aby wpisywać transkrybowany tekst.",
+    "permissionsDescription": "MadWhisp potrzebuje uprawnień dostępności, aby wpisywać transkrybowany tekst.",
     "openSettings": "Otwórz ustawienia systemowe",
     "dismiss": "Zamknij"
   },
@@ -573,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Język aplikacji",
-    "description": "Zmień język interfejsu Handy"
+    "description": "Zmień język interfejsu MadWhisp"
   },
   "overlay": {
     "transcribing": "Transkrypcja...",

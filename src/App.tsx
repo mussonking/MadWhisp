@@ -231,7 +231,7 @@ function App() {
   return (
     <div
       dir={direction}
-      className="h-screen flex flex-col select-none cursor-default"
+      className="h-screen flex flex-col select-none cursor-default bg-background text-text"
     >
       <Toaster
         theme="system"
@@ -239,7 +239,7 @@ function App() {
           unstyled: true,
           classNames: {
             toast:
-              "bg-background border border-mid-gray/20 rounded-lg shadow-lg px-4 py-3 flex items-center gap-3 text-sm",
+              "bg-background border border-logo-stroke/35 rounded-md shadow-lg px-4 py-3 flex items-center gap-3 text-sm text-text",
             title: "font-medium",
             description: "text-mid-gray",
           },
@@ -253,7 +253,7 @@ function App() {
         />
         {/* Scrollable content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-background">
             <div className="flex flex-col items-center p-4 gap-4">
               <AccessibilityPermissions />
               {renderSettingsContent(currentSection)}

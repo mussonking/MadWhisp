@@ -1,5 +1,9 @@
-use crate::audio_toolkit::{apply_custom_words, filter_transcription_output};
+use crate::audio_toolkit::{
+    apply_custom_word_aliases, apply_custom_words, filter_transcription_output,
+};
 use crate::managers::model::{EngineType, ModelManager};
+use crate::managers::whisper::CancellableWhisperEngine;
+use crate::platform;
 use crate::settings::{
     get_settings, ModelUnloadTimeout, OrtAcceleratorSetting, WhisperAcceleratorSetting,
 };
@@ -11,7 +15,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::{AppHandle, Emitter};
 use transcribe_rs::{
     onnx::{
@@ -22,7 +26,7 @@ use transcribe_rs::{
         sense_voice::{SenseVoiceModel, SenseVoiceParams},
         Quantization,
     },
-    whisper_cpp::{WhisperEngine, WhisperInferenceParams},
+    whisper_cpp::WhisperInferenceParams,
     SpeechModel, TranscribeOptions,
 };
 
@@ -34,8 +38,10 @@ pub struct ModelStateEvent {
     pub error: Option<String>,
 }
 
+const MODEL_LOAD_WAIT_TIMEOUT: Duration = Duration::from_secs(180);
+
 enum LoadedEngine {
-    Whisper(WhisperEngine),
+    Whisper(CancellableWhisperEngine),
     Parakeet(ParakeetModel),
     Moonshine(MoonshineModel),
     MoonshineStreaming(StreamingModel),
@@ -70,6 +76,7 @@ pub struct TranscriptionManager {
     watcher_handle: Arc<Mutex<Option<thread::JoinHandle<()>>>>,
     is_loading: Arc<Mutex<bool>>,
     loading_condvar: Arc<Condvar>,
+    cancel_requested: Arc<AtomicBool>,
 }
 
 impl TranscriptionManager {
@@ -89,6 +96,7 @@ impl TranscriptionManager {
             watcher_handle: Arc::new(Mutex::new(None)),
             is_loading: Arc::new(Mutex::new(false)),
             loading_condvar: Arc::new(Condvar::new()),
+            cancel_requested: Arc::new(AtomicBool::new(false)),
         };
 
         // Start the idle watcher
@@ -164,6 +172,10 @@ impl TranscriptionManager {
         engine.is_some()
     }
 
+    pub fn is_loading(&self) -> bool {
+        *self.is_loading.lock().unwrap()
+    }
+
     /// Atomically check whether a model load is in progress and, if not, mark
     /// one as starting. Returns a [`LoadingGuard`] whose [`Drop`] impl will
     /// clear the flag and wake waiters. Returns `None` if a load is already in
@@ -226,6 +238,10 @@ impl TranscriptionManager {
         }
     }
 
+    pub fn cancel_current_transcription(&self) {
+        self.cancel_requested.store(true, Ordering::Relaxed);
+    }
+
     pub fn load_model(&self, model_id: &str) -> Result<()> {
         let load_start = std::time::Instant::now();
         debug!("Starting to load model: {}", model_id);
@@ -265,7 +281,7 @@ impl TranscriptionManager {
         // Create appropriate engine based on model type
         let loaded_engine = match model_info.engine_type {
             EngineType::Whisper => {
-                let engine = WhisperEngine::load(&model_path).map_err(|e| {
+                let engine = CancellableWhisperEngine::load(&model_path).map_err(|e| {
                     let error_msg = format!("Failed to load whisper model {}: {}", model_id, e);
                     let _ = self.app_handle.emit(
                         "model-state-changed",
@@ -432,21 +448,21 @@ impl TranscriptionManager {
 
     /// Kicks off the model loading in a background thread if it's not already loaded
     pub fn initiate_model_load(&self) {
-        let mut is_loading = self.is_loading.lock().unwrap();
-        if *is_loading || self.is_model_loaded() {
+        if self.is_model_loaded() {
             return;
         }
 
-        *is_loading = true;
+        let Some(loading_guard) = self.try_start_loading() else {
+            return;
+        };
+
         let self_clone = self.clone();
         thread::spawn(move || {
+            let _loading_guard = loading_guard;
             let settings = get_settings(&self_clone.app_handle);
             if let Err(e) = self_clone.load_model(&settings.selected_model) {
                 error!("Failed to load model: {}", e);
             }
-            let mut is_loading = self_clone.is_loading.lock().unwrap();
-            *is_loading = false;
-            self_clone.loading_condvar.notify_all();
         });
     }
 
@@ -468,6 +484,7 @@ impl TranscriptionManager {
         let st = std::time::Instant::now();
 
         debug!("Audio vector length: {}", audio.len());
+        self.cancel_requested.store(false, Ordering::Relaxed);
 
         if audio.is_empty() {
             debug!("Empty audio vector");
@@ -479,8 +496,37 @@ impl TranscriptionManager {
         {
             // If the model is loading, wait for it to complete.
             let mut is_loading = self.is_loading.lock().unwrap();
+            let wait_start = Instant::now();
             while *is_loading {
-                is_loading = self.loading_condvar.wait(is_loading).unwrap();
+                let elapsed = wait_start.elapsed();
+                if elapsed >= MODEL_LOAD_WAIT_TIMEOUT {
+                    warn!(
+                        "Timed out waiting for model load after {}s",
+                        MODEL_LOAD_WAIT_TIMEOUT.as_secs()
+                    );
+                    return Err(anyhow::anyhow!(
+                        "Timed out waiting for the transcription model to finish loading after {}s.",
+                        MODEL_LOAD_WAIT_TIMEOUT.as_secs()
+                    ));
+                }
+
+                let remaining = MODEL_LOAD_WAIT_TIMEOUT.saturating_sub(elapsed);
+                let (guard, timeout) = self
+                    .loading_condvar
+                    .wait_timeout(is_loading, remaining)
+                    .unwrap();
+                is_loading = guard;
+
+                if timeout.timed_out() && *is_loading {
+                    warn!(
+                        "Timed out waiting for model load after {}s",
+                        MODEL_LOAD_WAIT_TIMEOUT.as_secs()
+                    );
+                    return Err(anyhow::anyhow!(
+                        "Timed out waiting for the transcription model to finish loading after {}s.",
+                        MODEL_LOAD_WAIT_TIMEOUT.as_secs()
+                    ));
+                }
             }
 
             let engine_guard = self.lock_engine();
@@ -560,16 +606,24 @@ impl TranscriptionManager {
                             let params = WhisperInferenceParams {
                                 language: whisper_language,
                                 translate: settings.translate_to_english,
+                                n_threads: platform::transcription::whisper_inference_threads(),
                                 initial_prompt: if settings.custom_words.is_empty() {
                                     None
                                 } else {
-                                    Some(settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", "))
+                                    Some(
+                                        settings
+                                            .custom_words
+                                            .iter()
+                                            .map(|e| e.word.as_str())
+                                            .collect::<Vec<_>>()
+                                            .join(", "),
+                                    )
                                 },
                                 ..Default::default()
                             };
 
                             whisper_engine
-                                .transcribe_with(&audio, &params)
+                                .transcribe_with(&audio, &params, self.cancel_requested.clone())
                                 .map_err(|e| anyhow::anyhow!("Whisper transcription failed: {}", e))
                         }
                         LoadedEngine::Parakeet(parakeet_engine) => {
@@ -622,6 +676,7 @@ impl TranscriptionManager {
                             let options = TranscribeOptions {
                                 language: lang,
                                 translate: settings.translate_to_english,
+                                ..Default::default()
                             };
                             canary_engine
                                 .transcribe(&audio, &options)
@@ -680,22 +735,25 @@ impl TranscriptionManager {
             }
         };
 
-        // Apply word correction if custom words are configured.
-        // Skip for Whisper models since custom words are already passed as initial_prompt.
+        // Apply word correction if custom words are configured. Whisper already
+        // receives target words as an initial prompt, but hard aliases are still
+        // deterministic replacements that need a post-pass.
         let is_whisper = self
             .model_manager
             .get_model_info(&settings.selected_model)
             .map(|info| matches!(info.engine_type, EngineType::Whisper))
             .unwrap_or(false);
 
-        let corrected_result = if !settings.custom_words.is_empty() && !is_whisper {
+        let corrected_result = if settings.custom_words.is_empty() {
+            result.text
+        } else if is_whisper {
+            apply_custom_word_aliases(&result.text, &settings.custom_words)
+        } else {
             apply_custom_words(
                 &result.text,
                 &settings.custom_words,
                 settings.word_correction_threshold,
             )
-        } else {
-            result.text
         };
 
         // Filter out filler words and hallucinations

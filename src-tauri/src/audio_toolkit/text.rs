@@ -5,10 +5,16 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use strsim::levenshtein;
 
-/// Builds an n-gram string by cleaning and concatenating words
+/// Normalizes a word fragment for correction matching.
 ///
-/// Strips punctuation from each word, lowercases, and joins without spaces.
-/// This allows matching "Charge B" against "ChargeBee".
+/// Strips punctuation, lowercases, and joins whitespace-separated fragments.
+/// This lets aliases like "Charge B" match transcriptions like "charge b".
+fn normalize_correction_key(text: &str) -> String {
+    let words: Vec<&str> = text.split_whitespace().collect();
+    build_ngram(&words)
+}
+
+/// Builds an n-gram string by cleaning and concatenating words.
 fn build_ngram(words: &[&str]) -> String {
     words
         .iter()
@@ -97,52 +103,9 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
         return text.to_string();
     }
 
-    // === Phase 0: Hard alias replacement ===
+    // Phase 0: hard alias replacement.
     // Build alias map: lowercased alias → target word
-    let mut alias_map: HashMap<String, &str> = HashMap::new();
-    for entry in custom_words {
-        for alias in &entry.aliases {
-            alias_map.insert(alias.to_lowercase(), &entry.word);
-        }
-    }
-
-    let words: Vec<&str> = text.split_whitespace().collect();
-    let mut phase0_result: Vec<String> = Vec::new();
-    let mut consumed: Vec<bool> = vec![false; words.len()];
-    let mut i = 0;
-
-    while i < words.len() {
-        let mut alias_matched = false;
-
-        if !alias_map.is_empty() {
-            // Try n-grams from longest (3) to shortest (1)
-            for n in (1..=3).rev() {
-                if i + n > words.len() {
-                    continue;
-                }
-                let ngram_words = &words[i..i + n];
-                let ngram = build_ngram(ngram_words);
-
-                if let Some(target) = alias_map.get(&ngram) {
-                    let (prefix, _) = extract_punctuation(ngram_words[0]);
-                    let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
-                    let corrected = preserve_case_pattern(ngram_words[0], target);
-                    phase0_result.push(format!("{}{}{}", prefix, corrected, suffix));
-                    for j in i..i + n {
-                        consumed[j] = true;
-                    }
-                    i += n;
-                    alias_matched = true;
-                    break;
-                }
-            }
-        }
-
-        if !alias_matched {
-            phase0_result.push(words[i].to_string());
-            i += 1;
-        }
-    }
+    let phase0_text = apply_custom_word_aliases(text, custom_words);
 
     // === Phase 1: Fuzzy matching with blacklist ===
     // Extract word strings for fuzzy comparison
@@ -159,38 +122,11 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
         .flat_map(|e| e.blacklist.iter().map(|b| b.to_lowercase()))
         .collect();
 
-    let phase0_words: Vec<&str> = phase0_result.iter().map(|s| s.as_str()).collect();
+    let phase0_words: Vec<&str> = phase0_text.split_whitespace().collect();
     let mut result = Vec::new();
     let mut j = 0;
-    // Track which phase0 words were already consumed by alias replacement
-    // We need to map back: consumed[orig_idx] but phase0 may have fewer words
-    // Instead, we skip fuzzy matching for words that came from alias replacement
-    let mut orig_idx = 0;
-    let mut phase0_consumed: Vec<bool> = Vec::new();
-    {
-        let mut oi = 0;
-        for pi in 0..phase0_words.len() {
-            if oi < consumed.len() && consumed[oi] {
-                phase0_consumed.push(true);
-                // Alias replaced n words into 1, skip ahead
-                while oi < consumed.len() && consumed[oi] {
-                    oi += 1;
-                }
-            } else {
-                phase0_consumed.push(false);
-                oi += 1;
-            }
-        }
-    }
 
     while j < phase0_words.len() {
-        // Skip fuzzy matching for words already handled by alias replacement
-        if j < phase0_consumed.len() && phase0_consumed[j] {
-            result.push(phase0_words[j].to_string());
-            j += 1;
-            continue;
-        }
-
         let mut matched = false;
 
         // Try n-grams from longest (3) to shortest (1) - greedy matching
@@ -202,9 +138,13 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
             let ngram_words = &phase0_words[j..j + n];
             let ngram = build_ngram(ngram_words);
 
-            if let Some((replacement, _score)) =
-                find_best_match(&ngram, &word_strings, &custom_words_nospace, threshold, &blacklist)
-            {
+            if let Some((replacement, _score)) = find_best_match(
+                &ngram,
+                &word_strings,
+                &custom_words_nospace,
+                threshold,
+                &blacklist,
+            ) {
                 let (prefix, _) = extract_punctuation(ngram_words[0]);
                 let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
                 let corrected = preserve_case_pattern(ngram_words[0], replacement);
@@ -224,11 +164,69 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
     result.join(" ")
 }
 
+/// Applies only hard aliases from custom words.
+///
+/// Whisper models use custom words as an initial prompt, but aliases are user-defined
+/// exact replacements and still need a deterministic post-pass.
+pub fn apply_custom_word_aliases(text: &str, custom_words: &[CustomWordEntry]) -> String {
+    if custom_words.is_empty() {
+        return text.to_string();
+    }
+
+    let mut alias_map: HashMap<String, &str> = HashMap::new();
+    for entry in custom_words {
+        for alias in &entry.aliases {
+            let key = normalize_correction_key(alias);
+            if !key.is_empty() {
+                alias_map.insert(key, &entry.word);
+            }
+        }
+    }
+
+    if alias_map.is_empty() {
+        return text.to_string();
+    }
+
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut result: Vec<String> = Vec::new();
+    let mut i = 0;
+
+    while i < words.len() {
+        let mut alias_matched = false;
+
+        // Try n-grams from longest (3) to shortest (1)
+        for n in (1..=3).rev() {
+            if i + n > words.len() {
+                continue;
+            }
+            let ngram_words = &words[i..i + n];
+            let ngram = build_ngram(ngram_words);
+
+            if let Some(target) = alias_map.get(&ngram) {
+                let (prefix, _) = extract_punctuation(ngram_words[0]);
+                let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
+                let corrected = preserve_case_pattern(ngram_words[0], target);
+                result.push(format!("{}{}{}", prefix, corrected, suffix));
+                i += n;
+                alias_matched = true;
+                break;
+            }
+        }
+
+        if !alias_matched {
+            result.push(words[i].to_string());
+            i += 1;
+        }
+    }
+
+    result.join(" ")
+}
+
 /// Preserves the case pattern of the original word when applying a replacement
 fn preserve_case_pattern(original: &str, replacement: &str) -> String {
     if original.chars().all(|c| c.is_uppercase()) {
         replacement.to_uppercase()
-    } else if original.chars().next().map_or(false, |c| c.is_uppercase()) {
+    } else if original.chars().next().is_some_and(|c| c.is_uppercase()) {
         let mut chars: Vec<char> = replacement.chars().collect();
         if let Some(first_char) = chars.get_mut(0) {
             *first_char = first_char.to_uppercase().next().unwrap_or(*first_char);
@@ -683,6 +681,22 @@ mod tests {
         let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
         let result = apply_custom_words(text, &custom_words, 0.18);
         assert_eq!(result, "Ask Gemini, please.");
+    }
+
+    #[test]
+    fn test_hard_alias_multi_word_replacement() {
+        let text = "Ask gem and I about this";
+        let custom_words = vec![word_with_aliases("Gemini", &["gem and I"])];
+        let result = apply_custom_words(text, &custom_words, 0.18);
+        assert_eq!(result, "Ask Gemini about this");
+    }
+
+    #[test]
+    fn test_alias_only_pass_for_whisper_pipeline() {
+        let text = "Ask Jiminy about this";
+        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
+        let result = apply_custom_word_aliases(text, &custom_words);
+        assert_eq!(result, "Ask Gemini about this");
     }
 
     // === Blacklist tests ===

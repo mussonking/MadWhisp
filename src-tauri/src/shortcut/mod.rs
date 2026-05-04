@@ -283,14 +283,12 @@ pub fn change_keyboard_implementation_setting(
     settings::write_settings(&app, settings);
 
     // Initialize new implementation if needed (HandyKeys needs state)
-    if new_impl == KeyboardImplementation::HandyKeys {
-        if initialize_handy_keys_with_rollback(&app)? {
-            // Shortcuts already registered during init
-            return Ok(ImplementationChangeResult {
-                success: true,
-                reset_bindings: vec![],
-            });
-        }
+    if new_impl == KeyboardImplementation::HandyKeys && initialize_handy_keys_with_rollback(&app)? {
+        // Shortcuts already registered during init
+        return Ok(ImplementationChangeResult {
+            success: true,
+            reset_bindings: vec![],
+        });
     }
 
     // Register all shortcuts with new implementation, resetting invalid ones
@@ -641,7 +639,10 @@ pub fn change_update_checks_setting(app: AppHandle, enabled: bool) -> Result<(),
 
 #[tauri::command]
 #[specta::specta]
-pub fn update_custom_words(app: AppHandle, words: Vec<settings::CustomWordEntry>) -> Result<(), String> {
+pub fn update_custom_words(
+    app: AppHandle,
+    words: Vec<settings::CustomWordEntry>,
+) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.custom_words = words;
     settings::write_settings(&app, settings);
@@ -684,14 +685,7 @@ pub fn change_paste_method_setting(app: AppHandle, method: String) -> Result<(),
 #[tauri::command]
 #[specta::specta]
 pub fn get_available_typing_tools() -> Vec<String> {
-    #[cfg(target_os = "linux")]
-    {
-        crate::clipboard::get_available_typing_tools()
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        vec!["auto".to_string()]
-    }
+    crate::platform::shortcuts::available_typing_tools()
 }
 
 #[tauri::command]

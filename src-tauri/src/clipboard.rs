@@ -1,4 +1,5 @@
 use crate::input::{self, EnigoState};
+use crate::platform::clipboard as platform_clipboard;
 #[cfg(target_os = "linux")]
 use crate::settings::TypingTool;
 use crate::settings::{get_settings, AutoSubmitKey, ClipboardHandling, PasteMethod};
@@ -23,24 +24,7 @@ fn paste_via_clipboard(
     let clipboard = app_handle.clipboard();
     let clipboard_content = clipboard.read_text().unwrap_or_default();
 
-    // Write text to clipboard first
-    // On Wayland, prefer wl-copy for better compatibility (especially with umlauts)
-    #[cfg(target_os = "linux")]
-    let write_result = if is_wayland() && is_wl_copy_available() {
-        info!("Using wl-copy for clipboard write on Wayland");
-        write_clipboard_via_wl_copy(text)
-    } else {
-        clipboard
-            .write_text(text)
-            .map_err(|e| format!("Failed to write to clipboard: {}", e))
-    };
-
-    #[cfg(not(target_os = "linux"))]
-    let write_result = clipboard
-        .write_text(text)
-        .map_err(|e| format!("Failed to write to clipboard: {}", e));
-
-    write_result?;
+    platform_clipboard::write_text(app_handle, text)?;
 
     std::thread::sleep(Duration::from_millis(paste_delay_ms));
 
@@ -63,17 +47,7 @@ fn paste_via_clipboard(
 
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    // Restore original clipboard content
-    // On Wayland, prefer wl-copy for better compatibility
-    #[cfg(target_os = "linux")]
-    if is_wayland() && is_wl_copy_available() {
-        let _ = write_clipboard_via_wl_copy(&clipboard_content);
-    } else {
-        let _ = clipboard.write_text(&clipboard_content);
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    let _ = clipboard.write_text(&clipboard_content);
+    platform_clipboard::write_text_best_effort(app_handle, &clipboard_content);
 
     Ok(())
 }
@@ -270,16 +244,6 @@ fn is_kwtype_available() -> bool {
         .unwrap_or(false)
 }
 
-/// Check if wl-copy is available (Wayland clipboard tool)
-#[cfg(target_os = "linux")]
-fn is_wl_copy_available() -> bool {
-    Command::new("which")
-        .arg("wl-copy")
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
-}
-
 /// Type text directly via wtype on Wayland.
 #[cfg(target_os = "linux")]
 fn type_text_via_wtype(text: &str) -> Result<(), String> {
@@ -380,27 +344,7 @@ fn type_text_via_kwtype(text: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Write text to clipboard via wl-copy (Wayland clipboard tool).
 /// Uses Stdio::null() to avoid blocking on repeated calls — wl-copy forks a
-/// daemon that inherits piped fds, causing read_to_end to hang indefinitely.
-#[cfg(target_os = "linux")]
-fn write_clipboard_via_wl_copy(text: &str) -> Result<(), String> {
-    use std::process::Stdio;
-    let status = Command::new("wl-copy")
-        .arg("--")
-        .arg(text)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map_err(|e| format!("Failed to execute wl-copy: {}", e))?;
-
-    if !status.success() {
-        return Err("wl-copy failed".into());
-    }
-
-    Ok(())
-}
-
 /// Send a key combination (e.g., Ctrl+V) via wtype on Wayland.
 #[cfg(target_os = "linux")]
 fn send_key_combo_via_wtype(paste_method: &PasteMethod) -> Result<(), String> {

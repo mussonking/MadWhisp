@@ -185,7 +185,7 @@ impl HistoryManager {
         post_process_prompt: Option<String>,
     ) -> Result<()> {
         let timestamp = Utc::now().timestamp();
-        let file_name = format!("handy-{}.wav", timestamp);
+        let file_name = format!("madwhisp-{}.wav", timestamp);
         let title = self.format_timestamp_title(timestamp);
 
         // Save WAV file
@@ -238,16 +238,16 @@ impl HistoryManager {
         match retention_period {
             crate::settings::RecordingRetentionPeriod::Never => {
                 // Don't delete anything
-                return Ok(());
+                Ok(())
             }
             crate::settings::RecordingRetentionPeriod::PreserveLimit => {
                 // Use the old count-based logic with history_limit
                 let limit = crate::settings::get_history_limit(&self.app_handle);
-                return self.cleanup_by_count(limit);
+                self.cleanup_by_count(limit)
             }
             _ => {
                 // Use time-based logic
-                return self.cleanup_by_time(retention_period);
+                self.cleanup_by_time(retention_period)
             }
         }
     }
@@ -536,7 +536,7 @@ mod tests {
             "INSERT INTO transcription_history (file_name, timestamp, saved, title, transcription_text, post_processed_text, post_process_prompt)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![
-                format!("handy-{}.wav", timestamp),
+                format!("madwhisp-{}.wav", timestamp),
                 timestamp,
                 false,
                 format!("Recording {}", timestamp),

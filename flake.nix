@@ -1,5 +1,5 @@
 {
-  description = "Handy - A free, open source, and extensible speech-to-text application that works completely offline";
+  description = "MadWhisp - local, open source speech-to-text with platform-native integrations";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -41,8 +41,8 @@
           lib = pkgs.lib;
         in
         {
-          handy = pkgs.rustPlatform.buildRustPackage {
-            pname = "handy";
+          madwhisp = pkgs.rustPlatform.buildRustPackage {
+            pname = "madwhisp";
             inherit version;
             src = self;
 
@@ -186,14 +186,15 @@
 
             meta = {
               description = "A free, open source, and extensible speech-to-text application that works completely offline";
-              homepage = "https://github.com/cjpais/Handy";
+              homepage = "https://github.com/mussonking/MadWhisp";
               license = lib.licenses.mit;
-              mainProgram = "handy";
+              mainProgram = "madwhisp";
               platforms = supportedSystems;
             };
           };
 
-          default = self.packages.${system}.handy;
+          handy = self.packages.${system}.madwhisp;
+          default = self.packages.${system}.madwhisp;
         }
       );
 
@@ -202,7 +203,7 @@
         { lib, pkgs, ... }:
         {
           imports = [ ./nix/module.nix ];
-          programs.handy.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.handy;
+          programs.madwhisp.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.madwhisp;
         };
 
       # Home-manager module for per-user service
@@ -210,7 +211,7 @@
         { lib, pkgs, ... }:
         {
           imports = [ ./nix/hm-module.nix ];
-          services.handy.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.handy;
+          services.madwhisp.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.madwhisp;
         };
 
       # Development shell for building from source
@@ -270,7 +271,7 @@
             XDG_DATA_DIRS = "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}:${pkgs.hicolor-icon-theme}/share";
 
             shellHook = ''
-              echo "Handy development environment"
+              echo "MadWhisp development environment"
               bun install
               echo "Run 'bun run tauri dev' to start"
             '';

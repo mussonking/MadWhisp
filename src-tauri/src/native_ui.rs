@@ -92,7 +92,12 @@ fn section(ui: &mut egui::Ui, title: &str, add_contents: impl FnOnce(&mut egui::
         .show(ui, |ui| {
             ui.set_min_width(w - 22.0);
             ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("\u{2500}\u{2500}").color(BORDER_SUBTLE).monospace().size(10.0));
+                ui.label(
+                    egui::RichText::new("\u{2500}\u{2500}")
+                        .color(BORDER_SUBTLE)
+                        .monospace()
+                        .size(10.0),
+                );
                 ui.label(
                     egui::RichText::new(title)
                         .color(ACCENT_CYAN)
@@ -102,7 +107,12 @@ fn section(ui: &mut egui::Ui, title: &str, add_contents: impl FnOnce(&mut egui::
                 );
                 let remaining = ui.available_width();
                 let dashes = ((remaining / 7.0) as usize).min(40);
-                ui.label(egui::RichText::new("\u{2500}".repeat(dashes)).color(BORDER_SUBTLE).monospace().size(10.0));
+                ui.label(
+                    egui::RichText::new("\u{2500}".repeat(dashes))
+                        .color(BORDER_SUBTLE)
+                        .monospace()
+                        .size(10.0),
+                );
             });
             ui.add_space(4.0);
             add_contents(ui);
@@ -145,7 +155,12 @@ fn terminal_bar(ui: &mut egui::Ui, label: &str, value: f32, width: usize) {
 
 fn badge(ui: &mut egui::Ui, text: &str, color: Color32) {
     egui::Frame::new()
-        .fill(Color32::from_rgba_premultiplied(color.r(), color.g(), color.b(), 0x20))
+        .fill(Color32::from_rgba_premultiplied(
+            color.r(),
+            color.g(),
+            color.b(),
+            0x20,
+        ))
         .stroke(egui::Stroke::new(0.5, color))
         .corner_radius(egui::CornerRadius::same(3))
         .inner_margin(egui::Margin::symmetric(4, 1))
@@ -161,7 +176,12 @@ fn badge(ui: &mut egui::Ui, text: &str, color: Color32) {
 }
 
 fn dim_label(ui: &mut egui::Ui, text: &str) {
-    ui.label(egui::RichText::new(text).color(TEXT_DIM).monospace().size(11.0));
+    ui.label(
+        egui::RichText::new(text)
+            .color(TEXT_DIM)
+            .monospace()
+            .size(11.0),
+    );
 }
 
 fn hint_label(ui: &mut egui::Ui, text: &str) {
@@ -214,7 +234,12 @@ struct SettingsApp {
 impl SettingsApp {
     fn new(app_handle: tauri::AppHandle) -> Self {
         let settings = settings::get_settings(&app_handle);
-        let custom_words_text = settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", ");
+        let custom_words_text = settings
+            .custom_words
+            .iter()
+            .map(|e| e.word.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
 
         let model_manager = app_handle.state::<Arc<ModelManager>>();
         let models = model_manager.get_available_models();
@@ -223,9 +248,10 @@ impl SettingsApp {
 
         let history_manager = app_handle.state::<Arc<HistoryManager>>();
         let history_entries = {
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                rt.block_on(history_manager.get_history_entries())
-            }.unwrap_or_default();
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(history_manager.get_history_entries())
+        }
+        .unwrap_or_default();
 
         let history_dirty = Arc::new(AtomicBool::new(false));
         let dirty_flag = history_dirty.clone();
@@ -269,9 +295,9 @@ impl SettingsApp {
     fn reload_history(&mut self) {
         let history_manager = self.app_handle.state::<Arc<HistoryManager>>();
         if let Ok(entries) = {
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                rt.block_on(history_manager.get_history_entries())
-            } {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(history_manager.get_history_entries())
+        } {
             self.history_entries = entries;
         }
     }
@@ -288,11 +314,8 @@ impl SettingsApp {
                 let size = [rgba.width() as usize, rgba.height() as usize];
                 let pixels = rgba.into_raw();
                 let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
-                self.logo_texture = Some(ctx.load_texture(
-                    "logo",
-                    color_image,
-                    egui::TextureOptions::LINEAR,
-                ));
+                self.logo_texture =
+                    Some(ctx.load_texture("logo", color_image, egui::TextureOptions::LINEAR));
             }
         }
         self.logo_texture.as_ref()
@@ -307,7 +330,11 @@ impl SettingsApp {
 
         // Logo with blinking cursor
         let time = ui.input(|i| i.time);
-        let cursor = if (time * 2.0) as i32 % 2 == 0 { "\u{2588}" } else { " " };
+        let cursor = if (time * 2.0) as i32 % 2 == 0 {
+            "\u{2588}"
+        } else {
+            " "
+        };
         ui.vertical_centered(|ui| {
             ui.label(
                 egui::RichText::new(format!("> MadWhisp{}", cursor))
@@ -354,8 +381,16 @@ impl SettingsApp {
                 format!("  {} {}", icon, label)
             };
 
-            let text_color = if is_active { ACCENT_GREEN } else { TEXT_PRIMARY };
-            let bg = if is_active { NAV_ACTIVE_BG } else { Color32::TRANSPARENT };
+            let text_color = if is_active {
+                ACCENT_GREEN
+            } else {
+                TEXT_PRIMARY
+            };
+            let bg = if is_active {
+                NAV_ACTIVE_BG
+            } else {
+                Color32::TRANSPARENT
+            };
 
             let btn = egui::Button::new(
                 egui::RichText::new(nav_text)
@@ -491,34 +526,55 @@ impl SettingsApp {
                                     .unwrap_or("default")
                                     == mic.index;
                                 if ui.selectable_label(selected, &mic.name).clicked() {
-                                    self.settings.selected_microphone =
-                                        if mic.index == "default" { None } else { Some(mic.index.clone()) };
+                                    self.settings.selected_microphone = if mic.index == "default" {
+                                        None
+                                    } else {
+                                        Some(mic.index.clone())
+                                    };
                                     self.save_settings();
                                 }
                             }
                         });
                 });
 
-                if ui.checkbox(&mut self.settings.translate_to_english, "Translate to English").changed() {
+                if ui
+                    .checkbox(
+                        &mut self.settings.translate_to_english,
+                        "Translate to English",
+                    )
+                    .changed()
+                {
                     self.save_settings();
                 }
-                if ui.checkbox(&mut self.settings.append_trailing_space, "Trailing space").changed() {
+                if ui
+                    .checkbox(&mut self.settings.append_trailing_space, "Trailing space")
+                    .changed()
+                {
                     self.save_settings();
                 }
             });
 
             section(&mut cols[0], "Startup", |ui| {
-                if ui.checkbox(&mut self.settings.autostart_enabled, "Launch at startup").changed() {
+                if ui
+                    .checkbox(&mut self.settings.autostart_enabled, "Launch at startup")
+                    .changed()
+                {
                     self.save_settings();
                 }
             });
 
             // ── RIGHT COLUMN ──
             section(&mut cols[1], "Recording", |ui| {
-                if ui.checkbox(&mut self.settings.push_to_talk, "Push-to-talk").changed() {
+                if ui
+                    .checkbox(&mut self.settings.push_to_talk, "Push-to-talk")
+                    .changed()
+                {
                     self.save_settings();
                 }
-                if ui.checkbox(&mut self.settings.audio_feedback, "Audio feedback").changed() {
+                if ui
+                    .checkbox(&mut self.settings.audio_feedback, "Audio feedback")
+                    .changed()
+                {
                     self.save_settings();
                 }
 
@@ -526,7 +582,10 @@ impl SettingsApp {
                     ui.horizontal(|ui| {
                         dim_label(ui, "Volume");
                         if ui
-                            .add(egui::Slider::new(&mut self.settings.audio_feedback_volume, 0.0..=1.0))
+                            .add(egui::Slider::new(
+                                &mut self.settings.audio_feedback_volume,
+                                0.0..=1.0,
+                            ))
                             .changed()
                         {
                             self.save_settings();
@@ -534,7 +593,13 @@ impl SettingsApp {
                     });
                 }
 
-                if ui.checkbox(&mut self.settings.mute_while_recording, "Mute while recording").changed() {
+                if ui
+                    .checkbox(
+                        &mut self.settings.mute_while_recording,
+                        "Mute while recording",
+                    )
+                    .changed()
+                {
                     self.save_settings();
                 }
 
@@ -552,7 +617,10 @@ impl SettingsApp {
                                 (SoundTheme::Pop, "Pop"),
                                 (SoundTheme::Custom, "Custom"),
                             ] {
-                                if ui.selectable_value(&mut self.settings.sound_theme, theme, label).changed() {
+                                if ui
+                                    .selectable_value(&mut self.settings.sound_theme, theme, label)
+                                    .changed()
+                                {
                                     self.save_settings();
                                 }
                             }
@@ -583,10 +651,18 @@ impl SettingsApp {
         });
         ui.add_space(2.0);
 
-        let mut downloaded: Vec<ModelInfo> =
-            self.models.iter().filter(|m| m.is_downloaded).cloned().collect();
-        let mut available: Vec<ModelInfo> =
-            self.models.iter().filter(|m| !m.is_downloaded).cloned().collect();
+        let mut downloaded: Vec<ModelInfo> = self
+            .models
+            .iter()
+            .filter(|m| m.is_downloaded)
+            .cloned()
+            .collect();
+        let mut available: Vec<ModelInfo> = self
+            .models
+            .iter()
+            .filter(|m| !m.is_downloaded)
+            .cloned()
+            .collect();
         downloaded.sort_by(|a, b| a.name.cmp(&b.name));
         available.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -598,7 +674,15 @@ impl SettingsApp {
             section(ui, "Downloaded", |ui| {
                 for model in &downloaded {
                     let is_active = model.id == self.settings.selected_model;
-                    Self::render_model_card(ui, model, is_active, true, &mut model_to_select, &mut model_to_delete, &mut model_to_download);
+                    Self::render_model_card(
+                        ui,
+                        model,
+                        is_active,
+                        true,
+                        &mut model_to_select,
+                        &mut model_to_delete,
+                        &mut model_to_download,
+                    );
                     ui.add_space(2.0);
                 }
             });
@@ -607,7 +691,15 @@ impl SettingsApp {
         if !available.is_empty() {
             section(ui, "Available for Download", |ui| {
                 for model in &available {
-                    Self::render_model_card(ui, model, false, false, &mut model_to_select, &mut model_to_delete, &mut model_to_download);
+                    Self::render_model_card(
+                        ui,
+                        model,
+                        false,
+                        false,
+                        &mut model_to_select,
+                        &mut model_to_delete,
+                        &mut model_to_download,
+                    );
                     ui.add_space(2.0);
                 }
             });
@@ -669,10 +761,21 @@ impl SettingsApp {
         delete_action: &mut Option<String>,
         download_action: &mut Option<String>,
     ) {
-        let border_color = if is_active { ACCENT_GREEN } else { BORDER_SUBTLE };
+        let border_color = if is_active {
+            ACCENT_GREEN
+        } else {
+            BORDER_SUBTLE
+        };
         egui::Frame::new()
-            .fill(if is_active { Color32::from_rgb(0x0a, 0x1a, 0x15) } else { BG_INPUT })
-            .stroke(egui::Stroke::new(if is_active { 1.0 } else { 0.5 }, border_color))
+            .fill(if is_active {
+                Color32::from_rgb(0x0a, 0x1a, 0x15)
+            } else {
+                BG_INPUT
+            })
+            .stroke(egui::Stroke::new(
+                if is_active { 1.0 } else { 0.5 },
+                border_color,
+            ))
             .corner_radius(egui::CornerRadius::same(6))
             .inner_margin(egui::Margin::same(10))
             .show(ui, |ui| {
@@ -692,10 +795,13 @@ impl SettingsApp {
                         badge(ui, "REC", ACCENT_YELLOW);
                     }
                     ui.label(
-                        egui::RichText::new(format!("{}MB | {:?}", model.size_mb, model.engine_type))
-                            .color(TEXT_DIM)
-                            .monospace()
-                            .size(10.0),
+                        egui::RichText::new(format!(
+                            "{}MB | {:?}",
+                            model.size_mb, model.engine_type
+                        ))
+                        .color(TEXT_DIM)
+                        .monospace()
+                        .size(10.0),
                     );
                     if model.supports_translation {
                         badge(ui, "TR", ACCENT_CYAN);
@@ -703,15 +809,35 @@ impl SettingsApp {
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if is_downloaded {
-                            if ui.button(egui::RichText::new("Del").color(ACCENT_RED).monospace().size(10.0)).clicked() {
+                            if ui
+                                .button(
+                                    egui::RichText::new("Del")
+                                        .color(ACCENT_RED)
+                                        .monospace()
+                                        .size(10.0),
+                                )
+                                .clicked()
+                            {
                                 *delete_action = Some(model.id.clone());
                             }
-                            if !is_active && ui.button(egui::RichText::new("Use").monospace().size(10.0)).clicked() {
+                            if !is_active
+                                && ui
+                                    .button(egui::RichText::new("Use").monospace().size(10.0))
+                                    .clicked()
+                            {
                                 *select_action = Some(model.id.clone());
                             }
                         } else if model.is_downloading {
                             ui.spinner();
-                        } else if ui.button(egui::RichText::new("Get").color(ACCENT_GREEN).monospace().size(10.0)).clicked() {
+                        } else if ui
+                            .button(
+                                egui::RichText::new("Get")
+                                    .color(ACCENT_GREEN)
+                                    .monospace()
+                                    .size(10.0),
+                            )
+                            .clicked()
+                        {
                             *download_action = Some(model.id.clone());
                         }
                     });
@@ -760,7 +886,10 @@ impl SettingsApp {
                 .strong(),
         );
         ui.add_space(2.0);
-        hint_label(ui, "Words Whisper often misspells. Fuzzy matching corrects them.");
+        hint_label(
+            ui,
+            "Words Whisper often misspells. Fuzzy matching corrects them.",
+        );
         ui.add_space(4.0);
 
         // Add new word
@@ -768,10 +897,18 @@ impl SettingsApp {
             ui.horizontal(|ui| {
                 dim_label(ui, ">");
                 let response = ui.text_edit_singleline(&mut self.new_word_input);
-                let enter_pressed = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-                if (ui.button("Add").clicked() || enter_pressed) && !self.new_word_input.trim().is_empty() {
+                let enter_pressed =
+                    response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+                if (ui.button("Add").clicked() || enter_pressed)
+                    && !self.new_word_input.trim().is_empty()
+                {
                     let word_str = self.new_word_input.trim().to_string();
-                    if !self.settings.custom_words.iter().any(|e| e.word == word_str) {
+                    if !self
+                        .settings
+                        .custom_words
+                        .iter()
+                        .any(|e| e.word == word_str)
+                    {
                         self.settings.custom_words.push(settings::CustomWordEntry {
                             word: word_str,
                             aliases: Vec::new(),
@@ -794,7 +931,12 @@ impl SettingsApp {
         if self.settings.custom_words.is_empty() {
             ui.add_space(16.0);
             ui.vertical_centered(|ui| {
-                ui.label(egui::RichText::new("No custom words yet.").italics().color(TEXT_DIM).monospace());
+                ui.label(
+                    egui::RichText::new("No custom words yet.")
+                        .italics()
+                        .color(TEXT_DIM)
+                        .monospace(),
+                );
             });
         } else {
             section(ui, "Word List", |ui| {
@@ -914,7 +1056,11 @@ impl SettingsApp {
             changed = true;
         }
         if let Some((wi, alias)) = alias_to_add {
-            if !self.settings.custom_words[wi].aliases.iter().any(|a| a.eq_ignore_ascii_case(&alias)) {
+            if !self.settings.custom_words[wi]
+                .aliases
+                .iter()
+                .any(|a| a.eq_ignore_ascii_case(&alias))
+            {
                 self.settings.custom_words[wi].aliases.push(alias);
                 changed = true;
             }
@@ -924,7 +1070,11 @@ impl SettingsApp {
             changed = true;
         }
         if let Some((wi, bl)) = blacklist_to_add {
-            if !self.settings.custom_words[wi].blacklist.iter().any(|b| b.eq_ignore_ascii_case(&bl)) {
+            if !self.settings.custom_words[wi]
+                .blacklist
+                .iter()
+                .any(|b| b.eq_ignore_ascii_case(&bl))
+            {
                 self.settings.custom_words[wi].blacklist.push(bl);
                 changed = true;
             }
@@ -942,8 +1092,12 @@ impl SettingsApp {
         section(ui, "Sensitivity", |ui| {
             ui.horizontal(|ui| {
                 dim_label(ui, "Threshold");
-                let mut sensitivity_pct = (self.settings.word_correction_threshold * 200.0).round() as i32;
-                if ui.add(egui::Slider::new(&mut sensitivity_pct, 0..=100).suffix("%")).changed() {
+                let mut sensitivity_pct =
+                    (self.settings.word_correction_threshold * 200.0).round() as i32;
+                if ui
+                    .add(egui::Slider::new(&mut sensitivity_pct, 0..=100).suffix("%"))
+                    .changed()
+                {
                     self.settings.word_correction_threshold = sensitivity_pct as f64 / 200.0;
                     self.save_settings();
                 }
@@ -953,7 +1107,13 @@ impl SettingsApp {
     }
 
     fn update_custom_words_text(&mut self) {
-        self.custom_words_text = self.settings.custom_words.iter().map(|e| e.word.as_str()).collect::<Vec<_>>().join(", ");
+        self.custom_words_text = self
+            .settings
+            .custom_words
+            .iter()
+            .map(|e| e.word.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -971,7 +1131,13 @@ impl SettingsApp {
         ui.add_space(2.0);
         hint_label(ui, "Send transcriptions to an LLM for cleanup.");
 
-        if ui.checkbox(&mut self.settings.post_process_enabled, egui::RichText::new("Enable post-processing").monospace()).changed() {
+        if ui
+            .checkbox(
+                &mut self.settings.post_process_enabled,
+                egui::RichText::new("Enable post-processing").monospace(),
+            )
+            .changed()
+        {
             self.save_settings();
         }
 
@@ -979,10 +1145,21 @@ impl SettingsApp {
 
         // Provider config - full width, compact
         section(ui, "Provider", |ui| {
-            if !enabled { ui.disable(); }
+            if !enabled {
+                ui.disable();
+            }
 
-            let providers: Vec<(String, String)> = self.settings.post_process_providers.iter().map(|p| (p.id.clone(), p.label.clone())).collect();
-            let current_provider_label = providers.iter().find(|(id, _)| *id == self.settings.post_process_provider_id).map(|(_, label)| label.as_str()).unwrap_or("Select...");
+            let providers: Vec<(String, String)> = self
+                .settings
+                .post_process_providers
+                .iter()
+                .map(|p| (p.id.clone(), p.label.clone()))
+                .collect();
+            let current_provider_label = providers
+                .iter()
+                .find(|(id, _)| *id == self.settings.post_process_provider_id)
+                .map(|(_, label)| label.as_str())
+                .unwrap_or("Select...");
 
             // All on one row or compact rows
             ui.horizontal(|ui| {
@@ -991,7 +1168,14 @@ impl SettingsApp {
                     .selected_text(current_provider_label)
                     .show_ui(ui, |ui| {
                         for (id, label) in &providers {
-                            if ui.selectable_value(&mut self.settings.post_process_provider_id, id.clone(), label).changed() {
+                            if ui
+                                .selectable_value(
+                                    &mut self.settings.post_process_provider_id,
+                                    id.clone(),
+                                    label,
+                                )
+                                .changed()
+                            {
                                 self.save_settings();
                             }
                         }
@@ -999,8 +1183,15 @@ impl SettingsApp {
 
                 dim_label(ui, "Model");
                 let provider_id = self.settings.post_process_provider_id.clone();
-                let model = self.settings.post_process_models.entry(provider_id.clone()).or_default();
-                if ui.add(egui::TextEdit::singleline(model).desired_width(120.0)).changed() {
+                let model = self
+                    .settings
+                    .post_process_models
+                    .entry(provider_id.clone())
+                    .or_default();
+                if ui
+                    .add(egui::TextEdit::singleline(model).desired_width(120.0))
+                    .changed()
+                {
                     self.save_settings();
                 }
             });
@@ -1009,21 +1200,45 @@ impl SettingsApp {
 
             ui.horizontal(|ui| {
                 dim_label(ui, "API Key");
-                let key = self.settings.post_process_api_keys.entry(provider_id.clone()).or_default();
+                let key = self
+                    .settings
+                    .post_process_api_keys
+                    .entry(provider_id.clone())
+                    .or_default();
                 let response = if self.api_key_visible {
                     ui.add(egui::TextEdit::singleline(key).desired_width(200.0))
                 } else {
-                    ui.add(egui::TextEdit::singleline(key).password(true).desired_width(200.0))
+                    ui.add(
+                        egui::TextEdit::singleline(key)
+                            .password(true)
+                            .desired_width(200.0),
+                    )
                 };
-                if response.changed() { self.save_settings(); }
-                if ui.button(if self.api_key_visible { "Hide" } else { "Show" }).clicked() {
+                if response.changed() {
+                    self.save_settings();
+                }
+                if ui
+                    .button(if self.api_key_visible { "Hide" } else { "Show" })
+                    .clicked()
+                {
                     self.api_key_visible = !self.api_key_visible;
                 }
             });
 
-            let allow_base_url_edit = self.settings.post_process_providers.iter().find(|p| p.id == provider_id).map(|p| p.allow_base_url_edit).unwrap_or(false);
+            let allow_base_url_edit = self
+                .settings
+                .post_process_providers
+                .iter()
+                .find(|p| p.id == provider_id)
+                .map(|p| p.allow_base_url_edit)
+                .unwrap_or(false);
             if allow_base_url_edit {
-                if let Some(idx) = self.settings.post_process_providers.iter().position(|p| p.id == provider_id) {
+                if let Some(idx) = self
+                    .settings
+                    .post_process_providers
+                    .iter()
+                    .position(|p| p.id == provider_id)
+                {
                     let mut base_url = self.settings.post_process_providers[idx].base_url.clone();
                     ui.horizontal(|ui| {
                         dim_label(ui, "Base URL");
@@ -1039,14 +1254,27 @@ impl SettingsApp {
 
         // Prompts section
         section(ui, "Prompts", |ui| {
-            if !enabled { ui.disable(); }
+            if !enabled {
+                ui.disable();
+            }
 
-            let prompts: Vec<(String, String)> = self.settings.post_process_prompts.iter().map(|p| (p.id.clone(), p.name.clone())).collect();
+            let prompts: Vec<(String, String)> = self
+                .settings
+                .post_process_prompts
+                .iter()
+                .map(|p| (p.id.clone(), p.name.clone()))
+                .collect();
             let selected_id = self.settings.post_process_selected_prompt_id.clone();
-            let current_prompt_label = selected_id.as_ref()
+            let current_prompt_label = selected_id
+                .as_ref()
                 .and_then(|id| prompts.iter().find(|(pid, _)| pid == id))
                 .map(|(_, name)| name.as_str())
-                .unwrap_or_else(|| prompts.first().map(|(_, name)| name.as_str()).unwrap_or("None"));
+                .unwrap_or_else(|| {
+                    prompts
+                        .first()
+                        .map(|(_, name)| name.as_str())
+                        .unwrap_or("None")
+                });
 
             ui.horizontal(|ui| {
                 dim_label(ui, "Active");
@@ -1065,10 +1293,22 @@ impl SettingsApp {
                 // Delete button inline
                 if self.settings.post_process_prompts.len() > 1 {
                     if let Some(ref del_id) = selected_id {
-                        if ui.button(egui::RichText::new("Del").color(ACCENT_RED).monospace().size(10.0)).clicked() {
+                        if ui
+                            .button(
+                                egui::RichText::new("Del")
+                                    .color(ACCENT_RED)
+                                    .monospace()
+                                    .size(10.0),
+                            )
+                            .clicked()
+                        {
                             let del = del_id.clone();
                             self.settings.post_process_prompts.retain(|p| p.id != del);
-                            self.settings.post_process_selected_prompt_id = self.settings.post_process_prompts.first().map(|p| p.id.clone());
+                            self.settings.post_process_selected_prompt_id = self
+                                .settings
+                                .post_process_prompts
+                                .first()
+                                .map(|p| p.id.clone());
                             self.save_settings();
                         }
                     }
@@ -1076,11 +1316,24 @@ impl SettingsApp {
             });
 
             // Edit selected prompt
-            let editing_id = self.settings.post_process_selected_prompt_id.clone()
-                .or_else(|| self.settings.post_process_prompts.first().map(|p| p.id.clone()));
+            let editing_id = self
+                .settings
+                .post_process_selected_prompt_id
+                .clone()
+                .or_else(|| {
+                    self.settings
+                        .post_process_prompts
+                        .first()
+                        .map(|p| p.id.clone())
+                });
 
             if let Some(ref edit_id) = editing_id {
-                if let Some(idx) = self.settings.post_process_prompts.iter().position(|p| p.id == *edit_id) {
+                if let Some(idx) = self
+                    .settings
+                    .post_process_prompts
+                    .iter()
+                    .position(|p| p.id == *edit_id)
+                {
                     let mut name = self.settings.post_process_prompts[idx].name.clone();
                     let mut prompt_text = self.settings.post_process_prompts[idx].prompt.clone();
 
@@ -1114,14 +1367,26 @@ impl SettingsApp {
             });
 
             if !self.new_prompt_name.trim().is_empty() {
-                ui.add(egui::TextEdit::multiline(&mut self.new_prompt_text).desired_rows(3).desired_width(f32::INFINITY));
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.new_prompt_text)
+                        .desired_rows(3)
+                        .desired_width(f32::INFINITY),
+                );
                 if ui.button("Add prompt").clicked() && !self.new_prompt_text.trim().is_empty() {
-                    let id = format!("custom_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
-                    self.settings.post_process_prompts.push(crate::settings::LLMPrompt {
-                        id: id.clone(),
-                        name: self.new_prompt_name.trim().to_string(),
-                        prompt: self.new_prompt_text.trim().to_string(),
-                    });
+                    let id = format!(
+                        "custom_{}",
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_millis()
+                    );
+                    self.settings
+                        .post_process_prompts
+                        .push(crate::settings::LLMPrompt {
+                            id: id.clone(),
+                            name: self.new_prompt_name.trim().to_string(),
+                            prompt: self.new_prompt_text.trim().to_string(),
+                        });
                     self.settings.post_process_selected_prompt_id = Some(id);
                     self.save_settings();
                     self.new_prompt_name.clear();
@@ -1132,19 +1397,47 @@ impl SettingsApp {
 
         // Test section
         section(ui, "Test", |ui| {
-            if !enabled { ui.disable(); }
+            if !enabled {
+                ui.disable();
+            }
 
             ui.columns(2, |cols| {
-                cols[0].label(egui::RichText::new("Input:").color(TEXT_DIM).monospace().size(10.0));
-                cols[0].add(egui::TextEdit::multiline(&mut self.test_input).desired_rows(2).desired_width(f32::INFINITY).font(egui::FontId::new(11.0, egui::FontFamily::Monospace)));
+                cols[0].label(
+                    egui::RichText::new("Input:")
+                        .color(TEXT_DIM)
+                        .monospace()
+                        .size(10.0),
+                );
+                cols[0].add(
+                    egui::TextEdit::multiline(&mut self.test_input)
+                        .desired_rows(2)
+                        .desired_width(f32::INFINITY)
+                        .font(egui::FontId::new(11.0, egui::FontFamily::Monospace)),
+                );
 
-                cols[1].label(egui::RichText::new("Output:").color(TEXT_DIM).monospace().size(10.0));
+                cols[1].label(
+                    egui::RichText::new("Output:")
+                        .color(TEXT_DIM)
+                        .monospace()
+                        .size(10.0),
+                );
                 if let Some(result) = self.test_result.lock().unwrap().as_ref() {
                     let mut result_display = result.clone();
-                    cols[1].add(egui::TextEdit::multiline(&mut result_display).desired_rows(2).desired_width(f32::INFINITY).interactive(false).font(egui::FontId::new(11.0, egui::FontFamily::Monospace)));
+                    cols[1].add(
+                        egui::TextEdit::multiline(&mut result_display)
+                            .desired_rows(2)
+                            .desired_width(f32::INFINITY)
+                            .interactive(false)
+                            .font(egui::FontId::new(11.0, egui::FontFamily::Monospace)),
+                    );
                 } else {
                     let mut empty = String::from("...");
-                    cols[1].add(egui::TextEdit::multiline(&mut empty).desired_rows(2).desired_width(f32::INFINITY).interactive(false));
+                    cols[1].add(
+                        egui::TextEdit::multiline(&mut empty)
+                            .desired_rows(2)
+                            .desired_width(f32::INFINITY)
+                            .interactive(false),
+                    );
                 }
             });
 
@@ -1152,7 +1445,11 @@ impl SettingsApp {
             ui.horizontal(|ui| {
                 if is_running {
                     ui.spinner();
-                    ui.label(egui::RichText::new("Processing...").color(ACCENT_YELLOW).monospace());
+                    ui.label(
+                        egui::RichText::new("Processing...")
+                            .color(ACCENT_YELLOW)
+                            .monospace(),
+                    );
                 } else if ui.button("Run test").clicked() && !self.test_input.trim().is_empty() {
                     let settings = self.settings.clone();
                     let input = self.test_input.clone();
@@ -1162,8 +1459,11 @@ impl SettingsApp {
                     *result_ref.lock().unwrap() = None;
                     std::thread::spawn(move || {
                         let rt = tokio::runtime::Runtime::new().unwrap();
-                        let output = rt.block_on(crate::actions::post_process_transcription(&settings, &input));
-                        *result_ref.lock().unwrap() = Some(output.unwrap_or_else(|| "ERROR: returned nothing.".to_string()));
+                        let output = rt.block_on(crate::actions::post_process_transcription(
+                            &settings, &input,
+                        ));
+                        *result_ref.lock().unwrap() =
+                            Some(output.unwrap_or_else(|| "ERROR: returned nothing.".to_string()));
                         running_ref.store(false, Ordering::Relaxed);
                     });
                 }
@@ -1201,7 +1501,14 @@ impl SettingsApp {
                                 (PasteMethod::ExternalScript, "Script"),
                                 (PasteMethod::None, "None"),
                             ] {
-                                if ui.selectable_value(&mut self.settings.paste_method, method, label).changed() {
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.paste_method,
+                                        method,
+                                        label,
+                                    )
+                                    .changed()
+                                {
                                     self.save_settings();
                                 }
                             }
@@ -1211,9 +1518,14 @@ impl SettingsApp {
                 if self.settings.paste_method == PasteMethod::ExternalScript {
                     ui.horizontal(|ui| {
                         dim_label(ui, "Script");
-                        let mut path = self.settings.external_script_path.clone().unwrap_or_default();
+                        let mut path = self
+                            .settings
+                            .external_script_path
+                            .clone()
+                            .unwrap_or_default();
                         if ui.text_edit_singleline(&mut path).changed() {
-                            self.settings.external_script_path = if path.is_empty() { None } else { Some(path) };
+                            self.settings.external_script_path =
+                                if path.is_empty() { None } else { Some(path) };
                             self.save_settings();
                         }
                     });
@@ -1222,7 +1534,10 @@ impl SettingsApp {
                 ui.horizontal(|ui| {
                     dim_label(ui, "Delay");
                     let mut delay = self.settings.paste_delay_ms as i32;
-                    if ui.add(egui::Slider::new(&mut delay, 0..=500).suffix("ms")).changed() {
+                    if ui
+                        .add(egui::Slider::new(&mut delay, 0..=500).suffix("ms"))
+                        .changed()
+                    {
                         self.settings.paste_delay_ms = delay as u64;
                         self.save_settings();
                     }
@@ -1241,7 +1556,10 @@ impl SettingsApp {
                                 (TypingTool::Ydotool, "ydotool"),
                                 (TypingTool::Xdotool, "xdotool"),
                             ] {
-                                if ui.selectable_value(&mut self.settings.typing_tool, tool, label).changed() {
+                                if ui
+                                    .selectable_value(&mut self.settings.typing_tool, tool, label)
+                                    .changed()
+                                {
                                     self.save_settings();
                                 }
                             }
@@ -1256,12 +1574,33 @@ impl SettingsApp {
                             ClipboardHandling::CopyToClipboard => "Copy to clip",
                         })
                         .show_ui(ui, |ui| {
-                            if ui.selectable_value(&mut self.settings.clipboard_handling, ClipboardHandling::DontModify, "Don't modify").changed() { self.save_settings(); }
-                            if ui.selectable_value(&mut self.settings.clipboard_handling, ClipboardHandling::CopyToClipboard, "Copy to clipboard").changed() { self.save_settings(); }
+                            if ui
+                                .selectable_value(
+                                    &mut self.settings.clipboard_handling,
+                                    ClipboardHandling::DontModify,
+                                    "Don't modify",
+                                )
+                                .changed()
+                            {
+                                self.save_settings();
+                            }
+                            if ui
+                                .selectable_value(
+                                    &mut self.settings.clipboard_handling,
+                                    ClipboardHandling::CopyToClipboard,
+                                    "Copy to clipboard",
+                                )
+                                .changed()
+                            {
+                                self.save_settings();
+                            }
                         });
                 });
 
-                if ui.checkbox(&mut self.settings.auto_submit, "Auto-submit").changed() {
+                if ui
+                    .checkbox(&mut self.settings.auto_submit, "Auto-submit")
+                    .changed()
+                {
                     self.save_settings();
                 }
 
@@ -1271,8 +1610,21 @@ impl SettingsApp {
                         egui::ComboBox::from_id_salt("auto_submit_key")
                             .selected_text(format!("{:?}", self.settings.auto_submit_key))
                             .show_ui(ui, |ui| {
-                                for key in [AutoSubmitKey::Enter, AutoSubmitKey::CtrlEnter, AutoSubmitKey::CmdEnter] {
-                                    if ui.selectable_value(&mut self.settings.auto_submit_key, key, format!("{:?}", key)).changed() { self.save_settings(); }
+                                for key in [
+                                    AutoSubmitKey::Enter,
+                                    AutoSubmitKey::CtrlEnter,
+                                    AutoSubmitKey::CmdEnter,
+                                ] {
+                                    if ui
+                                        .selectable_value(
+                                            &mut self.settings.auto_submit_key,
+                                            key,
+                                            format!("{:?}", key),
+                                        )
+                                        .changed()
+                                    {
+                                        self.save_settings();
+                                    }
                                 }
                             });
                     });
@@ -1290,8 +1642,21 @@ impl SettingsApp {
                             OverlayPosition::Bottom => "Bottom",
                         })
                         .show_ui(ui, |ui| {
-                            for (pos, label) in [(OverlayPosition::None, "None"), (OverlayPosition::Top, "Top"), (OverlayPosition::Bottom, "Bottom")] {
-                                if ui.selectable_value(&mut self.settings.overlay_position, pos, label).changed() { self.save_settings(); }
+                            for (pos, label) in [
+                                (OverlayPosition::None, "None"),
+                                (OverlayPosition::Top, "Top"),
+                                (OverlayPosition::Bottom, "Bottom"),
+                            ] {
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.overlay_position,
+                                        pos,
+                                        label,
+                                    )
+                                    .changed()
+                                {
+                                    self.save_settings();
+                                }
                             }
                         });
                 });
@@ -1319,7 +1684,16 @@ impl SettingsApp {
                                 (ModelUnloadTimeout::Min15, "15 min"),
                                 (ModelUnloadTimeout::Hour1, "1 hour"),
                             ] {
-                                if ui.selectable_value(&mut self.settings.model_unload_timeout, timeout, label).changed() { self.save_settings(); }
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.model_unload_timeout,
+                                        timeout,
+                                        label,
+                                    )
+                                    .changed()
+                                {
+                                    self.save_settings();
+                                }
                             }
                         });
                 });
@@ -1332,7 +1706,16 @@ impl SettingsApp {
                         .selected_text(format!("{}", self.settings.history_limit))
                         .show_ui(ui, |ui| {
                             for limit in [5, 10, 25, 50, 100, 250] {
-                                if ui.selectable_value(&mut self.settings.history_limit, limit, format!("{}", limit)).changed() { self.save_settings(); }
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.history_limit,
+                                        limit,
+                                        format!("{}", limit),
+                                    )
+                                    .changed()
+                                {
+                                    self.save_settings();
+                                }
                             }
                         });
                 });
@@ -1347,12 +1730,25 @@ impl SettingsApp {
                         (RecordingRetentionPeriod::Weeks2, "2 weeks"),
                         (RecordingRetentionPeriod::Months3, "3 months"),
                     ];
-                    let current_label = options.iter().find(|(v, _)| *v == self.settings.recording_retention_period).map(|(_, l)| *l).unwrap_or("?");
+                    let current_label = options
+                        .iter()
+                        .find(|(v, _)| *v == self.settings.recording_retention_period)
+                        .map(|(_, l)| *l)
+                        .unwrap_or("?");
                     egui::ComboBox::from_id_salt("retention_period")
                         .selected_text(current_label)
                         .show_ui(ui, |ui| {
                             for (value, label) in options {
-                                if ui.selectable_value(&mut self.settings.recording_retention_period, value, label).changed() { self.save_settings(); }
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.recording_retention_period,
+                                        value,
+                                        label,
+                                    )
+                                    .changed()
+                                {
+                                    self.save_settings();
+                                }
                             }
                         });
                 });
@@ -1364,13 +1760,30 @@ impl SettingsApp {
                     egui::ComboBox::from_id_salt("keyboard_impl")
                         .selected_text(format!("{:?}", self.settings.keyboard_implementation))
                         .show_ui(ui, |ui| {
-                            for (impl_, label) in [(KeyboardImplementation::Tauri, "Tauri"), (KeyboardImplementation::HandyKeys, "HandyKeys")] {
-                                if ui.selectable_value(&mut self.settings.keyboard_implementation, impl_, label).changed() { self.save_settings(); }
+                            for (impl_, label) in [
+                                (KeyboardImplementation::Tauri, "Tauri"),
+                                (KeyboardImplementation::HandyKeys, "HandyKeys"),
+                            ] {
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.keyboard_implementation,
+                                        impl_,
+                                        label,
+                                    )
+                                    .changed()
+                                {
+                                    self.save_settings();
+                                }
                             }
                         });
                 });
 
-                if ui.checkbox(&mut self.settings.debug_mode, "Debug mode").changed() { self.save_settings(); }
+                if ui
+                    .checkbox(&mut self.settings.debug_mode, "Debug mode")
+                    .changed()
+                {
+                    self.save_settings();
+                }
 
                 if self.settings.debug_mode {
                     ui.horizontal(|ui| {
@@ -1378,14 +1791,34 @@ impl SettingsApp {
                         egui::ComboBox::from_id_salt("log_level")
                             .selected_text(format!("{:?}", self.settings.log_level))
                             .show_ui(ui, |ui| {
-                                for (level, label) in [(LogLevel::Error, "Error"), (LogLevel::Warn, "Warn"), (LogLevel::Info, "Info"), (LogLevel::Debug, "Debug"), (LogLevel::Trace, "Trace")] {
-                                    if ui.selectable_value(&mut self.settings.log_level, level, label).changed() { self.save_settings(); }
+                                for (level, label) in [
+                                    (LogLevel::Error, "Error"),
+                                    (LogLevel::Warn, "Warn"),
+                                    (LogLevel::Info, "Info"),
+                                    (LogLevel::Debug, "Debug"),
+                                    (LogLevel::Trace, "Trace"),
+                                ] {
+                                    if ui
+                                        .selectable_value(
+                                            &mut self.settings.log_level,
+                                            level,
+                                            label,
+                                        )
+                                        .changed()
+                                    {
+                                        self.save_settings();
+                                    }
                                 }
                             });
                     });
                 }
 
-                if ui.checkbox(&mut self.settings.experimental_enabled, "Experimental").changed() { self.save_settings(); }
+                if ui
+                    .checkbox(&mut self.settings.experimental_enabled, "Experimental")
+                    .changed()
+                {
+                    self.save_settings();
+                }
             });
         });
     }
@@ -1404,8 +1837,15 @@ impl SettingsApp {
                     .strong(),
             );
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("Refresh").clicked() { self.reload_history(); }
-                ui.label(egui::RichText::new(format!("{} entries", self.history_entries.len())).color(TEXT_DIM).monospace().size(10.0));
+                if ui.button("Refresh").clicked() {
+                    self.reload_history();
+                }
+                ui.label(
+                    egui::RichText::new(format!("{} entries", self.history_entries.len()))
+                        .color(TEXT_DIM)
+                        .monospace()
+                        .size(10.0),
+                );
             });
         });
         ui.add_space(2.0);
@@ -1413,7 +1853,12 @@ impl SettingsApp {
         if self.history_entries.is_empty() {
             ui.add_space(32.0);
             ui.vertical_centered(|ui| {
-                ui.label(egui::RichText::new("No transcription history.").italics().color(TEXT_DIM).monospace());
+                ui.label(
+                    egui::RichText::new("No transcription history.")
+                        .italics()
+                        .color(TEXT_DIM)
+                        .monospace(),
+                );
             });
             return;
         }
@@ -1425,12 +1870,29 @@ impl SettingsApp {
         egui::Frame::new()
             .fill(BG_CARD)
             .inner_margin(egui::Margin::symmetric(10, 4))
-            .corner_radius(egui::CornerRadius { nw: 6, ne: 6, sw: 0, se: 0 })
+            .corner_radius(egui::CornerRadius {
+                nw: 6,
+                ne: 6,
+                sw: 0,
+                se: 0,
+            })
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new("TIMESTAMP").color(ACCENT_CYAN).monospace().size(10.0).strong());
+                    ui.label(
+                        egui::RichText::new("TIMESTAMP")
+                            .color(ACCENT_CYAN)
+                            .monospace()
+                            .size(10.0)
+                            .strong(),
+                    );
                     ui.add_space(60.0);
-                    ui.label(egui::RichText::new("TRANSCRIPTION").color(ACCENT_CYAN).monospace().size(10.0).strong());
+                    ui.label(
+                        egui::RichText::new("TRANSCRIPTION")
+                            .color(ACCENT_CYAN)
+                            .monospace()
+                            .size(10.0)
+                            .strong(),
+                    );
                 });
             });
 
@@ -1443,25 +1905,57 @@ impl SettingsApp {
                     .stroke(egui::Stroke::new(0.5, BORDER_SUBTLE))
                     .inner_margin(egui::Margin::symmetric(10, 6))
                     .show(ui, |ui| {
-                        let text = entry.post_processed_text.as_deref().unwrap_or(&entry.transcription_text);
-                        let preview = if text.len() > 100 { format!("{}...", &text[..100]) } else { text.to_string() };
+                        let text = entry
+                            .post_processed_text
+                            .as_deref()
+                            .unwrap_or(&entry.transcription_text);
+                        let preview = if text.len() > 100 {
+                            format!("{}...", &text[..100])
+                        } else {
+                            text.to_string()
+                        };
 
                         ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new(&entry.title).color(TEXT_DIM).monospace().size(10.0));
+                            ui.label(
+                                egui::RichText::new(&entry.title)
+                                    .color(TEXT_DIM)
+                                    .monospace()
+                                    .size(10.0),
+                            );
                             if entry.post_processed_text.is_some() {
                                 badge(ui, "PP", ACCENT_CYAN);
                             }
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                if ui.small_button(egui::RichText::new("x").color(ACCENT_RED).monospace()).clicked() {
-                                    entry_to_delete = Some(entry.id);
-                                }
-                                if ui.small_button(egui::RichText::new("cp").color(ACCENT_GREEN).monospace()).clicked() {
-                                    text_to_copy = Some(text.to_string());
-                                }
-                            });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui
+                                        .small_button(
+                                            egui::RichText::new("x").color(ACCENT_RED).monospace(),
+                                        )
+                                        .clicked()
+                                    {
+                                        entry_to_delete = Some(entry.id);
+                                    }
+                                    if ui
+                                        .small_button(
+                                            egui::RichText::new("cp")
+                                                .color(ACCENT_GREEN)
+                                                .monospace(),
+                                        )
+                                        .clicked()
+                                    {
+                                        text_to_copy = Some(text.to_string());
+                                    }
+                                },
+                            );
                         });
 
-                        ui.label(egui::RichText::new(&preview).color(TEXT_PRIMARY).monospace().size(11.0));
+                        ui.label(
+                            egui::RichText::new(&preview)
+                                .color(TEXT_PRIMARY)
+                                .monospace()
+                                .size(11.0),
+                        );
                     });
             }
         });
@@ -1492,9 +1986,6 @@ impl eframe::App for SettingsApp {
         apply_hacker_theme(ctx);
         ctx.request_repaint_after(std::time::Duration::from_millis(500));
 
-
-
-
         if self.history_dirty.swap(false, Ordering::Relaxed) {
             self.reload_history();
         }
@@ -1508,38 +1999,65 @@ impl eframe::App for SettingsApp {
         // ── SIDEBAR ──
         egui::SidePanel::left("nav_sidebar")
             .exact_width(170.0)
-            .frame(egui::Frame::new().fill(BG_SIDEBAR).inner_margin(egui::Margin::same(0)))
+            .frame(
+                egui::Frame::new()
+                    .fill(BG_SIDEBAR)
+                    .inner_margin(egui::Margin::same(0)),
+            )
             .show(ctx, |ui| {
                 self.render_sidebar(ctx, ui);
             });
 
         // ── STATUS BAR ──
         egui::TopBottomPanel::bottom("status_bar")
-            .frame(egui::Frame::new().fill(BG_SIDEBAR).inner_margin(egui::Margin::symmetric(12, 4)))
+            .frame(
+                egui::Frame::new()
+                    .fill(BG_SIDEBAR)
+                    .inner_margin(egui::Margin::symmetric(12, 4)),
+            )
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     if let Some((msg, _)) = &self.status_message {
-                        ui.label(egui::RichText::new(format!("> {}", msg)).color(ACCENT_GREEN).monospace().size(10.0));
+                        ui.label(
+                            egui::RichText::new(format!("> {}", msg))
+                                .color(ACCENT_GREEN)
+                                .monospace()
+                                .size(10.0),
+                        );
                     } else {
-                        let model_name = if self.settings.selected_model.is_empty() { "none".to_string() } else { self.settings.selected_model.clone() };
-                        ui.label(egui::RichText::new(format!("[READY] model: {} | lang: {}", model_name, self.settings.selected_language)).color(TEXT_DIM).monospace().size(9.0));
+                        let model_name = if self.settings.selected_model.is_empty() {
+                            "none".to_string()
+                        } else {
+                            self.settings.selected_model.clone()
+                        };
+                        ui.label(
+                            egui::RichText::new(format!(
+                                "[READY] model: {} | lang: {}",
+                                model_name, self.settings.selected_language
+                            ))
+                            .color(TEXT_DIM)
+                            .monospace()
+                            .size(9.0),
+                        );
                     }
                 });
             });
 
         // ── MAIN CONTENT ──
         egui::CentralPanel::default()
-            .frame(egui::Frame::new().fill(BG_DARK).inner_margin(egui::Margin::same(14)))
+            .frame(
+                egui::Frame::new()
+                    .fill(BG_DARK)
+                    .inner_margin(egui::Margin::same(14)),
+            )
             .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    match self.current_tab {
-                        Tab::General => self.render_general_tab(ui),
-                        Tab::Models => self.render_models_tab(ui),
-                        Tab::Words => self.render_words_tab(ui),
-                        Tab::PostProcess => self.render_post_process_tab(ui),
-                        Tab::Advanced => self.render_advanced_tab(ui),
-                        Tab::History => self.render_history_tab(ui),
-                    }
+                egui::ScrollArea::vertical().show(ui, |ui| match self.current_tab {
+                    Tab::General => self.render_general_tab(ui),
+                    Tab::Models => self.render_models_tab(ui),
+                    Tab::Words => self.render_words_tab(ui),
+                    Tab::PostProcess => self.render_post_process_tab(ui),
+                    Tab::Advanced => self.render_advanced_tab(ui),
+                    Tab::History => self.render_history_tab(ui),
                 });
             });
     }

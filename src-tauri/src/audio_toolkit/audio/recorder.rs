@@ -169,7 +169,7 @@ impl AudioRecorder {
             }
         });
 
-        match init_rx.recv() {
+        match init_rx.recv_timeout(Duration::from_secs(4)) {
             Ok(Ok(())) => {
                 self.device = Some(device);
                 self.cmd_tx = Some(cmd_tx);
@@ -185,11 +185,17 @@ impl AudioRecorder {
                 };
                 Err(Box::new(Error::new(kind, error_message)))
             }
-            Err(recv_error) => {
-                let _ = worker.join();
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                let _ = cmd_tx.send(Cmd::Shutdown);
                 Err(Box::new(Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to initialize microphone worker: {recv_error}"),
+                    std::io::ErrorKind::TimedOut,
+                    "Timed out initializing microphone input. Check the selected microphone device.",
+                )))
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => {
+                let _ = worker.join();
+                Err(Box::new(Error::other(
+                    "Failed to initialize microphone worker",
                 )))
             }
         }
@@ -400,29 +406,10 @@ fn run_consumer(
     }
 
     loop {
-        let chunk = match sample_rx.recv() {
-            Ok(c) => c,
-            Err(_) => break, // stream closed
-        };
-
-        let raw = match chunk {
-            AudioChunk::Samples(s) => s,
-            AudioChunk::EndOfStream => continue,
-        };
-
-        // ---------- spectrum processing ---------------------------------- //
-        if let Some(buckets) = visualizer.feed(&raw) {
-            if let Some(cb) = &level_cb {
-                cb(buckets);
-            }
-        }
-
-        // ---------- existing pipeline ------------------------------------ //
-        frame_resampler.push(&raw, &mut |frame: &[f32]| {
-            handle_frame(frame, recording, &vad, &mut processed_samples)
-        });
-
-        // non-blocking check for a command
+        // Commands must be handled even when the audio callback is silent. On
+        // Windows, some devices can stop delivering samples while still leaving
+        // the stream alive, so blocking forever on sample_rx would make Stop
+        // and Shutdown appear ignored.
         while let Ok(cmd) = cmd_rx.try_recv() {
             match cmd {
                 Cmd::Start => {
@@ -443,7 +430,7 @@ fn run_consumer(
                     // silent — guaranteeing every captured sample is in the channel
                     // ahead of the sentinel.
                     loop {
-                        match sample_rx.recv_timeout(Duration::from_secs(2)) {
+                        match sample_rx.recv_timeout(Duration::from_millis(500)) {
                             Ok(AudioChunk::Samples(remaining)) => {
                                 frame_resampler.push(&remaining, &mut |frame: &[f32]| {
                                     handle_frame(frame, true, &vad, &mut processed_samples)
@@ -473,5 +460,28 @@ fn run_consumer(
                 }
             }
         }
+
+        let chunk = match sample_rx.recv_timeout(Duration::from_millis(20)) {
+            Ok(c) => c,
+            Err(mpsc::RecvTimeoutError::Timeout) => continue,
+            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+        };
+
+        let raw = match chunk {
+            AudioChunk::Samples(s) => s,
+            AudioChunk::EndOfStream => continue,
+        };
+
+        // ---------- spectrum processing ---------------------------------- //
+        if let Some(buckets) = visualizer.feed(&raw) {
+            if let Some(cb) = &level_cb {
+                cb(buckets);
+            }
+        }
+
+        // ---------- existing pipeline ------------------------------------ //
+        frame_resampler.push(&raw, &mut |frame: &[f32]| {
+            handle_frame(frame, recording, &vad, &mut processed_samples)
+        });
     }
 }

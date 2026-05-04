@@ -1,9 +1,17 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Cog, FlaskConical, History, Info, Sparkles, Cpu } from "lucide-react";
-import HandyTextLogo from "./icons/HandyTextLogo";
-import HandyHand from "./icons/HandyHand";
+import {
+  BookOpenText,
+  Cog,
+  Cpu,
+  FlaskConical,
+  History,
+  Info,
+  Sparkles,
+  Terminal,
+} from "lucide-react";
 import { useSettings } from "../hooks/useSettings";
+import BrandLogo from "./BrandLogo";
 import {
   GeneralSettings,
   AdvancedSettings,
@@ -12,6 +20,7 @@ import {
   AboutSettings,
   PostProcessingSettings,
   ModelsSettings,
+  WordsSettings,
 } from "./settings";
 
 export type SidebarSection = keyof typeof SECTIONS_CONFIG;
@@ -26,6 +35,7 @@ interface IconProps {
 
 interface SectionConfig {
   labelKey: string;
+  defaultLabel: string;
   icon: React.ComponentType<IconProps>;
   component: React.ComponentType;
   enabled: (settings: any) => boolean;
@@ -34,42 +44,56 @@ interface SectionConfig {
 export const SECTIONS_CONFIG = {
   general: {
     labelKey: "sidebar.general",
-    icon: HandyHand,
+    defaultLabel: "General",
+    icon: Terminal,
     component: GeneralSettings,
     enabled: () => true,
   },
   models: {
     labelKey: "sidebar.models",
+    defaultLabel: "Models",
     icon: Cpu,
     component: ModelsSettings,
     enabled: () => true,
   },
-  advanced: {
-    labelKey: "sidebar.advanced",
-    icon: Cog,
-    component: AdvancedSettings,
+  words: {
+    labelKey: "sidebar.words",
+    defaultLabel: "Words",
+    icon: BookOpenText,
+    component: WordsSettings,
     enabled: () => true,
   },
   postprocessing: {
     labelKey: "sidebar.postProcessing",
+    defaultLabel: "Process",
     icon: Sparkles,
     component: PostProcessingSettings,
-    enabled: (settings) => settings?.post_process_enabled ?? false,
+    enabled: () => true,
+  },
+  advanced: {
+    labelKey: "sidebar.advanced",
+    defaultLabel: "Advanced",
+    icon: Cog,
+    component: AdvancedSettings,
+    enabled: () => true,
   },
   history: {
     labelKey: "sidebar.history",
+    defaultLabel: "History",
     icon: History,
     component: HistorySettings,
     enabled: () => true,
   },
   debug: {
     labelKey: "sidebar.debug",
+    defaultLabel: "Debug",
     icon: FlaskConical,
     component: DebugSettings,
     enabled: (settings) => settings?.debug_mode ?? false,
   },
   about: {
     labelKey: "sidebar.about",
+    defaultLabel: "About",
     icon: Info,
     component: AboutSettings,
     enabled: () => true,
@@ -93,29 +117,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
   return (
-    <div className="flex flex-col w-40 h-full border-e border-mid-gray/20 items-center px-2">
-      <HandyTextLogo width={120} className="m-4" />
-      <div className="flex flex-col w-full items-center gap-1 pt-2 border-t border-mid-gray/20">
+    <div className="flex flex-col w-44 h-full border-e border-logo-stroke/40 bg-[#080c10] items-center px-2">
+      <BrandLogo className="w-full px-3 py-4" size="md" />
+      <div className="flex flex-col w-full items-center gap-1 pt-2 border-t border-logo-stroke/40">
         {availableSections.map((section) => {
           const Icon = section.icon;
           const isActive = activeSection === section.id;
+          const label = t(section.labelKey, {
+            defaultValue: section.defaultLabel,
+          });
 
           return (
             <div
               key={section.id}
-              className={`flex gap-2 items-center p-2 w-full rounded-lg cursor-pointer transition-colors ${
+              className={`flex gap-2 items-center p-2 w-full rounded-md cursor-pointer transition-colors font-mono ${
                 isActive
-                  ? "bg-logo-primary/80"
-                  : "hover:bg-mid-gray/20 hover:opacity-100 opacity-85"
+                  ? "bg-logo-primary/15 text-logo-primary border border-logo-primary/45"
+                  : "border border-transparent hover:bg-logo-primary/10 hover:text-logo-primary opacity-85 hover:opacity-100"
               }`}
               onClick={() => onSectionChange(section.id)}
             >
-              <Icon width={24} height={24} className="shrink-0" />
+              <Icon width={20} height={20} className="shrink-0" />
               <p
-                className="text-sm font-medium truncate"
-                title={t(section.labelKey)}
+                className="text-sm font-medium truncate tracking-normal"
+                title={label}
               >
-                {t(section.labelKey)}
+                {label}
               </p>
             </div>
           );

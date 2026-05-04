@@ -113,12 +113,13 @@ pub enum OverlayPosition {
     Bottom,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelUnloadTimeout {
     Never,
     Immediately,
     Min2,
+    #[default]
     Min5,
     Min10,
     Min15,
@@ -137,16 +138,18 @@ pub enum PasteMethod {
     ExternalScript,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ClipboardHandling {
+    #[default]
     DontModify,
     CopyToClipboard,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum AutoSubmitKey {
+    #[default]
     Enter,
     CtrlEnter,
     CmdEnter,
@@ -171,38 +174,13 @@ pub enum KeyboardImplementation {
 
 impl Default for KeyboardImplementation {
     fn default() -> Self {
-        #[cfg(target_os = "linux")]
-        return KeyboardImplementation::Tauri;
-        #[cfg(not(target_os = "linux"))]
-        return KeyboardImplementation::HandyKeys;
-    }
-}
-
-impl Default for ModelUnloadTimeout {
-    fn default() -> Self {
-        ModelUnloadTimeout::Min5
+        crate::platform::shortcuts::default_keyboard_implementation()
     }
 }
 
 impl Default for PasteMethod {
     fn default() -> Self {
-        // Default to CtrlV for macOS and Windows, Direct for Linux
-        #[cfg(target_os = "linux")]
-        return PasteMethod::Direct;
-        #[cfg(not(target_os = "linux"))]
-        return PasteMethod::CtrlV;
-    }
-}
-
-impl Default for ClipboardHandling {
-    fn default() -> Self {
-        ClipboardHandling::DontModify
-    }
-}
-
-impl Default for AutoSubmitKey {
-    fn default() -> Self {
-        AutoSubmitKey::Enter
+        crate::platform::clipboard::default_paste_method()
     }
 }
 
@@ -239,7 +217,7 @@ pub enum SoundTheme {
 }
 
 impl SoundTheme {
-    fn as_str(&self) -> &'static str {
+    fn as_str(self) -> &'static str {
         match self {
             SoundTheme::Marimba => "marimba",
             SoundTheme::Pop => "pop",
@@ -247,18 +225,19 @@ impl SoundTheme {
         }
     }
 
-    pub fn to_start_path(&self) -> String {
+    pub fn to_start_path(self) -> String {
         format!("resources/{}_start.wav", self.as_str())
     }
 
-    pub fn to_stop_path(&self) -> String {
+    pub fn to_stop_path(self) -> String {
         format!("resources/{}_stop.wav", self.as_str())
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum TypingTool {
+    #[default]
     Auto,
     Wtype,
     Kwtype,
@@ -267,41 +246,25 @@ pub enum TypingTool {
     Xdotool,
 }
 
-impl Default for TypingTool {
-    fn default() -> Self {
-        TypingTool::Auto
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum WhisperAcceleratorSetting {
+    #[default]
     Auto,
     Cpu,
     Gpu,
 }
 
-impl Default for WhisperAcceleratorSetting {
-    fn default() -> Self {
-        WhisperAcceleratorSetting::Auto
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum OrtAcceleratorSetting {
+    #[default]
     Auto,
     Cpu,
     Cuda,
     #[serde(rename = "directml")]
     DirectMl,
     Rocm,
-}
-
-impl Default for OrtAcceleratorSetting {
-    fn default() -> Self {
-        OrtAcceleratorSetting::Auto
-    }
 }
 
 /// A custom word entry with optional hard aliases and blacklist.
@@ -356,8 +319,7 @@ impl<'de> Deserialize<'de> for CustomWordEntry {
                     #[serde(default)]
                     blacklist: Vec<String>,
                 }
-                let inner =
-                    Inner::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                let inner = Inner::deserialize(de::value::MapAccessDeserializer::new(map))?;
                 Ok(CustomWordEntry {
                     word: inner.word,
                     aliases: inner.aliases,
@@ -484,7 +446,7 @@ fn default_autostart_enabled() -> bool {
 }
 
 fn default_update_checks_enabled() -> bool {
-    true
+    false
 }
 
 fn default_selected_language() -> String {
@@ -727,14 +689,7 @@ fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
 pub const SETTINGS_STORE_PATH: &str = "settings_store.json";
 
 pub fn get_default_settings() -> AppSettings {
-    #[cfg(target_os = "windows")]
-    let default_shortcut = "ctrl+space";
-    #[cfg(target_os = "macos")]
-    let default_shortcut = "option+space";
-    #[cfg(target_os = "linux")]
-    let default_shortcut = "ctrl+space";
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    let default_shortcut = "alt+space";
+    let default_shortcut = crate::platform::shortcuts::default_transcribe_shortcut();
 
     let mut bindings = HashMap::new();
     bindings.insert(
@@ -747,14 +702,7 @@ pub fn get_default_settings() -> AppSettings {
             current_binding: default_shortcut.to_string(),
         },
     );
-    #[cfg(target_os = "windows")]
-    let default_post_process_shortcut = "ctrl+shift+space";
-    #[cfg(target_os = "macos")]
-    let default_post_process_shortcut = "option+shift+space";
-    #[cfg(target_os = "linux")]
-    let default_post_process_shortcut = "ctrl+shift+space";
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    let default_post_process_shortcut = "alt+shift+space";
+    let default_post_process_shortcut = crate::platform::shortcuts::default_post_process_shortcut();
 
     bindings.insert(
         "transcribe_with_post_process".to_string(),
@@ -867,9 +815,11 @@ pub fn load_or_create_app_settings(app: &AppHandle) -> AppSettings {
 
                 // Merge default bindings into existing settings
                 for (key, value) in default_settings.bindings {
-                    if !settings.bindings.contains_key(&key) {
-                        debug!("Adding missing binding: {}", key);
-                        settings.bindings.insert(key, value);
+                    if let std::collections::hash_map::Entry::Vacant(entry) =
+                        settings.bindings.entry(key)
+                    {
+                        debug!("Adding missing binding: {}", entry.key());
+                        entry.insert(value);
                         updated = true;
                     }
                 }

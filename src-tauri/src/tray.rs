@@ -1,6 +1,7 @@
 use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::managers::model::ModelManager;
 use crate::managers::transcription::TranscriptionManager;
+use crate::platform;
 use crate::settings;
 use crate::tray_i18n::get_tray_translations;
 use log::{error, info, warn};
@@ -8,7 +9,7 @@ use std::sync::Arc;
 use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::TrayIcon;
-use tauri::{AppHandle, Manager, Theme};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -18,55 +19,12 @@ pub enum TrayIconState {
     Transcribing,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum AppTheme {
-    Dark,
-    Light,
-    Colored, // Pink/colored theme for Linux
-}
-
-/// Gets the current app theme, with Linux defaulting to Colored theme
-pub fn get_current_theme(app: &AppHandle) -> AppTheme {
-    if cfg!(target_os = "linux") {
-        // On Linux, always use the colored theme
-        AppTheme::Colored
-    } else {
-        // On other platforms, map system theme to our app theme
-        if let Some(main_window) = app.get_webview_window("main") {
-            match main_window.theme().unwrap_or(Theme::Dark) {
-                Theme::Light => AppTheme::Light,
-                Theme::Dark => AppTheme::Dark,
-                _ => AppTheme::Dark, // Default fallback
-            }
-        } else {
-            AppTheme::Dark
-        }
-    }
-}
-
-/// Gets the appropriate icon path for the given theme and state
-pub fn get_icon_path(theme: AppTheme, state: TrayIconState) -> &'static str {
-    match (theme, state) {
-        // Dark theme uses light icons
-        (AppTheme::Dark, TrayIconState::Idle) => "resources/tray_idle.png",
-        (AppTheme::Dark, TrayIconState::Recording) => "resources/tray_recording.png",
-        (AppTheme::Dark, TrayIconState::Transcribing) => "resources/tray_transcribing.png",
-        // Light theme uses dark icons
-        (AppTheme::Light, TrayIconState::Idle) => "resources/tray_idle_dark.png",
-        (AppTheme::Light, TrayIconState::Recording) => "resources/tray_recording_dark.png",
-        (AppTheme::Light, TrayIconState::Transcribing) => "resources/tray_transcribing_dark.png",
-        // Colored theme uses pink icons (for Linux)
-        (AppTheme::Colored, TrayIconState::Idle) => "resources/handy.png",
-        (AppTheme::Colored, TrayIconState::Recording) => "resources/recording.png",
-        (AppTheme::Colored, TrayIconState::Transcribing) => "resources/transcribing.png",
-    }
-}
-
 pub fn change_tray_icon(app: &AppHandle, icon: TrayIconState) {
-    let Some(tray) = app.try_state::<TrayIcon>() else { return };
-    let theme = get_current_theme(app);
-
-    let icon_path = get_icon_path(theme, icon.clone());
+    let Some(tray) = app.try_state::<TrayIcon>() else {
+        return;
+    };
+    let theme = platform::tray::current_theme(app);
+    let icon_path = platform::tray::icon_path(theme, &icon);
 
     let _ = tray.set_icon(Some(
         Image::from_path(
@@ -82,23 +40,21 @@ pub fn change_tray_icon(app: &AppHandle, icon: TrayIconState) {
 }
 
 pub fn update_tray_menu(app: &AppHandle, state: &TrayIconState, locale: Option<&str>) {
-    if app.try_state::<TrayIcon>().is_none() { return; }
+    if app.try_state::<TrayIcon>().is_none() {
+        return;
+    }
     let settings = settings::get_settings(app);
 
     let locale = locale.unwrap_or(&settings.app_language);
     let strings = get_tray_translations(Some(locale.to_string()));
 
-    // Platform-specific accelerators
-    #[cfg(target_os = "macos")]
-    let (settings_accelerator, quit_accelerator) = (Some("Cmd+,"), Some("Cmd+Q"));
-    #[cfg(not(target_os = "macos"))]
-    let (settings_accelerator, quit_accelerator) = (Some("Ctrl+,"), Some("Ctrl+Q"));
+    let (settings_accelerator, quit_accelerator) = platform::tray::menu_accelerators();
 
     // Create common menu items
     let version_label = if cfg!(debug_assertions) {
-        format!("Handy v{} (Dev)", env!("CARGO_PKG_VERSION"))
+        format!("MadWhisp v{} (Dev)", env!("CARGO_PKG_VERSION"))
     } else {
-        format!("Handy v{}", env!("CARGO_PKG_VERSION"))
+        format!("MadWhisp v{}", env!("CARGO_PKG_VERSION"))
     };
     let version_i = MenuItem::with_id(app, "version", &version_label, false, None::<&str>)
         .expect("failed to create version item");
@@ -223,7 +179,9 @@ fn last_transcript_text(entry: &HistoryEntry) -> &str {
 }
 
 pub fn set_tray_visibility(app: &AppHandle, visible: bool) {
-    let Some(tray) = app.try_state::<TrayIcon>() else { return };
+    let Some(tray) = app.try_state::<TrayIcon>() else {
+        return;
+    };
     if let Err(e) = tray.set_visible(visible) {
         error!("Failed to set tray visibility: {}", e);
     } else {
@@ -261,7 +219,7 @@ mod tests {
     fn build_entry(transcription: &str, post_processed: Option<&str>) -> HistoryEntry {
         HistoryEntry {
             id: 1,
-            file_name: "handy-1.wav".to_string(),
+            file_name: "madwhisp-1.wav".to_string(),
             timestamp: 0,
             saved: false,
             title: "Recording".to_string(),

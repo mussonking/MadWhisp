@@ -101,8 +101,20 @@ pub fn spawn_overlay(state: Arc<NativeOverlayState>) {
             cr.new_path();
             cr.arc(w - r, r, r, -std::f64::consts::FRAC_PI_2, 0.0);
             cr.arc(w - r, h - r, r, 0.0, std::f64::consts::FRAC_PI_2);
-            cr.arc(r, h - r, r, std::f64::consts::FRAC_PI_2, std::f64::consts::PI);
-            cr.arc(r, r, r, std::f64::consts::PI, 3.0 * std::f64::consts::FRAC_PI_2);
+            cr.arc(
+                r,
+                h - r,
+                r,
+                std::f64::consts::FRAC_PI_2,
+                std::f64::consts::PI,
+            );
+            cr.arc(
+                r,
+                r,
+                r,
+                std::f64::consts::PI,
+                3.0 * std::f64::consts::FRAC_PI_2,
+            );
             cr.close_path();
 
             // Dark background fill
@@ -191,17 +203,45 @@ fn draw_recording(cr: &gtk::cairo::Context, state: &NativeOverlayState, w: f64, 
 
         let br: f64 = 2.5;
         cr.new_path();
-        cr.arc(x + bar_width - br, y + br, br, -std::f64::consts::FRAC_PI_2, 0.0);
-        cr.arc(x + bar_width - br, y + bar_h - br, br, 0.0, std::f64::consts::FRAC_PI_2);
-        cr.arc(x + br, y + bar_h - br, br, std::f64::consts::FRAC_PI_2, std::f64::consts::PI);
-        cr.arc(x + br, y + br, br, std::f64::consts::PI, 3.0 * std::f64::consts::FRAC_PI_2);
+        cr.arc(
+            x + bar_width - br,
+            y + br,
+            br,
+            -std::f64::consts::FRAC_PI_2,
+            0.0,
+        );
+        cr.arc(
+            x + bar_width - br,
+            y + bar_h - br,
+            br,
+            0.0,
+            std::f64::consts::FRAC_PI_2,
+        );
+        cr.arc(
+            x + br,
+            y + bar_h - br,
+            br,
+            std::f64::consts::FRAC_PI_2,
+            std::f64::consts::PI,
+        );
+        cr.arc(
+            x + br,
+            y + br,
+            br,
+            std::f64::consts::PI,
+            3.0 * std::f64::consts::FRAC_PI_2,
+        );
         cr.close_path();
         let _ = cr.fill();
     }
 
     // "REC" text
     cr.set_source_rgb(1.0, 0.267, 0.267);
-    cr.select_font_face("monospace", gtk::cairo::FontSlant::Normal, gtk::cairo::FontWeight::Bold);
+    cr.select_font_face(
+        "monospace",
+        gtk::cairo::FontSlant::Normal,
+        gtk::cairo::FontWeight::Bold,
+    );
     cr.set_font_size(14.0);
     let rec_x = bars_start_x + bar_count as f64 * (bar_width + gap) + 8.0;
     cr.move_to(rec_x, cy + 5.0);
@@ -219,7 +259,11 @@ fn draw_status(cr: &gtk::cairo::Context, text: &str, r: f64, g: f64, b: f64, w: 
     let dots: String = ".".repeat(dot_count);
 
     cr.set_source_rgb(r, g, b);
-    cr.select_font_face("monospace", gtk::cairo::FontSlant::Normal, gtk::cairo::FontWeight::Normal);
+    cr.select_font_face(
+        "monospace",
+        gtk::cairo::FontSlant::Normal,
+        gtk::cairo::FontWeight::Normal,
+    );
     cr.set_font_size(16.0);
 
     let label = format!("{}{}", text, dots);

@@ -10,7 +10,12 @@ mod helpers;
 mod input;
 mod llm_client;
 mod managers;
+#[cfg(target_os = "linux")]
+mod native_overlay;
+#[cfg(target_os = "linux")]
+mod native_ui;
 mod overlay;
+mod platform;
 pub mod portable;
 mod settings;
 mod shortcut;
@@ -19,10 +24,6 @@ mod transcription_coordinator;
 mod tray;
 mod tray_i18n;
 mod utils;
-#[cfg(target_os = "linux")]
-mod native_overlay;
-#[cfg(target_os = "linux")]
-mod native_ui;
 
 pub use cli::CliArgs;
 #[cfg(debug_assertions)]
@@ -88,71 +89,14 @@ fn build_console_filter() -> env_filter::Filter {
     builder.build()
 }
 
-fn show_main_window(app: &AppHandle) {
-    if let Some(main_window) = app.get_webview_window("main") {
-        if let Err(e) = main_window.unminimize() {
-            log::error!("Failed to unminimize webview window: {}", e);
-        }
-        if let Err(e) = main_window.show() {
-            log::error!("Failed to show webview window: {}", e);
-        }
-        if let Err(e) = main_window.set_focus() {
-            log::error!("Failed to focus webview window: {}", e);
-        }
-        #[cfg(target_os = "macos")]
-        {
-            if let Err(e) = app.set_activation_policy(tauri::ActivationPolicy::Regular) {
-                log::error!("Failed to set activation policy to Regular: {}", e);
-            }
-        }
-        return;
-    }
-
-    let webview_labels = app.webview_windows().keys().cloned().collect::<Vec<_>>();
-    log::error!(
-        "Main window not found. Webview labels: {:?}",
-        webview_labels
-    );
-}
-
-#[allow(unused_variables)]
-fn should_force_show_permissions_window(app: &AppHandle) -> bool {
-    #[cfg(target_os = "windows")]
-    {
-        let model_manager = app.state::<Arc<ModelManager>>();
-        let has_downloaded_models = model_manager
-            .get_available_models()
-            .iter()
-            .any(|model| model.is_downloaded);
-
-        if !has_downloaded_models {
-            return false;
-        }
-
-        let status = commands::audio::get_windows_microphone_permission_status();
-        if status.supported && status.overall_access == commands::audio::PermissionAccess::Denied {
-            log::info!(
-                "Windows microphone permissions are denied; forcing main window visible for onboarding"
-            );
-            return true;
-        }
-    }
-
-    false
-}
-
 fn initialize_core_logic(app_handle: &AppHandle) {
     // Note: Enigo (keyboard/mouse simulation) is NOT initialized here on macOS/Windows.
     // The frontend is responsible for calling the `initialize_enigo` command
     // after onboarding completes. This avoids triggering permission dialogs
     // on macOS before the user is ready.
-    // On Linux with the native UI, the frontend never runs, so we init here.
-    #[cfg(target_os = "linux")]
-    {
-        if let Err(e) = commands::initialize_enigo(app_handle.clone()) {
-            log::error!("Failed to initialize Enigo on Linux: {}", e);
-        }
-    }
+    // On frontendless platforms, platform adapters initialize input directly.
+    platform::app::initialize_frontendless_input(app_handle);
+    platform::onnx_runtime::configure(app_handle);
 
     // Initialize the managers
     let recording_manager = Arc::new(
@@ -176,16 +120,8 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
 
-    // Note: Shortcuts are NOT initialized here on macOS/Windows.
-    // The frontend is responsible for calling the `initialize_shortcuts` command
-    // after permissions are confirmed (on macOS) or after onboarding completes.
-    // On Linux with the native UI, we init shortcuts directly.
-    #[cfg(target_os = "linux")]
-    {
-        if let Err(e) = commands::initialize_shortcuts(app_handle.clone()) {
-            log::error!("Failed to initialize shortcuts on Linux: {}", e);
-        }
-    }
+    // On frontendless platforms, platform adapters initialize shortcuts directly.
+    platform::app::initialize_frontendless_shortcuts(app_handle);
 
     #[cfg(unix)]
     let signals = Signals::new(&[SIGUSR1, SIGUSR2]).unwrap();
@@ -196,23 +132,10 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     #[cfg(unix)]
     signal_handle::setup_socket_listener(app_handle.clone());
 
-    // Apply macOS Accessory policy if starting hidden and tray is available.
-    // If the tray icon is disabled, keep the dock icon so the user can reopen.
-    #[cfg(target_os = "macos")]
-    {
-        let settings = settings::get_settings(app_handle);
-        if settings.start_hidden && settings.show_tray_icon {
-            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
-        }
-    }
+    platform::app::apply_start_hidden_activation_policy(app_handle);
     // On Linux, skip tray entirely — native egui UI replaces the WebView + tray pattern
-    #[cfg(not(target_os = "linux"))]
-    {
-        // Get the current theme to set the appropriate initial icon
-        let initial_theme = tray::get_current_theme(app_handle);
-
-        // Choose the appropriate initial icon based on theme
-        let initial_icon_path = tray::get_icon_path(initial_theme, tray::TrayIconState::Idle);
+    if platform::tray::uses_system_tray() {
+        let initial_icon_path = platform::tray::initial_icon_path(app_handle);
 
         let tray = TrayIconBuilder::new()
             .icon(
@@ -228,12 +151,12 @@ fn initialize_core_logic(app_handle: &AppHandle) {
             .icon_as_template(true)
             .on_menu_event(|app, event| match event.id.as_ref() {
                 "settings" => {
-                    show_main_window(app);
+                    platform::app::show_main_window(app);
                 }
                 "check_updates" => {
                     let settings = settings::get_settings(app);
                     if settings.update_checks_enabled {
-                        show_main_window(app);
+                        platform::app::show_main_window(app);
                         let _ = app.emit("check-for-updates", ());
                     }
                 }
@@ -289,8 +212,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
         utils::update_tray_menu(app_handle, &utils::TrayIconState::Idle, None);
     }
 
-    #[cfg(not(target_os = "linux"))]
-    {
+    if platform::tray::uses_system_tray() {
         // Apply show_tray_icon setting
         let settings = settings::get_settings(app_handle);
         if !settings.show_tray_icon {
@@ -306,7 +228,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 
     // Get the autostart manager and configure based on user setting
     let autostart_manager = app_handle.autolaunch();
-    let settings = settings::get_settings(&app_handle);
+    let settings = settings::get_settings(app_handle);
 
     if settings.autostart_enabled {
         // Enable autostart if user has opted in
@@ -335,7 +257,7 @@ fn trigger_update_check(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 fn show_main_window_command(app: AppHandle) -> Result<(), String> {
-    show_main_window(&app);
+    platform::app::show_main_window(&app);
     Ok(())
 }
 
@@ -475,11 +397,11 @@ pub fn run(cli_args: CliArgs) {
                     Target::new(if let Some(data_dir) = portable::data_dir() {
                         TargetKind::Folder {
                             path: data_dir.join("logs"),
-                            file_name: Some("handy".into()),
+                            file_name: Some("madwhisp".into()),
                         }
                     } else {
                         TargetKind::LogDir {
-                            file_name: Some("handy".into()),
+                            file_name: Some("madwhisp".into()),
                         }
                     })
                     .filter(|metadata| {
@@ -504,7 +426,7 @@ pub fn run(cli_args: CliArgs) {
             } else if args.iter().any(|a| a == "--cancel") {
                 crate::utils::cancel_current_operation(app);
             } else {
-                show_main_window(app);
+                platform::app::show_main_window(app);
             }
         }))
         .plugin(tauri_plugin_fs::init())
@@ -528,35 +450,9 @@ pub fn run(cli_args: CliArgs) {
             // On Linux, create a minimal hidden WebView to keep the Tauri event loop
             // alive (needed for managed state, single-instance, signals, etc.).
             // The native egui window is the actual UI.
-            #[cfg(target_os = "linux")]
-            {
-                tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("about:blank".into()))
-                    .title("")
-                    .inner_size(1.0, 1.0)
-                    .visible(false)
-                    .skip_taskbar(true)
-                    .build()?;
-            }
+            platform::app::create_main_window(app)?;
 
-            #[cfg(not(target_os = "linux"))]
-            {
-                let mut win_builder =
-                    tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
-                        .title("Handy")
-                        .inner_size(680.0, 570.0)
-                        .min_inner_size(680.0, 570.0)
-                        .resizable(true)
-                        .maximizable(false)
-                        .visible(false);
-
-                if let Some(data_dir) = portable::data_dir() {
-                    win_builder = win_builder.data_directory(data_dir.join("webview"));
-                }
-
-                win_builder.build()?;
-            }
-
-            let mut settings = get_settings(&app.handle());
+            let mut settings = get_settings(app.handle());
 
             // CLI --debug flag overrides debug_mode and log level (runtime-only, not persisted)
             if cli_args.debug {
@@ -573,9 +469,7 @@ pub fn run(cli_args: CliArgs) {
 
             initialize_core_logic(&app_handle);
 
-            // Hide tray icon if --no-tray was passed
-            #[cfg(not(target_os = "linux"))]
-            if cli_args.no_tray {
+            if platform::tray::uses_system_tray() && cli_args.no_tray {
                 tray::set_tray_visibility(&app_handle, false);
             }
 
@@ -583,32 +477,22 @@ pub fn run(cli_args: CliArgs) {
             // CLI --start-hidden flag overrides the setting.
             // But if permission onboarding is required, always show the window.
             let should_hide = settings.start_hidden || cli_args.start_hidden;
-            let should_force_show = should_force_show_permissions_window(&app_handle);
+            let should_force_show =
+                platform::app::should_force_show_permissions_window(&app_handle);
 
             // If start_hidden but tray is disabled, we must show the window
             // anyway. Without a tray icon, the dock is the only way back in.
-            let tray_available = settings.show_tray_icon && !cli_args.no_tray;
+            let tray_available =
+                platform::tray::uses_system_tray() && settings.show_tray_icon && !cli_args.no_tray;
 
-            #[cfg(target_os = "linux")]
-            {
-                // Spawn native GTK overlay (layer-shell, stays on top)
-                let overlay_state = std::sync::Arc::new(native_overlay::NativeOverlayState::new());
-                app_handle.manage(overlay_state.clone());
-                native_overlay::spawn_overlay(overlay_state);
+            platform::app::start_native_settings_ui(&app_handle);
 
-                let handle = app_handle.clone();
-                std::thread::spawn(move || {
-                    if let Err(e) = native_ui::run_settings_window(handle) {
-                        log::error!("Settings UI error: {}", e);
-                    }
-                    // egui window closed = quit the app
-                    std::process::exit(0);
-                });
-            }
-
-            #[cfg(not(target_os = "linux"))]
-            if should_force_show || !should_hide || !tray_available {
-                show_main_window(&app_handle);
+            if platform::app::should_show_initial_webview(
+                should_force_show,
+                should_hide,
+                tray_available,
+            ) {
+                platform::app::show_main_window(&app_handle);
             }
 
             Ok(())
@@ -617,28 +501,12 @@ pub fn run(cli_args: CliArgs) {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 api.prevent_close();
                 let _res = window.hide();
-
-                #[cfg(target_os = "macos")]
-                {
-                    let settings = get_settings(&window.app_handle());
-                    let tray_visible =
-                        settings.show_tray_icon && !window.app_handle().state::<CliArgs>().no_tray;
-                    if tray_visible {
-                        // Tray is available: hide the dock icon, app lives in the tray
-                        let res = window
-                            .app_handle()
-                            .set_activation_policy(tauri::ActivationPolicy::Accessory);
-                        if let Err(e) = res {
-                            log::error!("Failed to set activation policy: {}", e);
-                        }
-                    }
-                    // No tray: keep the dock icon visible so the user can reopen
-                }
+                platform::app::after_main_window_hidden(window.app_handle());
             }
             tauri::WindowEvent::ThemeChanged(theme) => {
                 log::info!("Theme changed to: {:?}", theme);
                 // Update tray icon to match new theme, maintaining idle state
-                utils::change_tray_icon(&window.app_handle(), utils::TrayIconState::Idle);
+                utils::change_tray_icon(window.app_handle(), utils::TrayIconState::Idle);
             }
             _ => {}
         })
@@ -646,10 +514,6 @@ pub fn run(cli_args: CliArgs) {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
-            #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::Reopen { .. } = &event {
-                show_main_window(app);
-            }
-            let _ = (app, event); // suppress unused warnings on non-macOS
+            platform::app::handle_reopen_event(app, &event);
         });
 }

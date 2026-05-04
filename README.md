@@ -47,14 +47,14 @@ MadWhisp is a desktop speech-to-text app powered by [Whisper](https://github.com
 
 ## Why MadWhisp?
 
-| | |
-|---|---|
-| **Offline** | Everything runs on your hardware. No internet required. No data sent anywhere. |
-| **Fast** | GPU-accelerated transcription. Sub-second on modern GPUs. |
-| **Smart corrections** | Per-word aliases and blacklists fix what Whisper always gets wrong. |
-| **Native Linux UI** | No Electron. No WebView. Pure native interface via [egui](https://github.com/emilk/egui). |
-| **Multi-model** | Choose from Whisper, Parakeet, Canary, Moonshine — download and switch in one click. |
-| **Extensible** | Post-processing via any OpenAI-compatible API. Custom scripts. Your rules. |
+|                       |                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| **Offline**           | Everything runs on your hardware. No internet required. No data sent anywhere.            |
+| **Fast**              | GPU-accelerated transcription. Sub-second on modern GPUs.                                 |
+| **Smart corrections** | Per-word aliases and blacklists fix what Whisper always gets wrong.                       |
+| **Native Linux UI**   | No Electron. No WebView. Pure native interface via [egui](https://github.com/emilk/egui). |
+| **Multi-model**       | Choose from Whisper, Parakeet, Canary, Moonshine — download and switch in one click.      |
+| **Extensible**        | Post-processing via any OpenAI-compatible API. Custom scripts. Your rules.                |
 
 ## Install
 
@@ -62,11 +62,11 @@ MadWhisp is a desktop speech-to-text app powered by [Whisper](https://github.com
 
 Grab the latest release for your system:
 
-| Platform | Download |
-|---|---|
-| **Ubuntu / Debian / Pop!_OS** | [`.deb`](https://github.com/mussonking/MadWhisp/releases/latest) |
-| **Fedora / RHEL** | [`.rpm`](https://github.com/mussonking/MadWhisp/releases/latest) |
-| **Any Linux** | [`.AppImage`](https://github.com/mussonking/MadWhisp/releases/latest) |
+| Platform                       | Download                                                              |
+| ------------------------------ | --------------------------------------------------------------------- |
+| **Ubuntu / Debian / Pop!\_OS** | [`.deb`](https://github.com/mussonking/MadWhisp/releases/latest)      |
+| **Fedora / RHEL**              | [`.rpm`](https://github.com/mussonking/MadWhisp/releases/latest)      |
+| **Any Linux**                  | [`.AppImage`](https://github.com/mussonking/MadWhisp/releases/latest) |
 
 ### Build from source
 
@@ -78,6 +78,7 @@ cd MadWhisp
 ```
 
 The installer handles everything:
+
 - Detects your package manager (apt, dnf, pacman, zypper)
 - Installs runtime dependencies (wtype, wl-clipboard, etc.)
 - Detects your desktop (COSMIC, GNOME, KDE, Hyprland, Sway) and configures shortcuts
@@ -88,9 +89,11 @@ The installer handles everything:
 Whisper is great, but it consistently botches certain words. MadWhisp fixes this with a **per-word correction system**:
 
 ### Fuzzy matching
+
 Add words to your list and MadWhisp auto-corrects similar-sounding transcription errors using Levenshtein distance + Soundex phonetic matching.
 
 ### Hard aliases
+
 Whisper always writes "Jiminy" when you say "Gemini"? Add an alias:
 
 ```
@@ -99,6 +102,7 @@ Alias: Jiminy  →  always becomes "Gemini", no fuzzy needed
 ```
 
 ### Blacklist
+
 The fuzzy matcher turns "feature" into "FOOTER"? Blacklist it:
 
 ```
@@ -112,9 +116,9 @@ All configured per-word in the UI. No regex. No config files.
 
 MadWhisp uses your desktop's native shortcut system:
 
-| Shortcut | Action |
-|---|---|
-| `Ctrl+Space` | Start/stop transcription |
+| Shortcut           | Action                          |
+| ------------------ | ------------------------------- |
+| `Ctrl+Space`       | Start/stop transcription        |
 | `Ctrl+Shift+Space` | Transcribe with post-processing |
 
 Or trigger from the command line:
@@ -127,18 +131,19 @@ madwhisp-ctl cancel           # cancel current operation
 
 ## Supported Models
 
-| Model | Engine | Best for |
-|---|---|---|
+| Model                           | Engine      | Best for                        |
+| ------------------------------- | ----------- | ------------------------------- |
 | Whisper (tiny → large-v3-turbo) | Whisper.cpp | General purpose, many languages |
-| Parakeet | NVIDIA NeMo | English, high accuracy |
-| Canary | NVIDIA NeMo | Multilingual, fast |
-| Moonshine | ONNX | Lightweight, CPU-friendly |
+| Parakeet                        | NVIDIA NeMo | English, high accuracy          |
+| Canary                          | NVIDIA NeMo | Multilingual, fast              |
+| Moonshine                       | ONNX        | Lightweight, CPU-friendly       |
 
 Download models directly from the app — one click.
 
 ## Post-Processing
 
 Optionally pipe transcriptions through any OpenAI-compatible API for:
+
 - Grammar correction
 - Translation
 - Summarization

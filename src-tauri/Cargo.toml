@@ -1,8 +1,8 @@
 [package]
 name = "madwhisp"
-version = "0.7.11"
-description = "MadWhisp — Speech-to-text by madera.tools"
-authors = ["cjpais", "madera.tools"]
+version = "0.2.0"
+description = "MadWhisp - local speech-to-text by madera.tools"
+authors = ["madera.tools"]
 edition = "2021"
 license = "MIT"
 default-run = "madwhisp"
@@ -16,7 +16,7 @@ incremental = true # Compile your binary in smaller steps.
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "handy_app_lib"
+name = "madwhisp_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 # [[bin]]
@@ -68,7 +68,8 @@ chrono = "0.4"
 rusqlite = { version = "0.37", features = ["bundled"] }
 tar = "0.4.44"
 flate2 = "1.0"
-transcribe-rs = { version = "0.3.1", features = ["whisper", "onnx"] }
+transcribe-rs = { version = "0.3.5", features = ["onnx"] }
+whisper-rs = { version = "0.16.0", features = ["raw-api"] }
 handy-keys = "0.2.4"
 ferrous-opencc = "0.2.3"
 clap = { version = "4", features = ["derive"] }
@@ -87,7 +88,8 @@ tauri-plugin-single-instance = "2.3.2"
 tauri-plugin-updater = "2.10.0"
 
 [target.'cfg(windows)'.dependencies]
-transcribe-rs = { version = "0.3.1", features = ["ort-directml"] }
+ort = { version = "=2.0.0-rc.12", features = ["load-dynamic"] }
+transcribe-rs = { version = "0.3.5", features = ["ort-directml", "whisper-vulkan"] }
 windows = { version = "0.61.3", features = [
   "Win32_Media_Audio_Endpoints",
   "Win32_System_Com_StructuredStorage",
@@ -98,9 +100,11 @@ windows = { version = "0.61.3", features = [
 winreg = "0.55"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+transcribe-rs = { version = "0.3.5", features = ["whisper-metal"] }
 tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.1" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+transcribe-rs = { version = "0.3.5", features = ["whisper-vulkan"] }
 gtk-layer-shell = { version = "0.8", features = ["v0_6"] }
 gtk = "0.18"
 eframe = "0.31"

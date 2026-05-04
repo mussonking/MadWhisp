@@ -2,27 +2,23 @@
 
 @theme {
   /* Design tokens */
-  --color-text: #0f0f0f;
-  --color-background: #fbfbfb;
-  --color-background-ui: #da5893;
-  --color-logo-primary: #faa2ca;
-  --color-logo-stroke: #382731;
-  --color-text-stroke: #f6f6f6;
-  --color-mid-gray: #808080;
+  --color-text: #e6edf3;
+  --color-background: #0d1117;
+  --color-background-ui: #008a5a;
+  --color-logo-primary: #00ff88;
+  --color-logo-stroke: #00d2ff;
+  --color-text-stroke: #0a0f1a;
+  --color-mid-gray: #718096;
 }
 
 :root {
   /* Typography */
+  font-family:
+    "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas,
+    "Liberation Mono", monospace;
   font-size: 15px;
   line-height: 24px;
   font-weight: 400;
-
-  /* Colors - Light Theme */
-  /* --color-text: #0f0f0f;
-  --color-background: #fbfbfb;
-  --color-logo-primary: #FAA2CA;
-  --color-logo-stroke: #382731;
-  --color-text-stroke: #f6f6f6; */
 
   /* Typography settings */
   font-synthesis: none;
@@ -54,11 +50,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Colors - Dark Theme */
-    --color-text: #fbfbfb;
-    --color-background: #2c2b29;
-    --color-logo-primary: #f28cbb;
-    --color-logo-stroke: #fad1ed;
+    --color-text: #e6edf3;
+    --color-background: #0d1117;
+    --color-background-ui: #008a5a;
+    --color-logo-primary: #00ff88;
+    --color-logo-stroke: #00d2ff;
+    --color-text-stroke: #0a0f1a;
   }
 }
 

@@ -63,7 +63,10 @@ fn build_system_prompt(prompt_template: &str) -> String {
     prompt_template.replace("${output}", "").trim().to_string()
 }
 
-pub async fn post_process_transcription(settings: &AppSettings, transcription: &str) -> Option<String> {
+pub async fn post_process_transcription(
+    settings: &AppSettings,
+    transcription: &str,
+) -> Option<String> {
     let provider = match settings.active_post_process_provider().cloned() {
         Some(provider) => provider,
         None => {
@@ -325,8 +328,6 @@ impl ShortcutAction for TranscribeAction {
         tm.initiate_model_load();
 
         let binding_id = binding_id.to_string();
-        change_tray_icon(app, TrayIconState::Recording);
-        show_recording_overlay(app);
 
         let rm = app.state::<Arc<AudioRecordingManager>>();
 
@@ -351,6 +352,8 @@ impl ShortcutAction for TranscribeAction {
             if let Err(e) = rm.try_start_recording(&binding_id) {
                 debug!("Recording failed: {}", e);
                 recording_error = Some(e);
+            } else {
+                debug!("Recording started in always-on mode");
             }
         } else {
             // On-demand mode: Start recording first, then play audio feedback, then apply mute
@@ -380,6 +383,8 @@ impl ShortcutAction for TranscribeAction {
         }
 
         if recording_error.is_none() {
+            change_tray_icon(app, TrayIconState::Recording);
+            show_recording_overlay(app);
             // Dynamically register the cancel shortcut in a separate task to avoid deadlock
             shortcut::register_cancel_shortcut(app);
         } else {

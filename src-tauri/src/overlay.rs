@@ -1,4 +1,5 @@
 use crate::input;
+use crate::platform;
 use crate::settings;
 use crate::settings::OverlayPosition;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
@@ -101,36 +102,6 @@ fn init_gtk_layer_shell(overlay_window: &tauri::webview::WebviewWindow) -> bool 
         return true;
     }
     false
-}
-
-/// Forces a window to be topmost using Win32 API (Windows only)
-/// This is more reliable than Tauri's set_always_on_top which can be overridden
-#[cfg(target_os = "windows")]
-fn force_overlay_topmost(overlay_window: &tauri::webview::WebviewWindow) {
-    use windows::Win32::UI::WindowsAndMessaging::{
-        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
-    };
-
-    // Clone because run_on_main_thread takes 'static
-    let overlay_clone = overlay_window.clone();
-
-    // Make sure the Win32 call happens on the UI thread
-    let _ = overlay_clone.clone().run_on_main_thread(move || {
-        if let Ok(hwnd) = overlay_clone.hwnd() {
-            unsafe {
-                // Force Z-order: make this window topmost without changing size/pos or stealing focus
-                let _ = SetWindowPos(
-                    hwnd,
-                    Some(HWND_TOPMOST),
-                    0,
-                    0,
-                    0,
-                    0,
-                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW,
-                );
-            }
-        }
-    });
 }
 
 fn get_monitor_with_cursor(app_handle: &AppHandle) -> Option<tauri::Monitor> {
@@ -324,7 +295,9 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
     // On Linux, always update native GTK overlay (independent of overlay_position setting)
     #[cfg(target_os = "linux")]
     {
-        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+        if let Some(native_state) =
+            app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>()
+        {
             native_state.set_mode(match state {
                 "recording" => crate::native_overlay::OverlayMode::Recording,
                 "transcribing" => crate::native_overlay::OverlayMode::Transcribing,
@@ -344,10 +317,7 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
 
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
         let _ = overlay_window.show();
-
-        // On Windows, aggressively re-assert "topmost" in the native Z-order after showing
-        #[cfg(target_os = "windows")]
-        force_overlay_topmost(&overlay_window);
+        platform::overlay::after_show(&overlay_window);
 
         let _ = overlay_window.emit("show-overlay", state);
     }
@@ -388,7 +358,9 @@ pub fn hide_recording_overlay(app_handle: &AppHandle) {
     // On Linux, hide native egui overlay
     #[cfg(target_os = "linux")]
     {
-        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+        if let Some(native_state) =
+            app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>()
+        {
             native_state.set_mode(crate::native_overlay::OverlayMode::Hidden);
         }
     }
@@ -398,12 +370,7 @@ pub fn hide_recording_overlay(app_handle: &AppHandle) {
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
         // Emit event to trigger fade-out animation
         let _ = overlay_window.emit("hide-overlay", ());
-        // Hide the window after a short delay to allow animation to complete
-        let window_clone = overlay_window.clone();
-        std::thread::spawn(move || {
-            std::thread::sleep(std::time::Duration::from_millis(300));
-            let _ = window_clone.hide();
-        });
+        platform::overlay::hide_after_fade(overlay_window.clone());
     }
 }
 
@@ -414,7 +381,9 @@ pub fn emit_levels(app_handle: &AppHandle, levels: &Vec<f32>) {
     // On Linux, update native egui overlay levels
     #[cfg(target_os = "linux")]
     {
-        if let Some(native_state) = app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>() {
+        if let Some(native_state) =
+            app_handle.try_state::<std::sync::Arc<crate::native_overlay::NativeOverlayState>>()
+        {
             native_state.update_levels(levels);
         }
     }
