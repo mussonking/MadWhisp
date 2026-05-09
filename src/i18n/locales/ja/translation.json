@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "権限が必要です",
-      "description": "MadWhispが正常に動作するにはいくつかの権限が必要です。",
+      "description": "MotsDitsが正常に動作するにはいくつかの権限が必要です。",
       "microphone": {
         "title": "マイクへのアクセス",
         "description": "文字起こしのためにあなたの声を聞くために必要です。"
@@ -171,7 +171,7 @@
     "general": {
       "title": "一般",
       "shortcut": {
-        "title": "MadWhispショートカット",
+        "title": "MotsDitsショートカット",
         "description": "音声録音を開始するキーボードショートカットを設定",
         "loading": "ショートカットを読み込み中...",
         "none": "ショートカットが設定されていません",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "起動時に実行",
-        "description": "コンピューターにログインしたときにMadWhispを自動的に起動。"
+        "description": "コンピューターにログインしたときにMotsDitsを自動的に起動。"
       },
       "showTrayIcon": {
         "label": "トレイアイコンを表示",
-        "description": "システムトレイにMadWhispのアイコンを表示します。"
+        "description": "システムトレイにMotsDitsのアイコンを表示します。"
       },
       "overlay": {
         "title": "オーバーレイ位置",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "アップデートを確認",
-        "description": "MadWhispの新しいバージョンを自動的にチェック"
+        "description": "MotsDitsの新しいバージョンを自動的にチェック"
       },
       "soundTheme": {
         "label": "サウンドテーマ",
@@ -499,11 +499,11 @@
       "title": "概要",
       "version": {
         "title": "バージョン",
-        "description": "MadWhispの現在のバージョン"
+        "description": "MotsDitsの現在のバージョン"
       },
       "appDataDirectory": {
         "title": "アプリデータディレクトリ",
-        "description": "MadWhispがデータを保存する場所"
+        "description": "MotsDitsがデータを保存する場所"
       },
       "sourceCode": {
         "title": "ソースコード",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "開発を支援",
-        "description": "MadWhispの開発を支援してください",
+        "description": "MotsDitsの開発を支援してください",
         "button": "寄付する"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "OpenAIのWhisper自動音声認識モデルの高性能推論",
-          "details": "MadWhispは高速でローカルな音声からテキストへの変換にWhisper.cppを使用しています。Georgi Gerganov氏と貢献者の皆様の素晴らしい仕事に感謝します。"
+          "details": "MotsDitsは高速でローカルな音声からテキストへの変換にWhisper.cppを使用しています。Georgi Gerganov氏と貢献者の皆様の素晴らしい仕事に感謝します。"
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "アクセシビリティ権限が必要です",
-    "permissionsDescription": "MadWhispが文字起こしテキストを入力するには、アクセシビリティ権限が必要です。",
+    "permissionsDescription": "MotsDitsが文字起こしテキストを入力するには、アクセシビリティ権限が必要です。",
     "openSettings": "システム設定を開く",
     "dismiss": "閉じる"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "アプリケーション言語",
-    "description": "MadWhispインターフェースの言語を変更"
+    "description": "MotsDitsインターフェースの言語を変更"
   },
   "overlay": {
     "transcribing": "文字起こし中...",

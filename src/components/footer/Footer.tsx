@@ -4,7 +4,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import ModelSelector from "../model-selector";
 import UpdateChecker from "../update-checker";
 
-const PRODUCT_NAME = "MadWhisp";
+const PRODUCT_NAME = "MotsDits";
 
 const Footer: React.FC = () => {
   const [version, setVersion] = useState("");

@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Permessi Richiesti",
-      "description": "MadWhisp ha bisogno di alcuni permessi per funzionare correttamente.",
+      "description": "MotsDits ha bisogno di alcuni permessi per funzionare correttamente.",
       "microphone": {
         "title": "Accesso al Microfono",
         "description": "Necessario per sentire la tua voce per la trascrizione."
@@ -171,7 +171,7 @@
     "general": {
       "title": "Generale",
       "shortcut": {
-        "title": "Scorciatoie di MadWhisp",
+        "title": "Scorciatoie di MotsDits",
         "description": "Configura le scorciatoie per attivare la trascrizione vocale",
         "loading": "Caricamento delle scorciatoie...",
         "none": "Nessuna scorciatoia configurata",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Avvia all'Accensione",
-        "description": "Avvia MadWhisp automaticamente quando accedi al computer."
+        "description": "Avvia MotsDits automaticamente quando accedi al computer."
       },
       "showTrayIcon": {
         "label": "Mostra icona nella barra di sistema",
-        "description": "Mostra l'icona di MadWhisp nella barra di sistema."
+        "description": "Mostra l'icona di MotsDits nella barra di sistema."
       },
       "overlay": {
         "title": "Posizione della Sovrimpressione",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Controlla aggiornamenti",
-        "description": "Controlla automaticamente la disponibilità di nuove versioni di MadWhisp"
+        "description": "Controlla automaticamente la disponibilità di nuove versioni di MotsDits"
       },
       "soundTheme": {
         "label": "Tema Sonoro",
@@ -499,11 +499,11 @@
       "title": "Informazioni",
       "version": {
         "title": "Versione",
-        "description": "Versione attuale di MadWhisp"
+        "description": "Versione attuale di MotsDits"
       },
       "appDataDirectory": {
         "title": "Cartella Dati App",
-        "description": "Cartella in cui MadWhisp salva i dati"
+        "description": "Cartella in cui MotsDits salva i dati"
       },
       "sourceCode": {
         "title": "Codice Sorgente",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Supporta lo Sviluppo",
-        "description": "Aiutaci a sviluppare MadWhisp",
+        "description": "Aiutaci a sviluppare MotsDits",
         "button": "Dona"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Inferenza ad alte prestazioni del modello di riconoscimento vocale automatico Whisper di OpenAI",
-          "details": "MadWhisp usa Whisper.cpp per il riconoscimento vocale veloce in locale. Grazie a Georgi Gerganov e collaboratori per il fantastico lavoro."
+          "details": "MotsDits usa Whisper.cpp per il riconoscimento vocale veloce in locale. Grazie a Georgi Gerganov e collaboratori per il fantastico lavoro."
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Richiesti Permessi di Accessibilità",
-    "permissionsDescription": "MadWhisp ha bisogno dei permessi di accessibilità per digitare il testo trascritto.",
+    "permissionsDescription": "MotsDits ha bisogno dei permessi di accessibilità per digitare il testo trascritto.",
     "openSettings": "Apri Impostazioni di Sistema",
     "dismiss": "Ignora"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Lingua Applicazione",
-    "description": "Cambia la lingua dell'interfaccia di MadWhisp"
+    "description": "Cambia la lingua dell'interfaccia di MotsDits"
   },
   "overlay": {
     "transcribing": "Trascrizione...",

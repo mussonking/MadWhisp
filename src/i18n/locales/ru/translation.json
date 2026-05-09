@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Требуются разрешения",
-      "description": "MadWhisp требуются некоторые разрешения для корректной работы.",
+      "description": "MotsDits требуются некоторые разрешения для корректной работы.",
       "microphone": {
         "title": "Доступ к микрофону",
         "description": "Необходим для прослушивания вашего голоса для транскрипции."
@@ -171,7 +171,7 @@
     "general": {
       "title": "Общие",
       "shortcut": {
-        "title": "Ярлыки MadWhisp",
+        "title": "Ярлыки MotsDits",
         "description": "Настройте сочетания клавиш для запуска записи речи в текст",
         "loading": "Загрузка ярлыков...",
         "none": "Ярлыки не настроены",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Запускать при старте",
-        "description": "Автоматически запускать MadWhisp при входе в систему."
+        "description": "Автоматически запускать MotsDits при входе в систему."
       },
       "showTrayIcon": {
         "label": "Показать значок в трее",
-        "description": "Отображать значок MadWhisp в системном трее."
+        "description": "Отображать значок MotsDits в системном трее."
       },
       "overlay": {
         "title": "Позиция индикатора",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Проверять наличие обновлений",
-        "description": "Автоматически проверять наличие новых версий MadWhisp"
+        "description": "Автоматически проверять наличие новых версий MotsDits"
       },
       "soundTheme": {
         "label": "Звуковая тема",
@@ -499,11 +499,11 @@
       "title": "О программе",
       "version": {
         "title": "Версия",
-        "description": "Текущая версия MadWhisp"
+        "description": "Текущая версия MotsDits"
       },
       "appDataDirectory": {
         "title": "Каталог данных приложения",
-        "description": "Место, где MadWhisp хранит свои данные"
+        "description": "Место, где MotsDits хранит свои данные"
       },
       "sourceCode": {
         "title": "Исходный код",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Поддержка развития",
-        "description": "Помогите нам продолжать развитие MadWhisp",
+        "description": "Помогите нам продолжать развитие MotsDits",
         "button": "Поддержать"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Высокопроизводительная модель автоматического распознавания речи OpenAI Whisper",
-          "details": "MadWhisp использует Whisper.cpp для быстрого локального преобразования речи в текст. Спасибо великолепной работе Георгия Герганова и участников."
+          "details": "MotsDits использует Whisper.cpp для быстрого локального преобразования речи в текст. Спасибо великолепной работе Георгия Герганова и участников."
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Требуются разрешения на доступ",
-    "permissionsDescription": "MadWhisp необходимы разрешения на доступ для ввода расшифрованного текста.",
+    "permissionsDescription": "MotsDits необходимы разрешения на доступ для ввода расшифрованного текста.",
     "openSettings": "Открыть настройки системы",
     "dismiss": "Увольнять"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Язык приложения",
-    "description": "Изменить язык интерфейса MadWhisp"
+    "description": "Изменить язык интерфейса MotsDits"
   },
   "overlay": {
     "transcribing": "Расшифровка...",

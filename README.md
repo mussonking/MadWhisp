@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="linux-logo.png" alt="MadWhisp" width="120" />
+  <img src="linux-logo.png" alt="MotsDits" width="120" />
 </p>
 
-<h1 align="center">MadWhisp</h1>
+<h1 align="center">MotsDits</h1>
 
 <p align="center">
   <strong>Speech-to-text that runs on your machine. Not in the cloud. Not behind a paywall.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/mussonking/MadWhisp/releases/latest"><img src="https://img.shields.io/github/v/release/mussonking/MadWhisp?style=flat-square&color=00ff88" alt="Release" /></a>
-  <a href="https://github.com/mussonking/MadWhisp/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mussonking/MadWhisp?style=flat-square&color=00d2ff" alt="License" /></a>
-  <a href="https://github.com/mussonking/MadWhisp/stargazers"><img src="https://img.shields.io/github/stars/mussonking/MadWhisp?style=flat-square&color=ffd93d" alt="Stars" /></a>
+  <a href="https://github.com/mussonking/MotsDits/releases/latest"><img src="https://img.shields.io/github/v/release/mussonking/MotsDits?style=flat-square&color=00ff88" alt="Release" /></a>
+  <a href="https://github.com/mussonking/MotsDits/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mussonking/MotsDits?style=flat-square&color=00d2ff" alt="License" /></a>
+  <a href="https://github.com/mussonking/MotsDits/stargazers"><img src="https://img.shields.io/github/stars/mussonking/MotsDits?style=flat-square&color=ffd93d" alt="Stars" /></a>
 </p>
 
 <p align="center">
@@ -21,20 +21,20 @@
 ---
 
 <p align="center">
-  <img src="assets/screenshot-models.png" alt="MadWhisp — Models" width="720" />
+  <img src="assets/screenshot-models.png" alt="MotsDits — Models" width="720" />
 </p>
 
 <p align="center">
-  <img src="assets/screenshot-words.png" alt="MadWhisp — Words" width="720" />
+  <img src="assets/screenshot-words.png" alt="MotsDits — Words" width="720" />
 </p>
 
 ---
 
-## What is MadWhisp?
+## What is MotsDits?
 
 Press a shortcut. Speak. Your words appear wherever your cursor is.
 
-MadWhisp is a desktop speech-to-text app powered by [Whisper](https://github.com/openai/whisper) that runs **100% locally** — your voice never leaves your machine. It's built for people who want fast, private transcription without subscriptions or cloud dependencies.
+MotsDits is a desktop speech-to-text app powered by [Whisper](https://github.com/openai/whisper) that runs **100% locally** — your voice never leaves your machine. It's built for people who want fast, private transcription without subscriptions or cloud dependencies.
 
 ### How it works
 
@@ -45,7 +45,7 @@ MadWhisp is a desktop speech-to-text app powered by [Whisper](https://github.com
 📋  Pasted            →  Text appears in your active app
 ```
 
-## Why MadWhisp?
+## Why MotsDits?
 
 |                       |                                                                                           |
 | --------------------- | ----------------------------------------------------------------------------------------- |
@@ -64,16 +64,16 @@ Grab the latest release for your system:
 
 | Platform                       | Download                                                              |
 | ------------------------------ | --------------------------------------------------------------------- |
-| **Ubuntu / Debian / Pop!\_OS** | [`.deb`](https://github.com/mussonking/MadWhisp/releases/latest)      |
-| **Fedora / RHEL**              | [`.rpm`](https://github.com/mussonking/MadWhisp/releases/latest)      |
-| **Any Linux**                  | [`.AppImage`](https://github.com/mussonking/MadWhisp/releases/latest) |
+| **Ubuntu / Debian / Pop!\_OS** | [`.deb`](https://github.com/mussonking/MotsDits/releases/latest)      |
+| **Fedora / RHEL**              | [`.rpm`](https://github.com/mussonking/MotsDits/releases/latest)      |
+| **Any Linux**                  | [`.AppImage`](https://github.com/mussonking/MotsDits/releases/latest) |
 
 ### Build from source
 
 ```bash
 # Prerequisites: Rust (rustup.rs) + Bun (bun.sh)
-git clone https://github.com/mussonking/MadWhisp.git
-cd MadWhisp
+git clone https://github.com/mussonking/MotsDits.git
+cd MotsDits
 ./install.sh    # auto-detects your distro, installs deps, builds, configures shortcuts
 ```
 
@@ -86,11 +86,11 @@ The installer handles everything:
 
 ## Smart Word Correction
 
-Whisper is great, but it consistently botches certain words. MadWhisp fixes this with a **per-word correction system**:
+Whisper is great, but it consistently botches certain words. MotsDits fixes this with a **per-word correction system**:
 
 ### Fuzzy matching
 
-Add words to your list and MadWhisp auto-corrects similar-sounding transcription errors using Levenshtein distance + Soundex phonetic matching.
+Add words to your list and MotsDits auto-corrects similar-sounding transcription errors using Levenshtein distance + Soundex phonetic matching.
 
 ### Hard aliases
 
@@ -114,7 +114,7 @@ All configured per-word in the UI. No regex. No config files.
 
 ## Keyboard Shortcuts
 
-MadWhisp uses your desktop's native shortcut system:
+MotsDits uses your desktop's native shortcut system:
 
 | Shortcut           | Action                          |
 | ------------------ | ------------------------------- |
@@ -124,9 +124,9 @@ MadWhisp uses your desktop's native shortcut system:
 Or trigger from the command line:
 
 ```bash
-madwhisp-ctl transcribe       # start/stop recording
-madwhisp-ctl post-process     # with AI post-processing
-madwhisp-ctl cancel           # cancel current operation
+motsdits-ctl transcribe       # start/stop recording
+motsdits-ctl post-process     # with AI post-processing
+motsdits-ctl cancel           # cancel current operation
 ```
 
 ## Supported Models
@@ -178,14 +178,14 @@ If the app crashes on startup with an NVIDIA GPU:
 WEBKIT_DISABLE_DMABUF_RENDERER=1 \
 WEBKIT_DISABLE_COMPOSITING_MODE=1 \
 JavaScriptCoreUseJIT=0 \
-madwhisp
+motsdits
 ```
 
 The installer detects NVIDIA and warns you automatically.
 
 ## Contributing
 
-MadWhisp is a fork of [Handy](https://github.com/cjpais/Handy) by [@cjpais](https://github.com/cjpais). We maintain upstream compatibility — contributions that improve the Linux experience are welcome.
+MotsDits is a fork of [Handy](https://github.com/cjpais/Handy) by [@cjpais](https://github.com/cjpais). We maintain upstream compatibility — contributions that improve the Linux experience are welcome.
 
 ```bash
 # Dev setup

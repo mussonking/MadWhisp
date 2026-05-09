@@ -770,6 +770,15 @@ pub fn change_auto_submit_key_setting(app: AppHandle, key: String) -> Result<(),
 
 #[tauri::command]
 #[specta::specta]
+pub fn change_post_process_auto_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.post_process_auto = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn change_post_process_enabled_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.post_process_enabled = enabled;
@@ -870,6 +879,67 @@ pub fn change_post_process_model_setting(
     settings.post_process_models.insert(provider_id, model);
     settings::write_settings(&app, settings);
     Ok(())
+}
+
+/// Send a minimal request to the configured post-processing LLM to verify
+/// that the provider, model, base URL, and API key are all wired up correctly.
+/// Returns the LLM's response on success, or a human-readable error string.
+#[tauri::command]
+#[specta::specta]
+pub async fn test_post_process_connection(app: AppHandle) -> Result<String, String> {
+    let settings = settings::get_settings(&app);
+
+    let provider = settings
+        .active_post_process_provider()
+        .cloned()
+        .ok_or_else(|| "No post-processing provider is selected.".to_string())?;
+
+    let model = settings
+        .post_process_models
+        .get(&provider.id)
+        .cloned()
+        .unwrap_or_default();
+    if model.trim().is_empty() {
+        return Err(format!(
+            "No model is configured for provider '{}'. Pick or type a model name first.",
+            provider.label
+        ));
+    }
+
+    let api_key = settings
+        .post_process_api_keys
+        .get(&provider.id)
+        .cloned()
+        .unwrap_or_default();
+    if api_key.trim().is_empty() && provider.id != crate::settings::APPLE_INTELLIGENCE_PROVIDER_ID {
+        return Err(format!(
+            "No API key is configured for provider '{}'.",
+            provider.label
+        ));
+    }
+
+    // Apple Intelligence has its own native path that doesn't go through HTTP.
+    if provider.id == crate::settings::APPLE_INTELLIGENCE_PROVIDER_ID {
+        return Err(
+            "Test is not supported for Apple Intelligence — try a real transcription instead."
+                .to_string(),
+        );
+    }
+
+    let prompt =
+        "Reply with exactly the two characters: OK. No punctuation, no quotes, nothing else."
+            .to_string();
+
+    match crate::llm_client::send_chat_completion(&provider, api_key, &model, prompt).await {
+        Ok(Some(response)) => {
+            // Strip thinking blocks so reasoning models (Gemma, DeepSeek, etc.)
+            // produce a readable test result instead of a wall of internal CoT.
+            let cleaned = crate::actions::strip_thinking_blocks(&response);
+            Ok(cleaned)
+        }
+        Ok(None) => Err("Provider returned an empty response.".to_string()),
+        Err(e) => Err(e),
+    }
 }
 
 #[tauri::command]

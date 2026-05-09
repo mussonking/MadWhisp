@@ -3,11 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MadWhisp</title>
+    <title>MotsDits</title>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Dev-only rescue against WebView2 ↔ Vite cold-start races that leave
+      // the window blank. If main.tsx never executes its module body within
+      // 4s (window.__motsditsBoot stays unset), force-reload the page.
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        setTimeout(function () {
+          if (!window.__motsditsBoot) {
+            console.warn("[motsdits] blank boot detected — reloading");
+            location.reload();
+          }
+        }, 4000);
+      }
+    </script>
   </body>
 </html>

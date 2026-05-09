@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="madwhisp"
-APP_DISPLAY="MadWhisp"
+APP_NAME="motsdits"
+APP_DISPLAY="MotsDits"
 INSTALL_DIR="$HOME/.local/bin"
 
 echo "=== $APP_DISPLAY installer ==="

@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "需要权限",
-      "description": "MadWhisp 需要一些权限才能正常工作。",
+      "description": "MotsDits 需要一些权限才能正常工作。",
       "microphone": {
         "title": "麦克风访问",
         "description": "需要听取您的语音进行转录。"
@@ -171,7 +171,7 @@
     "general": {
       "title": "通用",
       "shortcut": {
-        "title": "MadWhisp 快捷键",
+        "title": "MotsDits 快捷键",
         "description": "配置启动语音转文字录制的键盘快捷键",
         "loading": "加载快捷键中...",
         "none": "未配置快捷键",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "开机启动",
-        "description": "登录计算机时自动启动 MadWhisp。"
+        "description": "登录计算机时自动启动 MotsDits。"
       },
       "showTrayIcon": {
         "label": "显示托盘图标",
-        "description": "在系统托盘中显示 MadWhisp 图标。"
+        "description": "在系统托盘中显示 MotsDits 图标。"
       },
       "overlay": {
         "title": "悬浮窗位置",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "检查更新",
-        "description": "自动检查 MadWhisp 的新版本"
+        "description": "自动检查 MotsDits 的新版本"
       },
       "soundTheme": {
         "label": "声音主题",
@@ -499,11 +499,11 @@
       "title": "关于",
       "version": {
         "title": "版本",
-        "description": "MadWhisp 的当前版本"
+        "description": "MotsDits 的当前版本"
       },
       "appDataDirectory": {
         "title": "应用数据目录",
-        "description": "MadWhisp 存储数据的位置"
+        "description": "MotsDits 存储数据的位置"
       },
       "sourceCode": {
         "title": "源代码",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "支持开发",
-        "description": "帮助我们继续开发 MadWhisp",
+        "description": "帮助我们继续开发 MotsDits",
         "button": "捐赠"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "OpenAI Whisper 自动语音识别模型的高性能推理",
-          "details": "MadWhisp 使用 Whisper.cpp 进行快速的本地语音转文字处理。感谢 Georgi Gerganov 和贡献者们的出色工作。"
+          "details": "MotsDits 使用 Whisper.cpp 进行快速的本地语音转文字处理。感谢 Georgi Gerganov 和贡献者们的出色工作。"
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "需要辅助功能权限",
-    "permissionsDescription": "MadWhisp 需要辅助功能权限才能输入转录的文字。",
+    "permissionsDescription": "MotsDits 需要辅助功能权限才能输入转录的文字。",
     "openSettings": "打开系统设置",
     "dismiss": "关闭"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "应用语言",
-    "description": "更改 MadWhisp 界面的语言"
+    "description": "更改 MotsDits 界面的语言"
   },
   "overlay": {
     "transcribing": "正在转录...",

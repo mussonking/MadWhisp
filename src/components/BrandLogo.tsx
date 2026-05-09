@@ -21,7 +21,7 @@ const sizeClasses = {
   },
 } as const;
 
-const BRAND_NAME = "MadWhisp";
+const BRAND_NAME = "MotsDits";
 const BRAND_TAGLINE = "madera.tools";
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({

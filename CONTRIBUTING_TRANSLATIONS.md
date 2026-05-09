@@ -1,6 +1,6 @@
-# Contributing Translations to MadWhisp
+# Contributing Translations to MotsDits
 
-Thank you for helping translate MadWhisp. This guide explains how to add or improve translations.
+Thank you for helping translate MotsDits. This guide explains how to add or improve translations.
 
 ## Quick Start
 
@@ -120,7 +120,7 @@ Found a typo or better translation?
 
 ### Don't:
 
-- Translate brand names (MadWhisp, Whisper.cpp, OpenAI)
+- Translate brand names (MotsDits, Whisper.cpp, OpenAI)
 - Change or remove `{{variables}}`
 - Modify JSON keys
 - Add extra spaces or formatting
@@ -171,4 +171,4 @@ We'd love help with:
 
 ---
 
-Thank you for making MadWhisp accessible to more people around the world!
+Thank you for making MotsDits accessible to more people around the world!

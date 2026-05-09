@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "İzinler Gerekli",
-      "description": "MadWhisp'nin düzgün çalışabilmesi için birkaç izne ihtiyacı var.",
+      "description": "MotsDits'nin düzgün çalışabilmesi için birkaç izne ihtiyacı var.",
       "microphone": {
         "title": "Mikrofon Erişimi",
         "description": "Sesinizi transkripsiyon için alabilmek için gereklidir."
@@ -171,7 +171,7 @@
     "general": {
       "title": "Genel",
       "shortcut": {
-        "title": "MadWhisp Kısayolları",
+        "title": "MotsDits Kısayolları",
         "description": "Sesle yazma kaydını başlatmak için klavye kısayollarını yapılandırın",
         "loading": "Kısayollar yükleniyor...",
         "none": "Kısayol yapılandırılmadı",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Başlangıçta Çalıştır",
-        "description": "Bilgisayara giriş yaptığınızda MadWhisp otomatik olarak başlatılır."
+        "description": "Bilgisayara giriş yaptığınızda MotsDits otomatik olarak başlatılır."
       },
       "showTrayIcon": {
         "label": "Tepsi simgesini göster",
-        "description": "MadWhisp simgesini sistem tepsisinde göster."
+        "description": "MotsDits simgesini sistem tepsisinde göster."
       },
       "overlay": {
         "title": "Overlay Konumu",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Güncellemeleri Kontrol Et",
-        "description": "MadWhisp için yeni sürümleri otomatik olarak kontrol eder"
+        "description": "MotsDits için yeni sürümleri otomatik olarak kontrol eder"
       },
       "soundTheme": {
         "label": "Ses Teması",
@@ -499,11 +499,11 @@
       "title": "Hakkında",
       "version": {
         "title": "Sürüm",
-        "description": "MadWhisp'nin mevcut sürümü"
+        "description": "MotsDits'nin mevcut sürümü"
       },
       "appDataDirectory": {
         "title": "Uygulama Veri Dizini",
-        "description": "MadWhisp'nin verilerini sakladığı konum"
+        "description": "MotsDits'nin verilerini sakladığı konum"
       },
       "sourceCode": {
         "title": "Kaynak Kodu",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Geliştirmeyi Destekle",
-        "description": "MadWhisp'yi geliştirmeye devam etmemize yardımcı olun",
+        "description": "MotsDits'yi geliştirmeye devam etmemize yardımcı olun",
         "button": "Bağış Yap"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "OpenAI'nin Whisper otomatik konuşma tanıma modelinin yüksek performanslı çıkarımı",
-          "details": "MadWhisp, hızlı ve yerel konuşmadan metne dönüştürme için Whisper.cpp kullanır. Georgi Gerganov ve katkıda bulunanların harika çalışmaları için teşekkür ederiz."
+          "details": "MotsDits, hızlı ve yerel konuşmadan metne dönüştürme için Whisper.cpp kullanır. Georgi Gerganov ve katkıda bulunanların harika çalışmaları için teşekkür ederiz."
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Erişilebilirlik İzinleri Gerekli",
-    "permissionsDescription": "MadWhisp, transkribe edilen metni yazabilmek için erişilebilirlik izinlerine ihtiyaç duyar.",
+    "permissionsDescription": "MotsDits, transkribe edilen metni yazabilmek için erişilebilirlik izinlerine ihtiyaç duyar.",
     "openSettings": "Sistem Ayarlarını Aç",
     "dismiss": "Yoksay"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Uygulama Dili",
-    "description": "MadWhisp arayüzünün dilini değiştirin"
+    "description": "MotsDits arayüzünün dilini değiştirin"
   },
   "overlay": {
     "transcribing": "Transkribe ediliyor...",

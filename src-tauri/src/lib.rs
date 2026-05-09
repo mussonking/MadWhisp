@@ -292,6 +292,8 @@ pub fn run(cli_args: CliArgs) {
         shortcut::change_auto_submit_setting,
         shortcut::change_auto_submit_key_setting,
         shortcut::change_post_process_enabled_setting,
+        shortcut::change_post_process_auto_setting,
+        shortcut::test_post_process_connection,
         shortcut::change_experimental_enabled_setting,
         shortcut::change_post_process_base_url_setting,
         shortcut::change_post_process_api_key_setting,
@@ -397,11 +399,11 @@ pub fn run(cli_args: CliArgs) {
                     Target::new(if let Some(data_dir) = portable::data_dir() {
                         TargetKind::Folder {
                             path: data_dir.join("logs"),
-                            file_name: Some("madwhisp".into()),
+                            file_name: Some("motsdits".into()),
                         }
                     } else {
                         TargetKind::LogDir {
-                            file_name: Some("madwhisp".into()),
+                            file_name: Some("motsdits".into()),
                         }
                     })
                     .filter(|metadata| {
@@ -468,6 +470,12 @@ pub fn run(cli_args: CliArgs) {
             app.manage(TranscriptionCoordinator::new(app_handle.clone()));
 
             initialize_core_logic(&app_handle);
+            #[cfg(not(target_os = "linux"))]
+            {
+                // Ensure global shortcuts are active even if the frontend
+                // onboarding path hasn't finished yet (older builds could miss this).
+                shortcut::init_shortcuts(&app_handle);
+            }
 
             if platform::tray::uses_system_tray() && cli_args.no_tray {
                 tray::set_tray_visibility(&app_handle, false);

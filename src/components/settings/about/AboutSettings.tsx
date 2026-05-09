@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { getVersion } from "@tauri-apps/api/app";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openUrl, openPath } from "@tauri-apps/plugin-opener";
+import { resolveResource } from "@tauri-apps/api/path";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { SettingContainer } from "../../ui/SettingContainer";
 import { Button } from "../../ui/Button";
@@ -32,6 +33,15 @@ export const AboutSettings: React.FC = () => {
       await openUrl("https://madera.tools");
     } catch (error) {
       console.error("Failed to open donate link:", error);
+    }
+  };
+
+  const openBundledLegalFile = async (relativePath: string) => {
+    try {
+      const path = await resolveResource(relativePath);
+      await openPath(path);
+    } catch (error) {
+      console.error("Failed to open legal file:", error);
     }
   };
 
@@ -66,7 +76,7 @@ export const AboutSettings: React.FC = () => {
           <Button
             variant="secondary"
             size="md"
-            onClick={() => openUrl("https://github.com/mussonking/MadWhisp")}
+            onClick={() => openUrl("https://github.com/mussonking/MotsDits")}
           >
             {t("settings.about.sourceCode.button")}
           </Button>
@@ -86,6 +96,71 @@ export const AboutSettings: React.FC = () => {
           <div className="text-sm text-mid-gray">
             {t("settings.about.acknowledgments.whisper.details")}
           </div>
+        </SettingContainer>
+      </SettingsGroup>
+
+      <SettingsGroup
+        title={t("settings.about.legal.title", { defaultValue: "Legal" })}
+      >
+        <SettingContainer
+          title={t("settings.about.legal.thirdParty.title", {
+            defaultValue: "Third-party licenses",
+          })}
+          description={t("settings.about.legal.thirdParty.description", {
+            defaultValue:
+              "Open-source components incorporated into MotsDits and their licenses.",
+          })}
+          grouped={true}
+        >
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => openBundledLegalFile("legal/THIRD-PARTY-LICENSES.md")}
+          >
+            {t("settings.about.legal.thirdParty.button", {
+              defaultValue: "Open",
+            })}
+          </Button>
+        </SettingContainer>
+
+        <SettingContainer
+          title={t("settings.about.legal.notice.title", {
+            defaultValue: "Notice",
+          })}
+          description={t("settings.about.legal.notice.description", {
+            defaultValue:
+              "Copyright, attribution, and trademark information.",
+          })}
+          grouped={true}
+        >
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => openBundledLegalFile("legal/NOTICE.md")}
+          >
+            {t("settings.about.legal.notice.button", { defaultValue: "Open" })}
+          </Button>
+        </SettingContainer>
+
+        <SettingContainer
+          title={t("settings.about.legal.handyMit.title", {
+            defaultValue: "Upstream MIT license (Handy)",
+          })}
+          description={t("settings.about.legal.handyMit.description", {
+            defaultValue:
+              "MIT license of the upstream Handy project from which MotsDits was forked.",
+          })}
+          grouped={true}
+        >
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => openBundledLegalFile("legal/LICENSE-HANDY-MIT")}
+          >
+            {t("settings.about.legal.handyMit.button", {
+              defaultValue: "Open",
+            })}
+          </Button>
         </SettingContainer>
       </SettingsGroup>
     </div>

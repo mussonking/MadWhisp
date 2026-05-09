@@ -1,9 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
+  AudioLines,
   BookOpenText,
   Cog,
-  Cpu,
   FlaskConical,
   History,
   Info,
@@ -19,7 +19,7 @@ import {
   DebugSettings,
   AboutSettings,
   PostProcessingSettings,
-  ModelsSettings,
+  ListeningQuality,
   WordsSettings,
 } from "./settings";
 
@@ -49,11 +49,11 @@ export const SECTIONS_CONFIG = {
     component: GeneralSettings,
     enabled: () => true,
   },
-  models: {
-    labelKey: "sidebar.models",
-    defaultLabel: "Models",
-    icon: Cpu,
-    component: ModelsSettings,
+  listening: {
+    labelKey: "sidebar.listening",
+    defaultLabel: "Listening Quality",
+    icon: AudioLines,
+    component: ListeningQuality,
     enabled: () => true,
   },
   words: {
@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
   return (
-    <div className="flex flex-col w-44 h-full border-e border-logo-stroke/40 bg-[#080c10] items-center px-2">
+    <div className="flex flex-col w-fit min-w-44 h-full border-e border-logo-stroke/40 bg-[#080c10] items-center px-2">
       <BrandLogo className="w-full px-3 py-4" size="md" />
       <div className="flex flex-col w-full items-center gap-1 pt-2 border-t border-logo-stroke/40">
         {availableSections.map((section) => {
@@ -139,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Icon width={20} height={20} className="shrink-0" />
               <p
-                className="text-sm font-medium truncate tracking-normal"
+                className="text-sm font-medium whitespace-nowrap tracking-normal pr-2"
                 title={label}
               >
                 {label}

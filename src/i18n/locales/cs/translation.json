@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Vyžadována oprávnění",
-      "description": "MadWhisp potřebuje několik oprávnění pro správné fungování.",
+      "description": "MotsDits potřebuje několik oprávnění pro správné fungování.",
       "microphone": {
         "title": "Přístup k mikrofonu",
         "description": "Potřebný pro zachycení vašeho hlasu k přepisu."
@@ -171,7 +171,7 @@
     "general": {
       "title": "Obecné",
       "shortcut": {
-        "title": "Zkratky MadWhisp",
+        "title": "Zkratky MotsDits",
         "description": "Nastavte klávesové zkratky pro spuštění nahrávání řeči na text",
         "loading": "Načítám zkratky...",
         "none": "Žádné zkratky nejsou nastavené",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Spouštět při startu",
-        "description": "Automaticky spustit MadWhisp po přihlášení do počítače."
+        "description": "Automaticky spustit MotsDits po přihlášení do počítače."
       },
       "showTrayIcon": {
         "label": "Zobrazit ikonu v systémové liště",
-        "description": "Zobrazit ikonu MadWhisp v systémové liště."
+        "description": "Zobrazit ikonu MotsDits v systémové liště."
       },
       "overlay": {
         "title": "Pozice překryvu",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Kontrolovat aktualizace",
-        "description": "Automaticky kontrolovat nové verze MadWhisp"
+        "description": "Automaticky kontrolovat nové verze MotsDits"
       },
       "soundTheme": {
         "label": "Zvukový motiv",
@@ -499,11 +499,11 @@
       "title": "O aplikaci",
       "version": {
         "title": "Verze",
-        "description": "Aktuální verze MadWhisp"
+        "description": "Aktuální verze MotsDits"
       },
       "appDataDirectory": {
         "title": "Adresář dat aplikace",
-        "description": "Umístění, kde MadWhisp ukládá data"
+        "description": "Umístění, kde MotsDits ukládá data"
       },
       "sourceCode": {
         "title": "Zdrojový kód",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Podpořte vývoj",
-        "description": "Pomozte nám pokračovat ve vývoji MadWhisp",
+        "description": "Pomozte nám pokračovat ve vývoji MotsDits",
         "button": "Přispět"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Vysoce výkonné inferenční zpracování modelu automatického rozpoznávání řeči Whisper od OpenAI",
-          "details": "MadWhisp používá Whisper.cpp pro rychlé lokální zpracování řeči na text. Díky skvělé práci Georgiho Gerganova a přispěvatelů."
+          "details": "MotsDits používá Whisper.cpp pro rychlé lokální zpracování řeči na text. Díky skvělé práci Georgiho Gerganova a přispěvatelů."
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Vyžadována oprávnění usnadnění přístupu",
-    "permissionsDescription": "MadWhisp potřebuje oprávnění usnadnění přístupu, aby mohlo psát přepsaný text.",
+    "permissionsDescription": "MotsDits potřebuje oprávnění usnadnění přístupu, aby mohlo psát přepsaný text.",
     "openSettings": "Otevřít Nastavení systému",
     "dismiss": "Zavřít"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Jazyk aplikace",
-    "description": "Změňte jazyk rozhraní MadWhisp"
+    "description": "Změňte jazyk rozhraní MotsDits"
   },
   "overlay": {
     "transcribing": "Přepisuji...",

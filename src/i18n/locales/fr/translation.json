@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Général",
-    "models": "Modèles",
+    "listening": "Qualité d'écoute",
     "advanced": "Avancé",
     "postProcessing": "Post-traitement",
     "history": "Historique",
@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Autorisations requises",
-      "description": "MadWhisp a besoin de quelques autorisations pour fonctionner correctement.",
+      "description": "MotsDits a besoin de quelques autorisations pour fonctionner correctement.",
       "microphone": {
         "title": "Accès au microphone",
         "description": "Nécessaire pour entendre votre voix pour la transcription."
@@ -171,7 +171,7 @@
     "general": {
       "title": "Général",
       "shortcut": {
-        "title": "Raccourcis MadWhisp",
+        "title": "Raccourcis MotsDits",
         "description": "Configurer les raccourcis clavier pour déclencher l'enregistrement de la reconnaissance vocale",
         "loading": "Chargement des raccourcis...",
         "none": "Aucun raccourci configuré",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Lancer au démarrage",
-        "description": "Démarrer automatiquement MadWhisp lorsque vous vous connectez à votre ordinateur."
+        "description": "Démarrer automatiquement MotsDits lorsque vous vous connectez à votre ordinateur."
       },
       "showTrayIcon": {
         "label": "Afficher l'icône de la barre",
-        "description": "Afficher l'icône de MadWhisp dans la barre système."
+        "description": "Afficher l'icône de MotsDits dans la barre système."
       },
       "overlay": {
         "title": "Position de la fenêtre d'enregistrement",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Rechercher ou sélectionner un modèle",
           "placeholderNoOptions": "Tapez un nom de modèle",
           "refreshModels": "Actualiser les modèles"
+        },
+        "test": {
+          "button": "Tester la connexion",
+          "running": "Test en cours...",
+          "success": "Connexion OK — le fournisseur a répondu : « {{response}} »",
+          "failure": "Échec du test : {{error}}"
         }
       },
       "prompts": {
@@ -435,7 +441,7 @@
       },
       "updateChecks": {
         "label": "Vérifier les mises à jour",
-        "description": "Vérifier automatiquement les nouvelles versions de MadWhisp"
+        "description": "Vérifier automatiquement les nouvelles versions de MotsDits"
       },
       "soundTheme": {
         "label": "Thème sonore",
@@ -472,6 +478,10 @@
         "label": "Post-traitement",
         "description": "Activer l'affinage du texte par IA après la transcription"
       },
+      "postProcessingAutoToggle": {
+        "label": "Post-traitement automatique",
+        "description": "Appliquer le post-traitement automatiquement à chaque transcription (pas besoin d'un raccourci séparé). Nécessite que le post-traitement soit activé."
+      },
       "muteWhileRecording": {
         "label": "Muet pendant l'enregistrement",
         "description": "Couper le son du système pendant l'enregistrement"
@@ -499,11 +509,11 @@
       "title": "À propos",
       "version": {
         "title": "Version",
-        "description": "Version actuelle de MadWhisp"
+        "description": "Version actuelle de MotsDits"
       },
       "appDataDirectory": {
         "title": "Emplacement des données de l'application",
-        "description": "Emplacement où MadWhisp stocke ses données"
+        "description": "Emplacement où MotsDits stocke ses données"
       },
       "sourceCode": {
         "title": "Code source",
@@ -512,7 +522,7 @@
       },
       "supportDevelopment": {
         "title": "Soutenir le développement",
-        "description": "Aidez-nous à continuer à construire MadWhisp",
+        "description": "Aidez-nous à continuer à construire MotsDits",
         "button": "Faire un don"
       },
       "acknowledgments": {
@@ -520,7 +530,25 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Inférence haute performance du modèle de reconnaissance vocale automatique Whisper d'OpenAI",
-          "details": "MadWhisp utilise Whisper.cpp pour un traitement rapide et local de la parole en texte. Merci au travail incroyable de Georgi Gerganov et des contributeurs."
+          "details": "MotsDits utilise Whisper.cpp pour un traitement rapide et local de la parole en texte. Merci au travail incroyable de Georgi Gerganov et des contributeurs."
+        }
+      },
+      "legal": {
+        "title": "Mentions légales",
+        "thirdParty": {
+          "title": "Licences tierces",
+          "description": "Composants open source intégrés à MotsDits et leurs licences.",
+          "button": "Ouvrir"
+        },
+        "notice": {
+          "title": "Avis",
+          "description": "Informations de droits d'auteur, d'attribution et de marques de commerce.",
+          "button": "Ouvrir"
+        },
+        "handyMit": {
+          "title": "Licence MIT du projet d'origine (Handy)",
+          "description": "Licence MIT du projet Handy à partir duquel MotsDits a été forké.",
+          "button": "Ouvrir"
         }
       }
     }
@@ -563,7 +591,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Autorisations d'accessibilité requises",
-    "permissionsDescription": "MadWhisp a besoin des autorisations d'accessibilité pour taper le texte transcrit.",
+    "permissionsDescription": "MotsDits a besoin des autorisations d'accessibilité pour taper le texte transcrit.",
     "openSettings": "Ouvrir les Préférences Système",
     "dismiss": "Ignorer"
   },
@@ -582,10 +610,11 @@
   },
   "appLanguage": {
     "title": "Langue de l'application",
-    "description": "Changer la langue de l'interface de MadWhisp"
+    "description": "Changer la langue de l'interface de MotsDits"
   },
   "overlay": {
     "transcribing": "Transcription...",
-    "processing": "Traitement..."
+    "processing": "Traitement...",
+    "processingError": "Échec du post-traitement"
   }
 }

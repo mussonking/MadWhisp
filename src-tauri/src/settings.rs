@@ -2,7 +2,7 @@ use log::{debug, warn};
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 use specta::Type;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
@@ -388,6 +388,8 @@ pub struct AppSettings {
     pub auto_submit_key: AutoSubmitKey,
     #[serde(default = "default_post_process_enabled")]
     pub post_process_enabled: bool,
+    #[serde(default = "default_post_process_auto")]
+    pub post_process_auto: bool,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -497,6 +499,10 @@ fn default_post_process_enabled() -> bool {
     false
 }
 
+fn default_post_process_auto() -> bool {
+    false
+}
+
 fn default_app_language() -> String {
     tauri_plugin_os::locale()
         .map(|l| l.replace('_', "-"))
@@ -561,6 +567,14 @@ fn default_post_process_providers() -> Vec<PostProcessProvider> {
             models_endpoint: Some("/models".to_string()),
             supports_structured_output: true,
         },
+        PostProcessProvider {
+            id: "gemini".to_string(),
+            label: "Google Gemini".to_string(),
+            base_url: "https://generativelanguage.googleapis.com/v1beta/openai".to_string(),
+            allow_base_url_edit: false,
+            models_endpoint: Some("/models".to_string()),
+            supports_structured_output: false,
+        },
     ];
 
     // Note: We always include Apple Intelligence on macOS ARM64 without checking availability
@@ -619,11 +633,33 @@ fn default_post_process_models() -> HashMap<String, String> {
 }
 
 fn default_post_process_prompts() -> Vec<LLMPrompt> {
-    vec![LLMPrompt {
-        id: "default_improve_transcriptions".to_string(),
-        name: "Improve Transcriptions".to_string(),
-        prompt: "Clean this transcript:\n1. Fix spelling, capitalization, and punctuation errors\n2. Convert number words to digits (twenty-five → 25, ten percent → 10%, five dollars → $5)\n3. Replace spoken punctuation with symbols (period → ., comma → ,, question mark → ?)\n4. Remove filler words (um, uh, like as filler)\n5. Keep the language in the original version (if it was french, keep it in french for example)\n\nPreserve exact meaning and word order. Do not paraphrase or reorder content.\n\nReturn only the cleaned transcript.\n\nTranscript:\n${output}".to_string(),
-    }]
+    vec![
+        LLMPrompt {
+            id: "prompt_clean".to_string(),
+            name: "Transcription propre".to_string(),
+            prompt: "Tu nettoies une transcription vocale en français.\n\nTÂCHES\n1. Corrige l'orthographe, la capitalisation et la ponctuation manquante.\n2. Convertis les nombres en chiffres (vingt-cinq → 25, dix pour cent → 10 %, cinq dollars → 5 $).\n3. Remplace la ponctuation dictée par les symboles (point → ., virgule → ,, point d'interrogation → ?).\n4. Retire les mots de remplissage purs et sans valeur sémantique (euh, hum, « ben » répété comme tic, « tsé » comme tic).\n5. Conserve la langue d'origine. Si la source est en français québécois, reste en français québécois.\n\nCONTRAINTES\n- Préserve le sens exact, l'ordre des mots et la structure des phrases.\n- Ne reformule pas, ne paraphrase pas, ne résume pas.\n- Conserve le ton et le registre (familier, québécois, direct, etc.).\n- Si un passage est ambigu, laisse-le tel quel plutôt que de deviner.\n\nSORTIE\nRetourne uniquement le transcript nettoyé. Pas de commentaires, pas de balises, pas d'explications.\n\nTranscript :\n${output}".to_string(),
+        },
+        LLMPrompt {
+            id: "prompt_legal".to_string(),
+            name: "Domaine juridique".to_string(),
+            prompt: "Tu nettoies une transcription vocale française provenant d'un professionnel du droit (avocat, notaire, parajuriste, juge).\n\nCONTEXTE JURIDIQUE\nLa discussion peut référer à des articles du Code civil du Québec, à de la jurisprudence (« Untel c. Untel »), à des termes latins (mens rea, prima facie, ipso facto, ultra vires), à des tribunaux, à des parties, à des échéances. Préserve toutes ces références sans les corriger ni les substituer.\n\nTÂCHES\n1. Corrige l'orthographe, la ponctuation et la capitalisation.\n2. Mets en forme les références légales (art. 1457 C.c.Q., L.R.Q., R.S.C., L.Q. 2021, c. 25).\n3. Convertis les nombres en chiffres pour les articles, montants, dates et délais.\n4. Conserve la formulation juridique formelle. Ne simplifie pas un terme technique en synonyme grand public.\n5. Retire seulement les hésitations vocales pures (euh, hum).\n\nCONTRAINTES\n- La précision est critique en contexte juridique. Ne paraphrase jamais.\n- Préserve l'intégralité du sens, des nuances et des conditions.\n- Conserve la terminologie technique latine et anglaise.\n\nSORTIE\nRetourne uniquement le transcript nettoyé.\n\nTranscript :\n${output}".to_string(),
+        },
+        LLMPrompt {
+            id: "prompt_accounting".to_string(),
+            name: "Domaine comptable".to_string(),
+            prompt: "Tu nettoies une transcription vocale française provenant d'un professionnel comptable, fiscaliste ou en finance (CPA, CGA, comptable, contrôleur, conseiller financier).\n\nCONTEXTE COMPTABLE\nLa discussion peut inclure des montants, taux, ratios, dates fiscales, références (T1, T2, T4, TPS, TVQ, REER, CELI, FERR, REEE), normes (IFRS, ASPE, NCECF), comptes du grand livre, états financiers, organismes (ARC, RQ, AMF). Préserve toutes ces références.\n\nTÂCHES\n1. Convertis tous les nombres en chiffres au format québécois : 1 234,56 $, 12,5 %, 0,025 (espaces fines comme séparateur de milliers, virgule comme décimale, symbole après le nombre).\n2. Mets les acronymes en majuscules (TPS, TVQ, REER, CELI, CPA, ARC, RQ, AMF, BAQ).\n3. Corrige l'orthographe et la ponctuation.\n4. Préserve les termes anglais courants si utilisés naturellement (debit, credit, accrual, write-off).\n5. Retire seulement les hésitations vocales pures.\n\nCONTRAINTES\n- Précision numérique absolue. Ne jamais arrondir ni paraphraser un chiffre, un taux ou une date.\n- Préserve l'ordre exact des montants et des opérations.\n- Conserve le ton professionnel.\n\nSORTIE\nRetourne uniquement le transcript nettoyé.\n\nTranscript :\n${output}".to_string(),
+        },
+        LLMPrompt {
+            id: "prompt_medical".to_string(),
+            name: "Domaine médical".to_string(),
+            prompt: "Tu nettoies une transcription vocale française provenant d'un professionnel de la santé (médecin, infirmier, pharmacien, dentiste).\n\nCONTEXTE MÉDICAL\nLa discussion peut référer à des médicaments (génériques et commerciaux), des posologies, des diagnostics, des examens, des symptômes, de l'anatomie, des abréviations latines et anglaises standard. Préserve toutes ces références sans substituer.\n\nTÂCHES\n1. Corrige l'orthographe, la ponctuation et la capitalisation.\n2. Mets en forme les unités (mg, mL, kg, °C, mmHg, bpm, /min, U/L).\n3. Convertis les nombres en chiffres pour posologies, dates, doses, fréquences, valeurs de laboratoire.\n4. Préserve les abréviations médicales standard telles quelles (q4h, prn, po, IV, IM, sc, tid, bid, qid, hs).\n5. Conserve la terminologie médicale latine, française et anglaise sans la traduire.\n6. Retire seulement les hésitations vocales pures.\n\nCONTRAINTES\n- Précision absolue. Ne paraphrase jamais une posologie, un diagnostic, une dose ou une mesure.\n- Les noms propres de médicaments (génériques et commerciaux) restent intacts.\n- En cas de doute sur un terme, laisse-le tel quel.\n\nSORTIE\nRetourne uniquement le transcript nettoyé.\n\nTranscript :\n${output}".to_string(),
+        },
+        LLMPrompt {
+            id: "prompt_tech".to_string(),
+            name: "Domaine technique".to_string(),
+            prompt: "Tu nettoies une transcription vocale française provenant d'un développeur, ingénieur logiciel ou professionnel en technologie.\n\nCONTEXTE TECHNIQUE — IMPORTANT\nLe vocabulaire de dev est intentionnel. Les anglicismes techniques (commit, build, toggle, feature, branch, PR, merge, hotkey, overlay, stream, settings, log, deploy, push, pull, refactor), les noms de librairies, frameworks, fonctions et fichiers, les commandes CLI sont CORRECTS tels quels. Ne les traduis pas. Ne les remplace pas par des équivalents français. Ne les corrige pas même s'ils te semblent étranges hors contexte.\n\nTÂCHES\n1. Corrige l'orthographe, la capitalisation et la ponctuation manquante.\n2. Convertis les nombres en chiffres (vingt-cinq → 25, dix pour cent → 10 %).\n3. Remplace la ponctuation dictée par les symboles (point → ., virgule → ,, deux-points → :).\n4. Retire seulement les mots de remplissage purs et sans valeur sémantique (euh, hum, « ben » répété, « tsé » comme tic).\n5. Conserve la langue d'origine.\n\nCONTRAINTES STRICTES\n- Préserve le sens exact, l'ordre des mots et la structure des phrases.\n- Ne reformule pas, ne paraphrase pas, ne réorganise pas, ne résume pas.\n- Conserve le ton (familier, québécois, direct).\n- Ne change AUCUN terme technique, même si tu en doutes.\n- Si un passage est ambigu, laisse-le tel quel.\n\nSORTIE\nRetourne uniquement le transcript nettoyé. Pas de commentaires, pas de balises, pas d'explications, pas de markdown autour.\n\nTranscript :\n${output}".to_string(),
+        },
+    ]
 }
 
 fn default_typing_tool() -> TypingTool {
@@ -680,6 +716,20 @@ fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
                     .insert(provider.id.clone(), default_model);
                 changed = true;
             }
+        }
+    }
+
+    // Add any default prompts the user is missing (matched by stable ID).
+    // Existing user-edited or user-created prompts are never modified or removed.
+    let existing_ids: HashSet<String> = settings
+        .post_process_prompts
+        .iter()
+        .map(|p| p.id.clone())
+        .collect();
+    for default_prompt in default_post_process_prompts() {
+        if !existing_ids.contains(&default_prompt.id) {
+            settings.post_process_prompts.push(default_prompt);
+            changed = true;
         }
     }
 
@@ -755,6 +805,7 @@ pub fn get_default_settings() -> AppSettings {
         auto_submit: default_auto_submit(),
         auto_submit_key: AutoSubmitKey::default(),
         post_process_enabled: default_post_process_enabled(),
+        post_process_auto: default_post_process_auto(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

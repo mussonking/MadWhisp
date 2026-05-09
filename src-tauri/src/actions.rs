@@ -15,6 +15,7 @@ use crate::TranscriptionCoordinator;
 use ferrous_opencc::{config::BuiltinConfig, OpenCC};
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -55,6 +56,23 @@ const TRANSCRIPTION_FIELD: &str = "transcription";
 /// Strip invisible Unicode characters that some LLMs may insert
 fn strip_invisible_chars(s: &str) -> String {
     s.replace(['\u{200B}', '\u{200C}', '\u{200D}', '\u{FEFF}'], "")
+}
+
+/// Strip reasoning/thinking blocks emitted by open-weight LLMs (Gemma, DeepSeek,
+/// Qwen-thinking, etc.) before the actual answer. Without this, the entire
+/// chain-of-thought ends up pasted into the user's target app.
+static THINKING_BLOCK_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?si)<think>.*?</think>|<thinking>.*?</thinking>|<thought>.*?</thought>")
+        .expect("thinking-block regex must compile")
+});
+
+pub(crate) fn strip_thinking_blocks(s: &str) -> String {
+    THINKING_BLOCK_RE.replace_all(s, "").trim().to_string()
+}
+
+/// Combined cleanup applied to every LLM response before it is shown or pasted.
+fn clean_llm_response(s: &str) -> String {
+    strip_invisible_chars(&strip_thinking_blocks(s))
 }
 
 /// Build a system prompt from the user's prompt template.
@@ -208,7 +226,7 @@ pub async fn post_process_transcription(
                         if let Some(transcription_value) =
                             json.get(TRANSCRIPTION_FIELD).and_then(|t| t.as_str())
                         {
-                            let result = strip_invisible_chars(transcription_value);
+                            let result = clean_llm_response(transcription_value);
                             debug!(
                                 "Structured output post-processing succeeded for provider '{}'. Output length: {} chars",
                                 provider.id,
@@ -217,7 +235,7 @@ pub async fn post_process_transcription(
                             return Some(result);
                         } else {
                             error!("Structured output response missing 'transcription' field");
-                            return Some(strip_invisible_chars(&content));
+                            return Some(clean_llm_response(&content));
                         }
                     }
                     Err(e) => {
@@ -225,7 +243,7 @@ pub async fn post_process_transcription(
                             "Failed to parse structured output JSON: {}. Returning raw content.",
                             e
                         );
-                        return Some(strip_invisible_chars(&content));
+                        return Some(clean_llm_response(&content));
                     }
                 }
             }
@@ -251,7 +269,7 @@ pub async fn post_process_transcription(
         .await
     {
         Ok(Some(content)) => {
-            let content = strip_invisible_chars(&content);
+            let content = clean_llm_response(&content);
             debug!(
                 "LLM post-processing succeeded for provider '{}'. Output length: {} chars",
                 provider.id,
@@ -465,6 +483,11 @@ impl ShortcutAction for TranscribeAction {
                         );
                         if !transcription.is_empty() {
                             let settings = get_settings(&ah);
+                            // Auto post-processing: when both post_process_enabled and
+                            // post_process_auto are on, every transcription is post-processed,
+                            // not just the dedicated hotkey.
+                            let post_process = post_process
+                                || (settings.post_process_enabled && settings.post_process_auto);
                             let mut final_text = transcription.clone();
                             let mut post_processed_text: Option<String> = None;
                             let mut post_process_prompt: Option<String> = None;
@@ -486,6 +509,13 @@ impl ShortcutAction for TranscribeAction {
                             } else {
                                 None
                             };
+                            // Flash a red "processing error" overlay when PP was attempted
+                            // but failed (network error, bad API key, no model, etc.) so the
+                            // user knows the raw transcription is being pasted as a fallback.
+                            let pp_failed = post_process && processed.is_none();
+                            if pp_failed {
+                                utils::show_processing_error_overlay(&ah);
+                            }
                             if let Some(processed_text) = processed {
                                 post_processed_text = Some(processed_text.clone());
                                 final_text = processed_text;
@@ -533,9 +563,19 @@ impl ShortcutAction for TranscribeAction {
                                     ),
                                     Err(e) => error!("Failed to paste transcription: {}", e),
                                 }
-                                // Hide the overlay after transcription is complete
-                                utils::hide_recording_overlay(&ah_clone);
                                 change_tray_icon(&ah_clone, TrayIconState::Idle);
+                                if pp_failed {
+                                    // Keep the red error state visible briefly so the user
+                                    // notices the post-processing fallback occurred.
+                                    let ah_for_hide = ah_clone.clone();
+                                    tauri::async_runtime::spawn(async move {
+                                        tokio::time::sleep(std::time::Duration::from_secs(3))
+                                            .await;
+                                        utils::hide_recording_overlay(&ah_for_hide);
+                                    });
+                                } else {
+                                    utils::hide_recording_overlay(&ah_clone);
+                                }
                             })
                             .unwrap_or_else(|e| {
                                 error!("Failed to run paste on main thread: {:?}", e);

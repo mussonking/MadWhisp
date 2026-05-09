@@ -4,7 +4,7 @@
 
 ### Added
 
-- Renamed the application to MadWhisp and reset project versioning to `0.2.0`.
+- Renamed the application to MotsDits and reset project versioning to `0.2.0`.
 - Added explicit platform boundaries for Windows, Linux, and shared core code.
 - Added Windows build scripts that use a short Cargo target directory.
 - Added Windows ONNX Runtime and DirectML bootstrap for ONNX-based models.
@@ -17,7 +17,7 @@
   the Windows React/Tauri UI.
 - Update checks are disabled by default until signed updater metadata is
   published.
-- GitHub Actions, docs, issue templates, and release artifacts now use MadWhisp
+- GitHub Actions, docs, issue templates, and release artifacts now use MotsDits
   naming.
 
 ### Fixed
@@ -31,5 +31,5 @@
 
 ## Upstream History
 
-MadWhisp is forked from Handy. Earlier Handy release history is preserved in the
-upstream project; MadWhisp tracks its own releases from `0.2.0` onward.
+MotsDits is forked from Handy. Earlier Handy release history is preserved in the
+upstream project; MotsDits tracks its own releases from `0.2.0` onward.

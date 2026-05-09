@@ -59,12 +59,20 @@ function App() {
   useEffect(() => {
     if (onboardingStep === "done" && !hasCompletedPostOnboardingInit.current) {
       hasCompletedPostOnboardingInit.current = true;
-      Promise.all([
-        commands.initializeEnigo(),
-        commands.initializeShortcuts(),
-      ]).catch((e) => {
-        console.warn("Failed to initialize:", e);
-      });
+      const initializeAppState = async () => {
+        try {
+          await commands.initializeShortcuts();
+        } catch (e) {
+          console.warn("Failed to initialize shortcuts:", e);
+        }
+
+        try {
+          await commands.initializeEnigo();
+        } catch (e) {
+          console.warn("Failed to initialize input system:", e);
+        }
+      };
+      initializeAppState();
       refreshAudioDevices();
       refreshOutputDevices();
     }

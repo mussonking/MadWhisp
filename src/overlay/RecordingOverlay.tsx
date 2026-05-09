@@ -11,7 +11,11 @@ import { commands } from "@/bindings";
 import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 
-type OverlayState = "recording" | "transcribing" | "processing";
+type OverlayState =
+  | "recording"
+  | "transcribing"
+  | "processing"
+  | "processing_error";
 
 const RecordingOverlay: React.FC = () => {
   const { t } = useTranslation();
@@ -73,7 +77,7 @@ const RecordingOverlay: React.FC = () => {
   return (
     <div
       dir={direction}
-      className={`recording-overlay ${isVisible ? "fade-in" : ""}`}
+      className={`recording-overlay ${isVisible ? "fade-in" : ""} ${state === "processing_error" ? "processing-error-border" : ""}`}
     >
       <div className="overlay-left">{getIcon()}</div>
 
@@ -98,6 +102,13 @@ const RecordingOverlay: React.FC = () => {
         )}
         {state === "processing" && (
           <div className="transcribing-text">{t("overlay.processing")}</div>
+        )}
+        {state === "processing_error" && (
+          <div className="transcribing-text processing-error-text">
+            {t("overlay.processingError", {
+              defaultValue: "Post-processing failed",
+            })}
+          </div>
         )}
       </div>
 

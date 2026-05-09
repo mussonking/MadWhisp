@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 import { commands } from "@/bindings";
 
 import { Alert } from "../../ui/Alert";
@@ -25,6 +26,36 @@ import { useSettings } from "../../../hooks/useSettings";
 const PostProcessingSettingsApiComponent: React.FC = () => {
   const { t } = useTranslation();
   const state = usePostProcessProviderState();
+  const [isTesting, setIsTesting] = useState(false);
+
+  const handleTestConnection = async () => {
+    if (isTesting) return;
+    setIsTesting(true);
+    try {
+      const result = await commands.testPostProcessConnection();
+      if (result.status === "ok") {
+        toast.success(
+          t("settings.postProcessing.api.test.success", {
+            response: result.data,
+          }),
+        );
+      } else {
+        toast.error(
+          t("settings.postProcessing.api.test.failure", {
+            error: result.error,
+          }),
+        );
+      }
+    } catch (e) {
+      toast.error(
+        t("settings.postProcessing.api.test.failure", {
+          error: e instanceof Error ? e.message : String(e),
+        }),
+      );
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   return (
     <>
@@ -136,6 +167,18 @@ const PostProcessingSettingsApiComponent: React.FC = () => {
                 className={`h-4 w-4 ${state.isFetchingModels ? "animate-spin" : ""}`}
               />
             </ResetButton>
+          </div>
+          <div className="pt-2">
+            <Button
+              onClick={handleTestConnection}
+              variant="secondary"
+              size="md"
+              disabled={isTesting || !state.model}
+            >
+              {isTesting
+                ? t("settings.postProcessing.api.test.running")
+                : t("settings.postProcessing.api.test.button")}
+            </Button>
           </div>
         </SettingContainer>
       )}

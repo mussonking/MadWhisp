@@ -50,7 +50,7 @@ pub fn spawn_overlay(state: Arc<NativeOverlayState>) {
     // Use glib::idle_add to create the overlay window on the GTK main loop.
     gtk::glib::idle_add_once(move || {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
-        window.set_title("MadWhisp Overlay");
+        window.set_title("MotsDits Overlay");
         window.set_default_size(OVERLAY_WIDTH, OVERLAY_HEIGHT);
         window.set_app_paintable(true);
         window.set_decorated(false);
@@ -69,7 +69,7 @@ pub fn spawn_overlay(state: Arc<NativeOverlayState>) {
         window.set_exclusive_zone(0);
         window.set_anchor(Edge::Bottom, true);
         window.set_layer_shell_margin(Edge::Bottom, BOTTOM_MARGIN);
-        window.set_namespace("madwhisp-overlay");
+        window.set_namespace("motsdits-overlay");
 
         // Drawing area
         let drawing_area = gtk::DrawingArea::new();

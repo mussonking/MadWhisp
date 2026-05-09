@@ -16,7 +16,7 @@ if (-not $Destination) {
     $Destination = Join-Path $RepoRoot "src-tauri\resources\onnxruntime\windows-$Arch"
 }
 
-$CacheRoot = Join-Path $env:LOCALAPPDATA "MadWhisp\build-cache\nuget"
+$CacheRoot = Join-Path $env:LOCALAPPDATA "MotsDits\build-cache\nuget"
 New-Item -ItemType Directory -Force -Path $CacheRoot | Out-Null
 if ($UsingDefaultDestination) {
     $OnnxResourceRoot = Join-Path $RepoRoot "src-tauri\resources\onnxruntime"

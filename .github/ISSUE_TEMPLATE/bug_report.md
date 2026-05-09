@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help us improve MadWhisp
+about: Create a report to help us improve MotsDits
 title: "[BUG] "
 labels: ["bug"]
 assignees: ""
@@ -9,7 +9,7 @@ assignees: ""
 ## Before You Submit
 
 Please search existing issues first:
-https://github.com/mussonking/MadWhisp/issues
+https://github.com/mussonking/MotsDits/issues
 
 ## Bug Description
 

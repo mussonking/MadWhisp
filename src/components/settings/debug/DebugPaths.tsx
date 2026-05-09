@@ -27,7 +27,7 @@ export const DebugPaths: React.FC<DebugPathsProps> = ({
           </span>{" "}
           {/* eslint-disable-next-line i18next/no-literal-string */}
           <span className="font-mono text-xs select-text">
-            %APPDATA%/tools.madera.madwhisp
+            %APPDATA%/tools.madera.motsdits
           </span>
         </div>
         <div>
@@ -36,7 +36,7 @@ export const DebugPaths: React.FC<DebugPathsProps> = ({
           </span>{" "}
           {/* eslint-disable-next-line i18next/no-literal-string */}
           <span className="font-mono text-xs select-text">
-            %APPDATA%/tools.madera.madwhisp/models
+            %APPDATA%/tools.madera.motsdits/models
           </span>
         </div>
         <div>
@@ -45,7 +45,7 @@ export const DebugPaths: React.FC<DebugPathsProps> = ({
           </span>{" "}
           {/* eslint-disable-next-line i18next/no-literal-string */}
           <span className="font-mono text-xs select-text">
-            %APPDATA%/tools.madera.madwhisp/settings_store.json
+            %APPDATA%/tools.madera.motsdits/settings_store.json
           </span>
         </div>
       </div>

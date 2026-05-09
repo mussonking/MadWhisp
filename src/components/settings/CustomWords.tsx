@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useSettings } from "../../hooks/useSettings";
 import { Input } from "../ui/Input";
@@ -15,7 +15,11 @@ interface CustomWordsProps {
 
 type TokenField = "aliases" | "blacklist";
 
-const sanitizeText = (value: string) => value.trim().replace(/[<>"'&]/g, "");
+// Trim only — alias and word strings flow through React (auto-escaped) and a
+// literal-string matcher in Rust, so there's no XSS or regex-injection surface
+// to defend against. Stripping characters here was breaking legitimate input
+// like French aliases ("l'app", "j'ai", "n'importe").
+const sanitizeText = (value: string) => value.trim();
 
 const withDefaults = (entry: CustomWordEntry): CustomWordEntry => ({
   ...entry,
@@ -32,10 +36,18 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
     const [blacklistDrafts, setBlacklistDrafts] = useState<
       Record<string, string>
     >({});
+    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+    const toggleExpanded = (word: string) => {
+      setExpanded((prev) => ({ ...prev, [word]: !prev[word] }));
+    };
 
     const customWords: CustomWordEntry[] = (
       getSetting("custom_words") || []
     ).map(withDefaults);
+    const sortedCustomWords = [...customWords].sort((a, b) =>
+      a.word.localeCompare(b.word, undefined, { sensitivity: "base" }),
+    );
     const isBusy = isUpdating("custom_words");
 
     const tokenConfig = {
@@ -247,11 +259,12 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           description={t("settings.advanced.customWords.description")}
           descriptionMode={descriptionMode}
           grouped={grouped}
+          layout="stacked"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full">
             <Input
               type="text"
-              className="max-w-48"
+              className="flex-1 min-w-0"
               value={newWord}
               onChange={(e) => setNewWord(e.target.value)}
               onKeyDown={handleWordKeyDown}
@@ -264,7 +277,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
               disabled={!newWord.trim() || newWord.trim().length > 80 || isBusy}
               variant="primary"
               size="md"
-              className="inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 flex-shrink-0"
             >
               <Plus className="h-4 w-4" />
               {t("settings.advanced.customWords.add")}
@@ -273,38 +286,51 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
         </SettingContainer>
 
         <div
-          className={`px-4 p-2 ${grouped ? "" : "rounded-lg border border-mid-gray/20"} space-y-3`}
+          className={`px-4 p-2 ${grouped ? "" : "rounded-lg border border-mid-gray/20"} space-y-1.5`}
         >
-          {customWords.length === 0 ? (
+          {sortedCustomWords.length === 0 ? (
             <p className="text-sm italic text-mid-gray">
               {t("settings.advanced.customWords.empty", {
                 defaultValue: "No custom words yet.",
               })}
             </p>
           ) : (
-            customWords.map((entry) => {
+            sortedCustomWords.map((entry) => {
               const aliases = entry.aliases ?? [];
               const blacklist = entry.blacklist ?? [];
               const summary = `${aliases.length}a | ${blacklist.length}b`;
+              const isOpen = !!expanded[entry.word];
 
               return (
                 <div
                   key={entry.word}
-                  className="space-y-3 rounded-md border border-logo-stroke/25 bg-[#0a0f1a] p-3"
+                  className="rounded-md border border-logo-stroke/25 bg-[#0a0f1a]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate font-mono text-sm font-semibold text-logo-primary">
+                  <div className="flex items-center gap-2 px-3 py-1.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(entry.word)}
+                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                      aria-expanded={isOpen}
+                    >
+                      {isOpen ? (
+                        <ChevronDown className="h-4 w-4 flex-shrink-0 text-mid-gray" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-mid-gray" />
+                      )}
+                      <span className="truncate font-mono text-sm font-semibold text-logo-primary">
                         {entry.word}
-                      </div>
-                      <div className="text-xs text-mid-gray">{summary}</div>
-                    </div>
+                      </span>
+                      <span className="flex-shrink-0 text-xs text-mid-gray">
+                        {summary}
+                      </span>
+                    </button>
                     <Button
                       onClick={() => handleRemoveWord(entry.word)}
                       disabled={isBusy}
                       variant="danger-ghost"
                       size="sm"
-                      className="inline-flex h-8 w-8 items-center justify-center p-0"
+                      className="inline-flex h-7 w-7 items-center justify-center p-0"
                       aria-label={t("settings.advanced.customWords.remove", {
                         word: entry.word,
                       })}
@@ -313,8 +339,12 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
                     </Button>
                   </div>
 
-                  {renderTokenSection(entry, "aliases")}
-                  {renderTokenSection(entry, "blacklist")}
+                  {isOpen && (
+                    <div className="space-y-3 border-t border-logo-stroke/15 px-3 py-3">
+                      {renderTokenSection(entry, "aliases")}
+                      {renderTokenSection(entry, "blacklist")}
+                    </div>
+                  )}
                 </div>
               );
             })

@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "الأذونات المطلوبة",
-      "description": ".يحتاج MadWhisp إلى بعض الأذونات ليعمل بشكل صحيح",
+      "description": ".يحتاج MotsDits إلى بعض الأذونات ليعمل بشكل صحيح",
       "microphone": {
         "title": "الوصول إلى الميكروفون",
         "description": ".مطلوب لسماع صوتك من أجل التفريغ الصوتي"
@@ -149,7 +149,7 @@
     "general": {
       "title": "عام",
       "shortcut": {
-        "title": "اختصارات MadWhisp",
+        "title": "اختصارات MotsDits",
         "description": "إعداد اختصارات لوحة المفاتيح لبدء تسجيل التفريغ الصوتي",
         "loading": "...جاري تحميل الاختصارات",
         "none": "لا توجد اختصارات مجهزة",
@@ -240,11 +240,11 @@
       },
       "autostart": {
         "label": "التشغيل عند بدء التشغيل",
-        "description": ".بدء تشغيل MadWhisp تلقائياً عند تسجيل الدخول إلى جهاز الكمبيوتر الخاص بك"
+        "description": ".بدء تشغيل MotsDits تلقائياً عند تسجيل الدخول إلى جهاز الكمبيوتر الخاص بك"
       },
       "showTrayIcon": {
         "label": "إظهار أيقونة شريط النظام",
-        "description": ".عرض أيقونة MadWhisp في شريط النظام"
+        "description": ".عرض أيقونة MotsDits في شريط النظام"
       },
       "overlay": {
         "title": "موقع التراكب",
@@ -413,7 +413,7 @@
       },
       "updateChecks": {
         "label": "التحقق من وجود تحديثات",
-        "description": "التحقق تلقائياً من وجود إصدارات جديدة من MadWhisp"
+        "description": "التحقق تلقائياً من وجود إصدارات جديدة من MotsDits"
       },
       "soundTheme": {
         "label": "سمة الصوت",
@@ -477,11 +477,11 @@
       "title": "حول",
       "version": {
         "title": "الإصدار",
-        "description": "الإصدار الحالي من MadWhisp"
+        "description": "الإصدار الحالي من MotsDits"
       },
       "appDataDirectory": {
         "title": "مجلد بيانات التطبيق",
-        "description": "الموقع الذي يخزن فيه MadWhisp بياناته"
+        "description": "الموقع الذي يخزن فيه MotsDits بياناته"
       },
       "sourceCode": {
         "title": "كود المصدر",
@@ -490,7 +490,7 @@
       },
       "supportDevelopment": {
         "title": "دعم التطوير",
-        "description": "ساعدنا في مواصلة بناء MadWhisp",
+        "description": "ساعدنا في مواصلة بناء MotsDits",
         "button": "تبرع"
       },
       "acknowledgments": {
@@ -498,7 +498,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "استنتاج عالي الأداء لنموذج التعرف التلقائي على الكلام Whisper من OpenAI",
-          "details": ".يستخدم MadWhisp برنامج Whisper.cpp لمعالجة سريعة ومحلية لتحويل الكلام إلى نص. شكراً للعمل الرائع الذي قام به Georgi Gerganov والمساهمون"
+          "details": ".يستخدم MotsDits برنامج Whisper.cpp لمعالجة سريعة ومحلية لتحويل الكلام إلى نص. شكراً للعمل الرائع الذي قام به Georgi Gerganov والمساهمون"
         }
       }
     },
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "أذونات إمكانية الوصول مطلوبة",
-    "permissionsDescription": ".يحتاج MadWhisp إلى أذونات إمكانية الوصول لكتابة النص المفرغ",
+    "permissionsDescription": ".يحتاج MotsDits إلى أذونات إمكانية الوصول لكتابة النص المفرغ",
     "openSettings": "فتح إعدادات النظام",
     "dismiss": "تجاهل"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "لغة التطبيق",
-    "description": "تغيير لغة واجهة MadWhisp"
+    "description": "تغيير لغة واجهة MotsDits"
   },
   "overlay": {
     "transcribing": "...جاري التفريغ",

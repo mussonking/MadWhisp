@@ -1,6 +1,6 @@
 # Platform Architecture
 
-MadWhisp should stay one project, but not one identical implementation for every
+MotsDits should stay one project, but not one identical implementation for every
 operating system. The shared app core should remain portable; OS behavior should
 live behind explicit platform boundaries.
 
@@ -78,7 +78,7 @@ The script uses Visual Studio Build Tools and `C:\mwtarget` as
 failures while building the Vulkan whisper dependency. It also downloads ignored
 ONNX Runtime and DirectML DLLs from NuGet and places them under
 `src-tauri\resources\onnxruntime\windows-x64`, so ONNX models do not fall back to
-stale system DLLs. After a release build, it syncs `madwhisp.exe`, runtime
+stale system DLLs. After a release build, it syncs `motsdits.exe`, runtime
 resources, and the MSI/NSIS bundles back into `src-tauri\target\release` for
 normal local testing.
 

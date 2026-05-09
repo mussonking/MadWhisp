@@ -19,7 +19,7 @@ on:
       asset-prefix:
         required: false
         type: string
-        default: "madwhisp"
+        default: "motsdits"
       asset-name-pattern:
         required: false
         type: string

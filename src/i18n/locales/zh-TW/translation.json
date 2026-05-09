@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "需要權限",
-      "description": "MadWhisp 需要一些權限才能正常運作",
+      "description": "MotsDits 需要一些權限才能正常運作",
       "microphone": {
         "title": "麥克風存取",
         "description": "需要聽取您的語音進行轉錄"
@@ -153,7 +153,7 @@
     "general": {
       "title": "一般",
       "shortcut": {
-        "title": "MadWhisp 快捷鍵",
+        "title": "MotsDits 快捷鍵",
         "description": "設定啟動語音轉文字錄製的鍵盤快捷鍵",
         "loading": "載入快捷鍵中...",
         "none": "未設定快捷鍵",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "開機啟動",
-        "description": "登入電腦時自動啟動 MadWhisp"
+        "description": "登入電腦時自動啟動 MotsDits"
       },
       "showTrayIcon": {
         "label": "顯示系統匣圖示",
-        "description": "在系統匣中顯示 MadWhisp 圖示"
+        "description": "在系統匣中顯示 MotsDits 圖示"
       },
       "overlay": {
         "title": "懸浮窗位置",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "檢查更新",
-        "description": "自動檢查 MadWhisp 的新版本"
+        "description": "自動檢查 MotsDits 的新版本"
       },
       "soundTheme": {
         "label": "聲音主題",
@@ -499,11 +499,11 @@
       "title": "關於",
       "version": {
         "title": "版本",
-        "description": "MadWhisp 的目前版本"
+        "description": "MotsDits 的目前版本"
       },
       "appDataDirectory": {
         "title": "應用程式資料目錄",
-        "description": "MadWhisp 儲存資料的位置"
+        "description": "MotsDits 儲存資料的位置"
       },
       "sourceCode": {
         "title": "原始碼",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "支持開發",
-        "description": "幫助我們繼續開發 MadWhisp",
+        "description": "幫助我們繼續開發 MotsDits",
         "button": "捐贈"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "針對 OpenAI Whisper 自動語音識別模型的高效能推理引擎",
-          "details": "MadWhisp 使用 Whisper.cpp 進行快速的本機語音轉文字處理。感謝 Georgi Gerganov 和貢獻者們的傑出工作"
+          "details": "MotsDits 使用 Whisper.cpp 進行快速的本機語音轉文字處理。感謝 Georgi Gerganov 和貢獻者們的傑出工作"
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "需要輔助使用權限",
-    "permissionsDescription": "MadWhisp 需要輔助使用權限才能輸入轉錄的文字",
+    "permissionsDescription": "MotsDits 需要輔助使用權限才能輸入轉錄的文字",
     "openSettings": "開啟系統設定",
     "dismiss": "關閉"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "應用程式語言",
-    "description": "變更 MadWhisp 介面的語言"
+    "description": "變更 MotsDits 介面的語言"
   },
   "overlay": {
     "transcribing": "正在轉錄...",

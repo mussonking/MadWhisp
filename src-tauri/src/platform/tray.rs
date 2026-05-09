@@ -36,7 +36,7 @@ pub fn icon_path(theme: TrayTheme, state: &TrayIconState) -> &'static str {
         (TrayTheme::Light, TrayIconState::Idle) => "resources/tray_idle_dark.png",
         (TrayTheme::Light, TrayIconState::Recording) => "resources/tray_recording_dark.png",
         (TrayTheme::Light, TrayIconState::Transcribing) => "resources/tray_transcribing_dark.png",
-        (TrayTheme::Colored, TrayIconState::Idle) => "resources/madwhisp.png",
+        (TrayTheme::Colored, TrayIconState::Idle) => "resources/motsdits.png",
         (TrayTheme::Colored, TrayIconState::Recording) => "resources/recording.png",
         (TrayTheme::Colored, TrayIconState::Transcribing) => "resources/transcribing.png",
     }

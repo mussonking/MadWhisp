@@ -338,6 +338,12 @@ pub fn show_processing_overlay(app_handle: &AppHandle) {
     show_overlay_state(app_handle, "processing");
 }
 
+/// Shows the processing overlay in error state (red text), used to flash a
+/// failure indicator after post-processing falls back to the raw transcription.
+pub fn show_processing_error_overlay(app_handle: &AppHandle) {
+    show_overlay_state(app_handle, "processing_error");
+}
+
 /// Updates the overlay window position based on current settings
 pub fn update_overlay_position(app_handle: &AppHandle) {
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {

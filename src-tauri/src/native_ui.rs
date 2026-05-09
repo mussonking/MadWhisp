@@ -337,14 +337,14 @@ impl SettingsApp {
         };
         ui.vertical_centered(|ui| {
             ui.label(
-                egui::RichText::new(format!("> MadWhisp{}", cursor))
+                egui::RichText::new(format!("> MotsDits{}", cursor))
                     .size(18.0)
                     .color(ACCENT_GREEN)
                     .monospace()
                     .strong(),
             );
             ui.label(
-                egui::RichText::new(format!("MadWhisp v{}", env!("CARGO_PKG_VERSION")))
+                egui::RichText::new(format!("MotsDits v{}", env!("CARGO_PKG_VERSION")))
                     .size(9.0)
                     .color(TEXT_DIM)
                     .monospace(),
@@ -2074,8 +2074,8 @@ pub fn run_settings_window(app_handle: tauri::AppHandle) -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1100.0, 750.0])
             .with_min_inner_size([900.0, 650.0])
-            .with_title("MadWhisp")
-            .with_app_id("madwhisp"),
+            .with_title("MotsDits")
+            .with_app_id("motsdits"),
         event_loop_builder: Some(Box::new(|builder| {
             builder.with_any_thread(true);
         })),
@@ -2083,7 +2083,7 @@ pub fn run_settings_window(app_handle: tauri::AppHandle) -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "MadWhisp",
+        "MotsDits",
         options,
         Box::new(move |_cc| Ok(Box::new(SettingsApp::new(app_handle)))),
     )

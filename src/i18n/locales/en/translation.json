@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "General",
-    "models": "Models",
+    "listening": "Listening Quality",
     "advanced": "Advanced",
     "postProcessing": "Post Process",
     "history": "History",
@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Permissions Required",
-      "description": "MadWhisp needs a couple of permissions to work properly.",
+      "description": "MotsDits needs a couple of permissions to work properly.",
       "microphone": {
         "title": "Microphone Access",
         "description": "Required to hear your voice for transcription."
@@ -153,7 +153,7 @@
     "general": {
       "title": "General",
       "shortcut": {
-        "title": "MadWhisp Shortcuts",
+        "title": "MotsDits Shortcuts",
         "description": "Configure keyboard shortcuts to trigger speech-to-text recording",
         "loading": "Loading shortcuts...",
         "none": "No shortcuts configured",
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Launch on Startup",
-        "description": "Automatically start MadWhisp when you log in to your computer."
+        "description": "Automatically start MotsDits when you log in to your computer."
       },
       "showTrayIcon": {
         "label": "Show Tray Icon",
-        "description": "Display the MadWhisp icon in the system tray."
+        "description": "Display the MotsDits icon in the system tray."
       },
       "overlay": {
         "title": "Overlay Position",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Search or select a model",
           "placeholderNoOptions": "Type a model name",
           "refreshModels": "Refresh models"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -435,7 +441,7 @@
       },
       "updateChecks": {
         "label": "Check for Updates",
-        "description": "Automatically check for new versions of MadWhisp"
+        "description": "Automatically check for new versions of MotsDits"
       },
       "soundTheme": {
         "label": "Sound Theme",
@@ -472,6 +478,10 @@
         "label": "Post Processing",
         "description": "Enable AI-powered text refinement after transcription"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Mute While Recording",
         "description": "Mute system audio during recording"
@@ -499,11 +509,11 @@
       "title": "About",
       "version": {
         "title": "Version",
-        "description": "Current version of MadWhisp"
+        "description": "Current version of MotsDits"
       },
       "appDataDirectory": {
         "title": "App Data Directory",
-        "description": "Location where MadWhisp stores its data"
+        "description": "Location where MotsDits stores its data"
       },
       "sourceCode": {
         "title": "Source Code",
@@ -512,7 +522,7 @@
       },
       "supportDevelopment": {
         "title": "Support Development",
-        "description": "Help us continue building MadWhisp",
+        "description": "Help us continue building MotsDits",
         "button": "Donate"
       },
       "acknowledgments": {
@@ -520,7 +530,25 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "High-performance inference of OpenAI's Whisper automatic speech recognition model",
-          "details": "MadWhisp uses Whisper.cpp for fast, local speech-to-text processing. Thanks to the amazing work by Georgi Gerganov and contributors."
+          "details": "MotsDits uses Whisper.cpp for fast, local speech-to-text processing. Thanks to the amazing work by Georgi Gerganov and contributors."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -563,7 +591,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Accessibility Permissions Required",
-    "permissionsDescription": "MadWhisp needs accessibility permissions to type transcribed text.",
+    "permissionsDescription": "MotsDits needs accessibility permissions to type transcribed text.",
     "openSettings": "Open System Settings",
     "dismiss": "Dismiss"
   },
@@ -582,10 +610,11 @@
   },
   "appLanguage": {
     "title": "Application Language",
-    "description": "Change the language of the MadWhisp interface"
+    "description": "Change the language of the MotsDits interface"
   },
   "overlay": {
     "transcribing": "Transcribing...",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "processingError": "Post-processing failed"
   }
 }

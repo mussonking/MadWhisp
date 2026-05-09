@@ -1,6 +1,6 @@
 # Build Instructions
 
-This guide covers local development and release builds for MadWhisp.
+This guide covers local development and release builds for MotsDits.
 
 ## Prerequisites
 
@@ -41,8 +41,8 @@ xcode-select --install
 ## Setup
 
 ```bash
-git clone https://github.com/mussonking/MadWhisp.git
-cd MadWhisp
+git clone https://github.com/mussonking/MotsDits.git
+cd MotsDits
 bun install
 ```
 
@@ -74,7 +74,7 @@ the ignored `src-tauri\resources\onnxruntime\windows-x64` directory with the
 runtime DLLs needed by ONNX models such as Canary, Parakeet, Moonshine,
 SenseVoice, and GigaAM.
 
-After a successful release build it syncs `madwhisp.exe`, runtime resources,
+After a successful release build it syncs `motsdits.exe`, runtime resources,
 the MSI, and the NSIS installer back to `src-tauri\target\release`.
 
 For Windows ARM64 packaging, prepare ARM64 runtime resources first:
@@ -85,10 +85,10 @@ powershell -ExecutionPolicy Bypass -File scripts/setup-onnxruntime-windows.ps1 -
 
 ## Nix
 
-MadWhisp exposes the official flake package as `madwhisp`:
+MotsDits exposes the official flake package as `motsdits`:
 
 ```bash
-nix build .#madwhisp
+nix build .#motsdits
 ```
 
 The old `.#handy` package name remains as a temporary compatibility alias.

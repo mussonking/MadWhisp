@@ -37,7 +37,7 @@ if ($Mode -eq "check") {
     $BuildCommand = "bun run tauri build"
 }
 
-$CmdFile = Join-Path $env:TEMP "madwhisp-build-$PID.cmd"
+$CmdFile = Join-Path $env:TEMP "motsdits-build-$PID.cmd"
 $CmdBody = @"
 @echo off
 call "$Vcvars"
@@ -85,10 +85,10 @@ if ($Mode -eq "build" -and -not $NoSync) {
         }
     }
 
-    $ExeSource = Join-Path $ReleaseSource "madwhisp.exe"
+    $ExeSource = Join-Path $ReleaseSource "motsdits.exe"
     if (Test-Path -LiteralPath $ExeSource) {
-        if (Copy-BuildArtifact -Source $ExeSource -Destination (Join-Path $ReleaseDest "madwhisp.exe")) {
-            Write-Host "Synced madwhisp.exe to src-tauri\target\release"
+        if (Copy-BuildArtifact -Source $ExeSource -Destination (Join-Path $ReleaseDest "motsdits.exe")) {
+            Write-Host "Synced motsdits.exe to src-tauri\target\release"
         }
     }
 

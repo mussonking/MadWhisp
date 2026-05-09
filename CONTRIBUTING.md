@@ -1,8 +1,8 @@
-# Contributing to MadWhisp
+# Contributing to MotsDits
 
-Thanks for helping improve MadWhisp.
+Thanks for helping improve MotsDits.
 
-MadWhisp is a fork of Handy, but it is now maintained as its own multi-platform
+MotsDits is a fork of Handy, but it is now maintained as its own multi-platform
 speech-to-text app. The main engineering rule is simple: keep shared behavior in
 the core, and put OS-specific behavior behind platform adapters.
 
@@ -17,8 +17,8 @@ the core, and put OS-specific behavior behind platform adapters.
 ## Local Setup
 
 ```bash
-git clone https://github.com/mussonking/MadWhisp.git
-cd MadWhisp
+git clone https://github.com/mussonking/MotsDits.git
+cd MotsDits
 bun install
 ```
 
@@ -81,5 +81,5 @@ Use the PR template. Include:
 
 ## Attribution
 
-MadWhisp is forked from Handy by cjpais and remains MIT licensed. Keep upstream
+MotsDits is forked from Handy by cjpais and remains MIT licensed. Keep upstream
 license and attribution intact when moving or adapting upstream code.

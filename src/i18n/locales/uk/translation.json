@@ -97,7 +97,7 @@
     },
     "permissions": {
       "title": "Потрібні дозволи",
-      "description": "MadWhisp потребує деяких дозволів для коректної роботи.",
+      "description": "MotsDits потребує деяких дозволів для коректної роботи.",
       "microphone": {
         "title": "Доступ до мікрофона",
         "description": "Потрібен для прослуховування вашого голосу для транскрипції."
@@ -262,11 +262,11 @@
       },
       "autostart": {
         "label": "Запуск при старті системи",
-        "description": "Автоматично запускати MadWhisp при вході в систему"
+        "description": "Автоматично запускати MotsDits при вході в систему"
       },
       "showTrayIcon": {
         "label": "Показати значок у треї",
-        "description": "Відображати значок MadWhisp у системному треї."
+        "description": "Відображати значок MotsDits у системному треї."
       },
       "overlay": {
         "title": "Позиція оверлею",
@@ -435,7 +435,7 @@
       },
       "updateChecks": {
         "label": "Перевірка оновлень",
-        "description": "Автоматично перевіряти наявність нових версій MadWhisp"
+        "description": "Автоматично перевіряти наявність нових версій MotsDits"
       },
       "soundTheme": {
         "label": "Звукова тема",
@@ -499,11 +499,11 @@
       "title": "Інфо",
       "version": {
         "title": "Версія",
-        "description": "Поточна версія MadWhisp"
+        "description": "Поточна версія MotsDits"
       },
       "appDataDirectory": {
         "title": "Папка даних програми",
-        "description": "Розташування даних MadWhisp"
+        "description": "Розташування даних MotsDits"
       },
       "sourceCode": {
         "title": "Вихідний код",
@@ -512,7 +512,7 @@
       },
       "supportDevelopment": {
         "title": "Підтримати розробку",
-        "description": "Допоможіть нам продовжувати розвивати MadWhisp",
+        "description": "Допоможіть нам продовжувати розвивати MotsDits",
         "button": "Підтримати"
       },
       "acknowledgments": {
@@ -520,7 +520,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Високопродуктивний інференс моделі автоматичного розпізнавання мовлення Whisper від OpenAI",
-          "details": "MadWhisp використовує Whisper.cpp для швидкої локальної обробки мовлення в текст. Дякуємо за чудову роботу Георгію Герганову та контриб'юторам."
+          "details": "MotsDits використовує Whisper.cpp для швидкої локальної обробки мовлення в текст. Дякуємо за чудову роботу Георгію Герганову та контриб'юторам."
         }
       }
     }
@@ -563,7 +563,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Потрібні права доступу",
-    "permissionsDescription": "MadWhisp потребує дозволи доступності для введення транскрибованого тексту.",
+    "permissionsDescription": "MotsDits потребує дозволи доступності для введення транскрибованого тексту.",
     "openSettings": "Відкрити Системні налаштування",
     "dismiss": "Закрити"
   },
@@ -582,7 +582,7 @@
   },
   "appLanguage": {
     "title": "Мова інтерфейсу",
-    "description": "Змінити мову інтерфейсу MadWhisp"
+    "description": "Змінити мову інтерфейсу MotsDits"
   },
   "overlay": {
     "transcribing": "Обробка...",

@@ -12,7 +12,7 @@ use signal_hook::iterator::Signals;
 use std::thread;
 
 #[cfg(unix)]
-const SOCKET_PATH: &str = "/tmp/madwhisp.sock";
+const SOCKET_PATH: &str = "/tmp/motsdits.sock";
 
 /// Send a transcription input to the coordinator.
 /// Used by signal handlers, CLI flags, and any other external trigger.

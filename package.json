@@ -1,11 +1,11 @@
 {
-  "name": "madwhisp",
+  "name": "motsdits",
   "private": true,
   "version": "0.2.0",
   "description": "Local speech-to-text desktop app with native Linux UI and GPU-accelerated Windows support.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mussonking/MadWhisp.git"
+    "url": "https://github.com/mussonking/MotsDits.git"
   },
   "license": "MIT",
   "type": "module",
@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri",
+    "tauri": "powershell -ExecutionPolicy Bypass -File scripts/tauri-windows.ps1",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write . && cd src-tauri && cargo fmt",

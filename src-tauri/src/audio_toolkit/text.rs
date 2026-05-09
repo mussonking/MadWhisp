@@ -15,12 +15,18 @@ fn normalize_correction_key(text: &str) -> String {
 }
 
 /// Builds an n-gram string by cleaning and concatenating words.
+///
+/// Curly Unicode apostrophes (U+2019, U+02BC) are normalized to a straight
+/// ASCII apostrophe so transcriptions from Whisper (which often emits the
+/// curly form for French contractions like "l'app") still match aliases the
+/// user typed with a regular keyboard.
 fn build_ngram(words: &[&str]) -> String {
     words
         .iter()
         .map(|w| {
-            w.trim_matches(|c: char| !c.is_alphanumeric())
+            w.trim_matches(|c: char| !c.is_alphanumeric() && c != '\'')
                 .to_lowercase()
+                .replace(['\u{2019}', '\u{02BC}'], "'")
         })
         .collect::<Vec<_>>()
         .concat()

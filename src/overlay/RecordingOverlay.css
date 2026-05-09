@@ -72,6 +72,20 @@
   animation: transcribing-pulse 1.5s infinite ease-in-out;
 }
 
+.transcribing-text.processing-error-text {
+  color: #ff5d6c;
+  font-weight: 600;
+  animation: none;
+}
+
+.recording-overlay.processing-error-border {
+  border-color: #ff5d6c99;
+  box-shadow:
+    0 8px 24px #00000059,
+    0 0 0 1px #ff5d6c26,
+    0 0 18px #ff5d6c40;
+}
+
 @keyframes transcribing-pulse {
   0%,
   100% {

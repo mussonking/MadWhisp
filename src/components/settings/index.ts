@@ -6,6 +6,7 @@ export { HistorySettings } from "./history/HistorySettings";
 export { AboutSettings } from "./about/AboutSettings";
 export { PostProcessingSettings } from "./post-processing/PostProcessingSettings";
 export { ModelsSettings } from "./models/ModelsSettings";
+export { ListeningQuality } from "./listening/ListeningQuality";
 export { WordsSettings } from "./words/WordsSettings";
 
 // Individual setting components
@@ -22,6 +23,7 @@ export { ShortcutInput } from "./ShortcutInput";
 export { TranslateToEnglish } from "./TranslateToEnglish";
 export { CustomWords } from "./CustomWords";
 export { PostProcessingToggle } from "./PostProcessingToggle";
+export { PostProcessingAutoToggle } from "./PostProcessingAutoToggle";
 export { PostProcessingSettingsApi } from "./PostProcessingSettingsApi";
 export { PostProcessingSettingsPrompts } from "./PostProcessingSettingsPrompts";
 export { AppDataDirectory } from "./AppDataDirectory";

@@ -38,14 +38,14 @@ bun run build:windows
 
 Expected artifacts:
 
-- `src-tauri\target\release\madwhisp.exe`
+- `src-tauri\target\release\motsdits.exe`
 - `src-tauri\target\release\resources\onnxruntime\windows-x64\onnxruntime.dll`
-- `src-tauri\target\release\bundle\msi\MadWhisp_<version>_x64_en-US.msi`
-- `src-tauri\target\release\bundle\nsis\MadWhisp_<version>_x64-setup.exe`
+- `src-tauri\target\release\bundle\msi\MotsDits_<version>_x64_en-US.msi`
+- `src-tauri\target\release\bundle\nsis\MotsDits_<version>_x64-setup.exe`
 
 ## GitHub Release
 
-- Confirm release workflows use the `madwhisp` asset prefix.
+- Confirm release workflows use the `motsdits` asset prefix.
 - Confirm Windows release workflows run `scripts/setup-onnxruntime-windows.ps1`
   before `tauri-action`.
 - Confirm signing secrets exist before enabling signed release builds.

@@ -131,6 +131,8 @@ const settingUpdaters: {
   history_limit: (value) => commands.updateHistoryLimit(value as number),
   post_process_enabled: (value) =>
     commands.changePostProcessEnabledSetting(value as boolean),
+  post_process_auto: (value) =>
+    commands.changePostProcessAutoSetting(value as boolean),
   post_process_selected_prompt_id: (value) =>
     commands.setPostProcessSelectedPrompt(value as string),
   mute_while_recording: (value) =>
@@ -459,13 +461,21 @@ export const useSettingsStore = create<SettingsStore>()(
     },
 
     updatePostProcessBaseUrl: async (providerId, baseUrl) => {
-      const { setUpdating, refreshSettings } = get();
+      const { setUpdating, refreshSettings, settings } = get();
       const updateKey = `post_process_base_url:${providerId}`;
+
+      // Compare against current persisted URL — if unchanged, skip everything.
+      // This prevents an onBlur with no edits from wiping the user's stored model.
+      const currentUrl =
+        settings?.post_process_providers?.find((p) => p.id === providerId)
+          ?.base_url ?? "";
+      if (currentUrl === baseUrl) {
+        return;
+      }
 
       setUpdating(updateKey, true);
 
       try {
-        // Persist the new base URL first.
         const urlResult = await commands.changePostProcessBaseUrlSetting(
           providerId,
           baseUrl,
@@ -475,19 +485,9 @@ export const useSettingsStore = create<SettingsStore>()(
           return;
         }
 
-        // Reset the stored model since the previous value is almost certainly
-        // invalid for the new endpoint (e.g. switching Custom from Groq to
-        // Cerebras). Only proceed if the reset succeeds.
-        const modelResult = await commands.changePostProcessModelSetting(
-          providerId,
-          "",
-        );
-        if (modelResult.status === "error") {
-          console.error("Failed to reset model setting:", modelResult.error);
-          return;
-        }
-
-        // Clear cached model options only after both backend writes succeed.
+        // Clear cached model options since the new endpoint likely exposes a
+        // different model list. The stored model itself is preserved — the
+        // user can refresh the model list and pick a new one if needed.
         set((state) => ({
           postProcessModelOptions: {
             ...state.postProcessModelOptions,
@@ -495,7 +495,6 @@ export const useSettingsStore = create<SettingsStore>()(
           },
         }));
 
-        // Single refresh after both backend writes.
         await refreshSettings();
       } catch (error) {
         console.error("Failed to update post-process base URL:", error);
