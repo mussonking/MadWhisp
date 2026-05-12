@@ -234,21 +234,18 @@ impl HistoryManager {
 
     pub fn cleanup_old_entries(&self) -> Result<()> {
         let retention_period = crate::settings::get_recording_retention_period(&self.app_handle);
+        let limit = crate::settings::get_history_limit(&self.app_handle);
 
+        // Always enforce the count cap from `history_limit`. Previously this only
+        // ran when retention was set to PreserveLimit, which let users accumulate
+        // unbounded entries when they had a time-based retention selected.
+        self.cleanup_by_count(limit)?;
+
+        // Apply time-based cleanup on top when configured.
         match retention_period {
-            crate::settings::RecordingRetentionPeriod::Never => {
-                // Don't delete anything
-                Ok(())
-            }
-            crate::settings::RecordingRetentionPeriod::PreserveLimit => {
-                // Use the old count-based logic with history_limit
-                let limit = crate::settings::get_history_limit(&self.app_handle);
-                self.cleanup_by_count(limit)
-            }
-            _ => {
-                // Use time-based logic
-                self.cleanup_by_time(retention_period)
-            }
+            crate::settings::RecordingRetentionPeriod::Never
+            | crate::settings::RecordingRetentionPeriod::PreserveLimit => Ok(()),
+            _ => self.cleanup_by_time(retention_period),
         }
     }
 
