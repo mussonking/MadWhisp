@@ -1,49 +1,34 @@
 import React from "react";
+import logoUrl from "../assets/motsdits-logo.png";
 
 interface BrandLogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
-  showTagline?: boolean;
 }
 
-const sizeClasses = {
-  sm: {
-    brand: "text-sm",
-    tagline: "text-[10px]",
-  },
-  md: {
-    brand: "text-base",
-    tagline: "text-[11px]",
-  },
-  lg: {
-    brand: "text-2xl",
-    tagline: "text-xs",
-  },
-} as const;
-
-const BRAND_NAME = "MotsDits";
-const BRAND_TAGLINE = "madera.tools";
+const sizePixels: Record<"sm" | "md" | "lg", number> = {
+  sm: 56,
+  md: 96,
+  lg: 168,
+};
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = "",
   size = "md",
-  showTagline = true,
 }) => {
-  const classes = sizeClasses[size];
+  const dim = sizePixels[size];
 
   return (
-    <div className={`font-mono leading-none ${className}`}>
-      <div
-        className={`${classes.brand} font-bold tracking-normal text-logo-primary`}
-      >
-        <span className="text-mid-gray">&gt;</span> <span>{BRAND_NAME}</span>
-        <span className="ml-1 animate-pulse text-logo-primary">_</span>
-      </div>
-      {showTagline && (
-        <div className={`${classes.tagline} mt-2 text-mid-gray`}>
-          {BRAND_TAGLINE}
-        </div>
-      )}
+    <div className={`flex items-center justify-center ${className}`}>
+      <img
+        src={logoUrl}
+        alt="MotsDits"
+        width={dim}
+        height={dim}
+        draggable={false}
+        className="select-none"
+        style={{ width: dim, height: dim }}
+      />
     </div>
   );
 };

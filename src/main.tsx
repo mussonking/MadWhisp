@@ -28,7 +28,7 @@ ReactDOM.createRoot(rootEl).render(
 if (import.meta.env.DEV) {
   setTimeout(() => {
     if (rootEl.childElementCount === 0) {
-      console.warn("[motsdits] blank dev render detected — forcing reload");
+      console.warn("[motsdits] blank dev render detected -- forcing reload");
       window.location.reload();
     }
   }, 2500);

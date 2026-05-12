@@ -68,35 +68,8 @@ export const AboutSettings: React.FC = () => {
           </Button>
         </SettingContainer>
 
-        <SettingContainer
-          title={t("settings.about.sourceCode.title")}
-          description={t("settings.about.sourceCode.description")}
-          grouped={true}
-        >
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => openUrl("https://github.com/mussonking/MotsDits")}
-          >
-            {t("settings.about.sourceCode.button")}
-          </Button>
-        </SettingContainer>
-
         <AppDataDirectory descriptionMode="tooltip" grouped={true} />
         <LogDirectory grouped={true} />
-      </SettingsGroup>
-
-      <SettingsGroup title={t("settings.about.acknowledgments.title")}>
-        <SettingContainer
-          title={t("settings.about.acknowledgments.whisper.title")}
-          description={t("settings.about.acknowledgments.whisper.description")}
-          grouped={true}
-          layout="stacked"
-        >
-          <div className="text-sm text-mid-gray">
-            {t("settings.about.acknowledgments.whisper.details")}
-          </div>
-        </SettingContainer>
       </SettingsGroup>
 
       <SettingsGroup
@@ -139,27 +112,6 @@ export const AboutSettings: React.FC = () => {
             onClick={() => openBundledLegalFile("legal/NOTICE.md")}
           >
             {t("settings.about.legal.notice.button", { defaultValue: "Open" })}
-          </Button>
-        </SettingContainer>
-
-        <SettingContainer
-          title={t("settings.about.legal.handyMit.title", {
-            defaultValue: "Upstream MIT license (Handy)",
-          })}
-          description={t("settings.about.legal.handyMit.description", {
-            defaultValue:
-              "MIT license of the upstream Handy project from which MotsDits was forked.",
-          })}
-          grouped={true}
-        >
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => openBundledLegalFile("legal/LICENSE-HANDY-MIT")}
-          >
-            {t("settings.about.legal.handyMit.button", {
-              defaultValue: "Open",
-            })}
           </Button>
         </SettingContainer>
       </SettingsGroup>

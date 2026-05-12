@@ -1,11 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { commands } from "@/bindings";
 import { getTranslatedModelName } from "../../lib/utils/modelTranslation";
 import { useModelStore } from "../../stores/modelStore";
-import ModelStatusButton from "./ModelStatusButton";
-import ModelDropdown from "./ModelDropdown";
 import DownloadProgressDisplay from "./DownloadProgressDisplay";
 
 import { ModelStateEvent } from "@/lib/types/events";
@@ -19,11 +17,7 @@ type ModelStatus =
   | "unloaded"
   | "none";
 
-interface ModelSelectorProps {
-  onError?: (error: string) => void;
-}
-
-const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
+const ModelSelector: React.FC = () => {
   const { t } = useTranslation();
   const {
     models,
@@ -36,11 +30,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
 
   const [modelStatus, setModelStatus] = useState<ModelStatus>("unloaded");
   const [modelError, setModelError] = useState<string | null>(null);
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
   // Track pending model switch for optimistic display
   const [pendingModelId, setPendingModelId] = useState<string | null>(null);
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const displayModelId = pendingModelId || currentModel;
 
@@ -106,7 +97,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
             if (!isRecording) {
               setPendingModelId(modelId);
               setModelError(null);
-              setShowModelDropdown(false);
               const success = await selectModel(modelId);
               if (!success) {
                 setPendingModelId(null);
@@ -119,37 +109,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
       },
     );
 
-    // Click outside to close dropdown
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowModelDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
       modelStateUnlisten.then((fn) => fn());
       downloadCompleteUnlisten.then((fn) => fn());
     };
   }, [selectModel]);
-
-  const handleModelSelect = async (modelId: string) => {
-    setPendingModelId(modelId);
-    setModelError(null);
-    setShowModelDropdown(false);
-    const success = await selectModel(modelId);
-    if (!success) {
-      setPendingModelId(null);
-      setModelStatus("error");
-      setModelError("Failed to switch model");
-      onError?.("Failed to switch model");
-    }
-  };
 
   const getModelDisplayText = (): string => {
     const extractingKeys = Object.keys(extractingModels);
@@ -225,25 +189,36 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
     return modelStatus;
   };
 
+  const getStatusColor = (status: ModelStatus): string => {
+    switch (status) {
+      case "ready":
+        return "bg-green-400";
+      case "loading":
+        return "bg-yellow-400 animate-pulse";
+      case "downloading":
+        return "bg-logo-primary animate-pulse";
+      case "extracting":
+        return "bg-orange-400 animate-pulse";
+      case "error":
+      case "none":
+        return "bg-red-400";
+      default:
+        return "bg-mid-gray/60";
+    }
+  };
+
+  const status = getDisplayStatus();
+  const displayText = getModelDisplayText();
+
   return (
     <>
-      {/* Model Status and Switcher */}
-      <div className="relative" ref={dropdownRef}>
-        <ModelStatusButton
-          status={getDisplayStatus()}
-          displayText={getModelDisplayText()}
-          isDropdownOpen={showModelDropdown}
-          onClick={() => setShowModelDropdown(!showModelDropdown)}
-        />
-
-        {/* Model Dropdown */}
-        {showModelDropdown && (
-          <ModelDropdown
-            models={models}
-            currentModelId={displayModelId}
-            onModelSelect={handleModelSelect}
-          />
-        )}
+      {/* Static read-only display: model name + status indicator. No interaction. */}
+      <div
+        className="flex items-center gap-2"
+        title={`Model status: ${displayText}`}
+      >
+        <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+        <span>{displayText}</span>
       </div>
 
       {/* Download Progress Bar for Models */}

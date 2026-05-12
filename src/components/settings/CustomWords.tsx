@@ -61,7 +61,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
         placeholder: t("settings.advanced.customWords.aliasPlaceholder", {
           defaultValue: "add alias...",
         }),
-        className: "text-yellow-300 border-yellow-300/30 bg-yellow-300/10",
+        className: "words-token words-token-alias",
       },
       blacklist: {
         title: t("settings.advanced.customWords.blacklist", {
@@ -73,7 +73,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
         placeholder: t("settings.advanced.customWords.blacklistPlaceholder", {
           defaultValue: "add blacklist...",
         }),
-        className: "text-red-300 border-red-300/30 bg-red-300/10",
+        className: "words-token words-token-blocked",
       },
     } as const;
 
@@ -192,17 +192,15 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
       const draft = getDraft(entry.word, field);
 
       return (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-mono ${config.className}`}>
-              {config.title}
-            </span>
-            <span className="text-xs text-mid-gray">{config.hint}</span>
+        <div className="words-token-section">
+          <div className="words-token-heading">
+            <span className={config.className}>{config.title}</span>
+            <span className="words-token-hint">{config.hint}</span>
           </div>
 
-          <div className="flex flex-wrap gap-1">
+          <div className="words-token-list">
             {values.length === 0 ? (
-              <span className="text-xs italic text-mid-gray">
+              <span className="words-token-empty">
                 {t("settings.advanced.customWords.none", {
                   defaultValue: "none",
                 })}
@@ -212,7 +210,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
                 <button
                   key={`${entry.word}-${field}-${token}`}
                   type="button"
-                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-mono transition-colors hover:bg-red-500/10 ${config.className}`}
+                  className={config.className}
                   onClick={() => handleRemoveToken(entry.word, field, token)}
                   disabled={isBusy}
                   aria-label={t("settings.advanced.customWords.remove", {
@@ -226,7 +224,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="words-token-input-row">
             <Input
               type="text"
               className="min-w-0 flex-1"
@@ -261,7 +259,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           grouped={grouped}
           layout="stacked"
         >
-          <div className="flex items-center gap-2 w-full">
+          <div className="words-add-row">
             <Input
               type="text"
               className="flex-1 min-w-0"
@@ -285,11 +283,9 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           </div>
         </SettingContainer>
 
-        <div
-          className={`px-4 p-2 ${grouped ? "" : "rounded-lg border border-mid-gray/20"} space-y-1.5`}
-        >
+        <div className={grouped ? "words-list words-list-grouped" : "words-list"}>
           {sortedCustomWords.length === 0 ? (
-            <p className="text-sm italic text-mid-gray">
+            <p className="words-empty-state">
               {t("settings.advanced.customWords.empty", {
                 defaultValue: "No custom words yet.",
               })}
@@ -302,28 +298,21 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
               const isOpen = !!expanded[entry.word];
 
               return (
-                <div
-                  key={entry.word}
-                  className="rounded-md border border-logo-stroke/25 bg-[#0a0f1a]"
-                >
-                  <div className="flex items-center gap-2 px-3 py-1.5">
+                <div key={entry.word} className="words-entry-card">
+                  <div className="words-entry-row">
                     <button
                       type="button"
                       onClick={() => toggleExpanded(entry.word)}
-                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                      className="words-entry-toggle"
                       aria-expanded={isOpen}
                     >
                       {isOpen ? (
-                        <ChevronDown className="h-4 w-4 flex-shrink-0 text-mid-gray" />
+                        <ChevronDown className="words-entry-icon" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-mid-gray" />
+                        <ChevronRight className="words-entry-icon" />
                       )}
-                      <span className="truncate font-mono text-sm font-semibold text-logo-primary">
-                        {entry.word}
-                      </span>
-                      <span className="flex-shrink-0 text-xs text-mid-gray">
-                        {summary}
-                      </span>
+                      <span className="words-entry-word">{entry.word}</span>
+                      <span className="words-entry-summary">{summary}</span>
                     </button>
                     <Button
                       onClick={() => handleRemoveWord(entry.word)}
@@ -340,7 +329,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
                   </div>
 
                   {isOpen && (
-                    <div className="space-y-3 border-t border-logo-stroke/15 px-3 py-3">
+                    <div className="words-entry-details">
                       {renderTokenSection(entry, "aliases")}
                       {renderTokenSection(entry, "blacklist")}
                     </div>

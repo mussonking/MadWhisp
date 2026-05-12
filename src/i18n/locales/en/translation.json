@@ -9,7 +9,7 @@
     "cancel": "Cancel"
   },
   "sidebar": {
-    "general": "General",
+    "general": "Settings",
     "listening": "Listening Quality",
     "advanced": "Advanced",
     "postProcessing": "Post Process",
@@ -248,12 +248,12 @@
       },
       "acceleration": {
         "whisper": {
-          "title": "Whisper Acceleration",
-          "description": "Hardware acceleration for Whisper models. Auto uses GPU if available (Metal on macOS, Vulkan on Windows/Linux)."
+          "title": "Accelerator",
+          "description": "Hardware acceleration for transcription. Auto uses GPU if available (Metal on macOS, Vulkan on Windows/Linux)."
         },
         "ort": {
-          "title": "ONNX Acceleration",
-          "description": "Hardware acceleration for ONNX models (Parakeet, Canary, Moonshine, etc.). DirectML on Windows is experimental. Models may fail to transcribe."
+          "title": "Accelerator (alternate)",
+          "description": "Hardware acceleration for alternate models. DirectML on Windows is experimental. Models may fail to transcribe."
         }
       },
       "startHidden": {

@@ -30,8 +30,7 @@
     "resources": {
       "resources/**/*": "resources/",
       "../THIRD-PARTY-LICENSES.md": "resources/legal/THIRD-PARTY-LICENSES.md",
-      "../NOTICE.md": "resources/legal/NOTICE.md",
-      "../LICENSE": "resources/legal/LICENSE-HANDY-MIT"
+      "../NOTICE.md": "resources/legal/NOTICE.md"
     },
     "license": "MIT",
     "icon": [

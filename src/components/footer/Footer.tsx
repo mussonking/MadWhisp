@@ -4,7 +4,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import ModelSelector from "../model-selector";
 import UpdateChecker from "../update-checker";
 
-const PRODUCT_NAME = "MotsDits";
+const PRODUCT_NAME = "Mots Dits";
 
 const Footer: React.FC = () => {
   const [version, setVersion] = useState("");
@@ -24,21 +24,17 @@ const Footer: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full border-t border-logo-stroke/30 bg-[#080c10] pt-3">
-      <div className="flex justify-between items-center text-xs px-4 pb-3 text-text/70 font-mono">
-        <div className="flex items-center gap-4">
-          <ModelSelector />
-        </div>
-
-        <div className="flex items-center gap-1">
-          <span className="text-logo-primary">{PRODUCT_NAME}</span>
-          <span>|</span>
-          <UpdateChecker />
-          <span>|</span>
-          <span>{`v${version}`}</span>
-        </div>
+    <footer className="paper-footer" aria-label="État de l’application">
+      <div className="paper-footer-model">
+        <ModelSelector />
       </div>
-    </div>
+
+      <div className="paper-footer-meta">
+        <span className="paper-footer-brand">{PRODUCT_NAME}</span>
+        <UpdateChecker />
+        <span className="paper-footer-version">{`v${version}`}</span>
+      </div>
+    </footer>
   );
 };
 

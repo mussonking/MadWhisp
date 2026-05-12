@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
@@ -26,16 +26,24 @@ const renderSettingsContent = (section: SidebarSection) => {
   return <ActiveComponent />;
 };
 
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#8fb4d9",
+  "paperTint": "#fcf4dc",
+  "density": 1,
+  "radiusScale": 1,
+  "sketchOpacity": 0.14
+}/*EDITMODE-END*/;
+
+void TWEAK_DEFAULTS;
+
 function App() {
   const { t, i18n } = useTranslation();
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep | null>(
     null,
   );
-  // Track if this is a returning user who just needs to grant permissions
-  // (vs a new user who needs full onboarding including model selection)
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [currentSection, setCurrentSection] =
-    useState<SidebarSection>("general");
+    useState<SidebarSection>("listening");
   const { settings, updateSetting } = useSettings();
   const direction = getLanguageDirection(i18n.language);
   const refreshAudioDevices = useSettingsStore(
@@ -45,17 +53,84 @@ function App() {
     (state) => state.refreshOutputDevices,
   );
   const hasCompletedPostOnboardingInit = useRef(false);
+  const activeSectionConfig =
+    SECTIONS_CONFIG[currentSection] ?? SECTIONS_CONFIG.general;
+  const activeSectionLabel = t(activeSectionConfig.labelKey, {
+    defaultValue: activeSectionConfig.defaultLabel,
+  });
+  const sectionDescriptions: Record<SidebarSection, string> = {
+    listening: t("app.sectionIntro.listening", {
+      defaultValue:
+        "Règle la balance entre vitesse et précision, et active les modes spéciaux quand t'en as besoin.",
+    }),
+    words: t("app.sectionIntro.words", {
+      defaultValue:
+        "Ajoute les noms, expressions et corrections que tu veux que MotsDits reconnaisse sans hésiter.",
+    }),
+    history: t("app.sectionIntro.history", {
+      defaultValue:
+        "Tes dernières dictées, gardées localement. Réécoute, copie, supprime -- toi, tu décides.",
+    }),
+    general: t("app.sectionIntro.general", {
+      defaultValue:
+        "Les réglages du quotidien : raccourci, microphone, lancement au démarrage.",
+    }),
+    postprocessing: t("app.sectionIntro.postprocessing", {
+      defaultValue:
+        "Une touche d'IA pour polir ta dictée selon ton domaine -- juridique, comptable, médical et plus.",
+    }),
+    advanced: t("app.sectionIntro.advanced", {
+      defaultValue:
+        "Les options plus fines, pour ceux qui veulent ajuster le détail. Les valeurs par défaut conviennent à la plupart.",
+    }),
+    debug: t("app.sectionIntro.debug", {
+      defaultValue:
+        "Les outils de diagnostic, à utiliser quand quelque chose cloche.",
+    }),
+    about: t("app.sectionIntro.about", {
+      defaultValue:
+        "Version, langue, et les crédits des composants ouverts qui font tourner MotsDits.",
+    }),
+  };
+  const activeSectionDescription = sectionDescriptions[currentSection];
+  const sectionKickers: Record<SidebarSection, string> = {
+    listening: t("app.sectionIntro.kicker.listening", {
+      defaultValue: "Ton écoute",
+    }),
+    words: t("app.sectionIntro.kicker.words", {
+      defaultValue: "Ton vocabulaire",
+    }),
+    history: t("app.sectionIntro.kicker.history", {
+      defaultValue: "Ta mémoire",
+    }),
+    general: t("app.sectionIntro.kicker.general", {
+      defaultValue: "Tes bases",
+    }),
+    postprocessing: t("app.sectionIntro.kicker.postprocessing", {
+      defaultValue: "Ton polissage",
+    }),
+    advanced: t("app.sectionIntro.kicker.advanced", {
+      defaultValue: "Plus loin",
+    }),
+    debug: t("app.sectionIntro.kicker.debug", {
+      defaultValue: "Diagnostic",
+    }),
+    about: t("app.sectionIntro.kicker.about", {
+      defaultValue: "À propos",
+    }),
+  };
+  const activeSectionKicker = sectionKickers[currentSection];
+
+
 
   useEffect(() => {
     checkOnboardingStatus();
   }, []);
 
-  // Initialize RTL direction when language changes
   useEffect(() => {
     initializeRTL(i18n.language);
   }, [i18n.language]);
 
-  // Initialize Enigo, shortcuts, and refresh audio devices when main app loads
   useEffect(() => {
     if (onboardingStep === "done" && !hasCompletedPostOnboardingInit.current) {
       hasCompletedPostOnboardingInit.current = true;
@@ -72,16 +147,15 @@ function App() {
           console.warn("Failed to initialize input system:", e);
         }
       };
+
       initializeAppState();
       refreshAudioDevices();
       refreshOutputDevices();
     }
   }, [onboardingStep, refreshAudioDevices, refreshOutputDevices]);
 
-  // Handle keyboard shortcuts for debug mode toggle
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Ctrl+Shift+D (Windows/Linux) or Cmd+Shift+D (macOS)
       const isDebugShortcut =
         event.shiftKey &&
         event.key.toLowerCase() === "d" &&
@@ -94,16 +168,12 @@ function App() {
       }
     };
 
-    // Add event listener when component mounts
     document.addEventListener("keydown", handleKeyDown);
-
-    // Cleanup event listener when component unmounts
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [settings?.debug_mode, updateSetting]);
 
-  // Listen for recording errors from the backend and show a toast
   useEffect(() => {
     const unlisten = listen<RecordingErrorEvent>("recording-error", (event) => {
       const { error_type, detail } = event.payload;
@@ -121,12 +191,12 @@ function App() {
         );
       }
     });
+
     return () => {
       unlisten.then((fn) => fn());
     };
   }, [t]);
 
-  // Listen for model loading failures and show a toast
   useEffect(() => {
     const unlisten = listen<ModelStateEvent>("model-state-changed", (event) => {
       if (event.payload.event_type === "loading_failed") {
@@ -141,6 +211,7 @@ function App() {
         );
       }
     });
+
     return () => {
       unlisten.then((fn) => fn());
     };
@@ -156,13 +227,11 @@ function App() {
 
   const checkOnboardingStatus = async () => {
     try {
-      // Check if they have any models available
       const result = await commands.hasAnyModelsAvailable();
       const hasModels = result.status === "ok" && result.data;
       const currentPlatform = platform();
 
       if (hasModels) {
-        // Returning user - check if they need to grant permissions first
         setIsReturningUser(true);
 
         if (currentPlatform === "macos") {
@@ -178,7 +247,6 @@ function App() {
             }
           } catch (e) {
             console.warn("Failed to check macOS permissions:", e);
-            // If we can't check, proceed to main app and let them fix it there
           }
         }
 
@@ -196,13 +264,11 @@ function App() {
             }
           } catch (e) {
             console.warn("Failed to check Windows microphone permissions:", e);
-            // If we can't check, proceed to main app and let them fix it there
           }
         }
 
         setOnboardingStep("done");
       } else {
-        // New user - start full onboarding
         setIsReturningUser(false);
         setOnboardingStep("accessibility");
       }
@@ -213,17 +279,13 @@ function App() {
   };
 
   const handleAccessibilityComplete = () => {
-    // Returning users already have models, skip to main app
-    // New users need to select a model
     setOnboardingStep(isReturningUser ? "done" : "model");
   };
 
   const handleModelSelected = () => {
-    // Transition to main app - user has started a download
     setOnboardingStep("done");
   };
 
-  // Still checking onboarding status
   if (onboardingStep === null) {
     return null;
   }
@@ -239,37 +301,40 @@ function App() {
   return (
     <div
       dir={direction}
-      className="h-screen flex flex-col select-none cursor-default bg-background text-text"
+      className="paper-app app-shell select-none cursor-default"
     >
       <Toaster
         theme="system"
         toastOptions={{
           unstyled: true,
           classNames: {
-            toast:
-              "bg-background border border-logo-stroke/35 rounded-md shadow-lg px-4 py-3 flex items-center gap-3 text-sm text-text",
-            title: "font-medium",
+            toast: "paper-toast px-4 py-3 flex items-center gap-3 text-sm text-text",
+            title: "font-medium text-text",
             description: "text-mid-gray",
           },
         }}
       />
-      {/* Main content area that takes remaining space */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="app-frame">
         <Sidebar
           activeSection={currentSection}
           onSectionChange={setCurrentSection}
         />
-        {/* Scrollable content area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto bg-background">
-            <div className="flex flex-col items-center p-4 gap-4">
-              <AccessibilityPermissions />
-              {renderSettingsContent(currentSection)}
+        <div className="app-main">
+          <main className="app-main-scroll paper-scroll-area">
+            <div className="app-content-shell">
+              <section className="app-section-intro">
+                <p className="app-section-kicker">{activeSectionKicker}</p>
+                <h1>{activeSectionLabel}</h1>
+                <p>{activeSectionDescription}</p>
+              </section>
+              <div className="app-content-stack paper-stack">
+                <AccessibilityPermissions />
+                {renderSettingsContent(currentSection)}
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
-      {/* Fixed footer at bottom */}
       <Footer />
     </div>
   );

@@ -8,7 +8,11 @@ export const WordsSettings: React.FC = () => {
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
-      <SettingsGroup title={t("settings.advanced.customWords.title")}>
+      <SettingsGroup
+        title={t("settings.advanced.customWords.title", {
+          defaultValue: "Liste de mots",
+        })}
+      >
         <CustomWords descriptionMode="inline" grouped={true} />
       </SettingsGroup>
     </div>

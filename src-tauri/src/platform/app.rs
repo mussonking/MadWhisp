@@ -53,10 +53,10 @@ pub fn create_main_window(app: &mut tauri::App) -> tauri::Result<()> {
         let mut win_builder =
             tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
                 .title("MotsDits")
-                .inner_size(680.0, 570.0)
-                .min_inner_size(680.0, 570.0)
+                .inner_size(1100.0, 760.0)
+                .min_inner_size(960.0, 640.0)
                 .resizable(true)
-                .maximizable(false)
+                .maximizable(true)
                 .visible(false);
 
         if let Some(data_dir) = portable::data_dir() {

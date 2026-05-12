@@ -8,7 +8,7 @@ import {
   History,
   Info,
   Sparkles,
-  Terminal,
+  Settings2,
 } from "lucide-react";
 import { useSettings } from "../hooks/useSettings";
 import BrandLogo from "./BrandLogo";
@@ -42,58 +42,58 @@ interface SectionConfig {
 }
 
 export const SECTIONS_CONFIG = {
-  general: {
-    labelKey: "sidebar.general",
-    defaultLabel: "General",
-    icon: Terminal,
-    component: GeneralSettings,
-    enabled: () => true,
-  },
   listening: {
     labelKey: "sidebar.listening",
-    defaultLabel: "Listening Quality",
+    defaultLabel: "Écoute",
     icon: AudioLines,
     component: ListeningQuality,
     enabled: () => true,
   },
   words: {
     labelKey: "sidebar.words",
-    defaultLabel: "Words",
+    defaultLabel: "Mots",
     icon: BookOpenText,
     component: WordsSettings,
     enabled: () => true,
   },
+  history: {
+    labelKey: "sidebar.history",
+    defaultLabel: "Historique",
+    icon: History,
+    component: HistorySettings,
+    enabled: () => true,
+  },
+  general: {
+    labelKey: "sidebar.general",
+    defaultLabel: "Réglages",
+    icon: Settings2,
+    component: GeneralSettings,
+    enabled: () => true,
+  },
   postprocessing: {
     labelKey: "sidebar.postProcessing",
-    defaultLabel: "Process",
+    defaultLabel: "Texte",
     icon: Sparkles,
     component: PostProcessingSettings,
     enabled: () => true,
   },
   advanced: {
     labelKey: "sidebar.advanced",
-    defaultLabel: "Advanced",
+    defaultLabel: "Avancé",
     icon: Cog,
     component: AdvancedSettings,
     enabled: () => true,
   },
-  history: {
-    labelKey: "sidebar.history",
-    defaultLabel: "History",
-    icon: History,
-    component: HistorySettings,
-    enabled: () => true,
-  },
   debug: {
     labelKey: "sidebar.debug",
-    defaultLabel: "Debug",
+    defaultLabel: "Diagnostic",
     icon: FlaskConical,
     component: DebugSettings,
     enabled: (settings) => settings?.debug_mode ?? false,
   },
   about: {
     labelKey: "sidebar.about",
-    defaultLabel: "About",
+    defaultLabel: "À propos",
     icon: Info,
     component: AboutSettings,
     enabled: () => true,
@@ -117,9 +117,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
   return (
-    <div className="flex flex-col w-fit min-w-44 h-full border-e border-logo-stroke/40 bg-[#080c10] items-center px-2">
-      <BrandLogo className="w-full px-3 py-4" size="md" />
-      <div className="flex flex-col w-full items-center gap-1 pt-2 border-t border-logo-stroke/40">
+    <aside className="paper-sidebar" aria-label={t("sidebar.navigation", { defaultValue: "Navigation" })}>
+      <BrandLogo className="paper-sidebar-logo" size="md" />
+      <nav className="paper-sidebar-nav">
         {availableSections.map((section) => {
           const Icon = section.icon;
           const isActive = activeSection === section.id;
@@ -128,26 +128,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
           });
 
           return (
-            <div
+            <button
               key={section.id}
-              className={`flex gap-2 items-center p-2 w-full rounded-md cursor-pointer transition-colors font-mono ${
-                isActive
-                  ? "bg-logo-primary/15 text-logo-primary border border-logo-primary/45"
-                  : "border border-transparent hover:bg-logo-primary/10 hover:text-logo-primary opacity-85 hover:opacity-100"
-              }`}
+              type="button"
+              className={`paper-sidebar-item ${isActive ? "is-active" : ""}`}
               onClick={() => onSectionChange(section.id)}
+              aria-current={isActive ? "page" : undefined}
             >
-              <Icon width={20} height={20} className="shrink-0" />
-              <p
-                className="text-sm font-medium whitespace-nowrap tracking-normal pr-2"
-                title={label}
-              >
+              <Icon width={19} height={19} className="paper-sidebar-icon" />
+              <span className="paper-sidebar-label" title={label}>
                 {label}
-              </p>
-            </div>
+              </span>
+            </button>
           );
         })}
-      </div>
-    </div>
+      </nav>
+    </aside>
   );
 };
