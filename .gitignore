@@ -41,3 +41,16 @@ blob-report/
 
 # Nix build output
 result
+
+# Local working notes and scratch files
+.claude/
+references/
+DESIGN.md
+MEMORY.md
+refonte-plan.md
+$log
+build-out.txt
+App.jsx
+.tmp-bench/
+_tmp_cmake/
+_cctest.*
