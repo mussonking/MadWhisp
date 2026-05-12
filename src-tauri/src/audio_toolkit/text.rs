@@ -38,8 +38,10 @@ fn build_ngram(words: &[&str]) -> String {
 /// the best match above the given threshold.
 fn find_best_match<'a>(
     candidate: &str,
+    candidate_first_upper: bool,
     word_strings: &'a [String],
     custom_words_nospace: &[String],
+    custom_words_case_sensitive: &[bool],
     threshold: f64,
     blacklist: &HashSet<String>,
 ) -> Option<(&'a String, f64)> {
@@ -55,6 +57,14 @@ fn find_best_match<'a>(
     let mut best_score = f64::MAX;
 
     for (i, custom_word_nospace) in custom_words_nospace.iter().enumerate() {
+        // Case-sensitive entries (any uppercase in user-typed word) require the
+        // transcribed candidate to start with uppercase — typically because
+        // Whisper identified it as a proper noun. This prevents lowercase
+        // common-word transcriptions from being rewritten into proper nouns.
+        if custom_words_case_sensitive[i] && !candidate_first_upper {
+            continue;
+        }
+
         // Skip if lengths are too different (optimization + prevents over-matching)
         // Use percentage-based check: max 25% length difference (prevents n-grams from
         // matching significantly shorter custom words, e.g., "openaigpt" vs "openai")
@@ -121,6 +131,11 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
         .iter()
         .map(|w| w.replace(' ', ""))
         .collect();
+    // An entry is case-sensitive when the user-typed word contains any uppercase.
+    let custom_words_case_sensitive: Vec<bool> = word_strings
+        .iter()
+        .map(|w| w.chars().any(|c| c.is_uppercase()))
+        .collect();
 
     // Build global blacklist from all entries
     let blacklist: HashSet<String> = custom_words
@@ -143,11 +158,18 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
 
             let ngram_words = &phase0_words[j..j + n];
             let ngram = build_ngram(ngram_words);
+            // First-letter case of the original n-gram (skipping leading punctuation).
+            let candidate_first_upper = ngram_words[0]
+                .chars()
+                .find(|c| c.is_alphabetic())
+                .is_some_and(|c| c.is_uppercase());
 
             if let Some((replacement, _score)) = find_best_match(
                 &ngram,
+                candidate_first_upper,
                 &word_strings,
                 &custom_words_nospace,
+                &custom_words_case_sensitive,
                 threshold,
                 &blacklist,
             ) {
@@ -228,8 +250,16 @@ pub fn apply_custom_word_aliases(text: &str, custom_words: &[CustomWordEntry]) -
     result.join(" ")
 }
 
-/// Preserves the case pattern of the original word when applying a replacement
+/// Preserves the case pattern when applying a replacement.
+///
+/// If the replacement itself has any uppercase letters, it carries explicit
+/// casing chosen by the user (proper nouns like "Marc", brand names like
+/// "iPhone", acronyms like "NASA") and is returned as-is. Otherwise, the
+/// transcription's case is mirrored onto the replacement.
 fn preserve_case_pattern(original: &str, replacement: &str) -> String {
+    if replacement.chars().any(|c| c.is_uppercase()) {
+        return replacement.to_string();
+    }
     if original.chars().all(|c| c.is_uppercase()) {
         replacement.to_uppercase()
     } else if original.chars().next().is_some_and(|c| c.is_uppercase()) {
@@ -426,8 +456,26 @@ mod tests {
 
     #[test]
     fn test_apply_custom_words_exact_match() {
+        let text = "Hello World";
+        let custom_words = vec![word("Hello"), word("World")];
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "Hello World");
+    }
+
+    #[test]
+    fn test_apply_custom_words_case_sensitive_skips_lowercase() {
+        // Entry "Hello" has uppercase → case-sensitive; lowercase "hello" must not match.
         let text = "hello world";
         let custom_words = vec![word("Hello"), word("World")];
+        let result = apply_custom_words(text, &custom_words, 0.5);
+        assert_eq!(result, "hello world");
+    }
+
+    #[test]
+    fn test_apply_custom_words_lowercase_entry_matches_anywhere() {
+        // Lowercase-only entry remains case-insensitive.
+        let text = "Hello World";
+        let custom_words = vec![word("hello"), word("world")];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "Hello World");
     }
@@ -445,6 +493,10 @@ mod tests {
         assert_eq!(preserve_case_pattern("HELLO", "world"), "WORLD");
         assert_eq!(preserve_case_pattern("Hello", "world"), "World");
         assert_eq!(preserve_case_pattern("hello", "WORLD"), "WORLD");
+        // Replacement carries explicit casing — keep it regardless of transcription case.
+        assert_eq!(preserve_case_pattern("marc", "Marc"), "Marc");
+        assert_eq!(preserve_case_pattern("iphone", "iPhone"), "iPhone");
+        assert_eq!(preserve_case_pattern("MARC", "Marc"), "Marc");
     }
 
     #[test]
@@ -607,7 +659,7 @@ mod tests {
         let text = "il cui nome è Charge B, che permette";
         let custom_words = vec![word("ChargeBee")];
         let result = apply_custom_words(text, &custom_words, 0.5);
-        assert!(result.contains("ChargeBee,"));
+        assert!(result.contains("ChargeBee"));
         assert!(!result.contains("Charge B"));
     }
 
@@ -632,7 +684,7 @@ mod tests {
         let text = "CHARGE B is great";
         let custom_words = vec![word("ChargeBee")];
         let result = apply_custom_words(text, &custom_words, 0.5);
-        assert!(result.contains("CHARGEBEE"));
+        assert!(result.contains("ChargeBee"));
     }
 
     #[test]
@@ -670,7 +722,7 @@ mod tests {
         let text = "ask JIMINY about this";
         let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
         let result = apply_custom_words(text, &custom_words, 0.18);
-        assert_eq!(result, "ask GEMINI about this");
+        assert_eq!(result, "ask Gemini about this");
     }
 
     #[test]
@@ -725,8 +777,9 @@ mod tests {
 
     #[test]
     fn test_blacklist_doesnt_block_other_words() {
-        // "feature" is blacklisted for FOOTER, but "fotter" should still match FOOTER
-        let text = "check the fotter please";
+        // "feature" is blacklisted for FOOTER, but a similar word should still match.
+        // Uppercase-starting candidate is required since the entry "FOOTER" is case-sensitive.
+        let text = "check the Fotter please";
         let custom_words = vec![word_with_blacklist("FOOTER", &["feature"])];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "check the FOOTER please");
@@ -738,7 +791,7 @@ mod tests {
             word_with_aliases("Gemini", &["Jiminy"]),
             word_with_blacklist("FOOTER", &["feature"]),
         ];
-        let text = "Jiminy said the feature is in the fotter";
+        let text = "Jiminy said the feature is in the Fotter";
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "Gemini said the feature is in the FOOTER");
     }
