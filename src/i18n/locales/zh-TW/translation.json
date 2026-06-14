@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "一般",
-    "models": "模型",
+    "listening": "Listening Quality",
     "advanced": "進階",
     "postProcessing": "後處理",
     "history": "歷史紀錄",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "搜尋或選擇模型",
           "placeholderNoOptions": "輸入模型名稱",
           "refreshModels": "重新整理模型"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "後處理",
         "description": "啟用轉錄後的 AI 文字最佳化"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "錄製時靜音",
         "description": "錄製期間靜音系統音訊"
@@ -515,12 +525,42 @@
         "description": "幫助我們繼續開發 MotsDits",
         "button": "捐贈"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "致謝",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "針對 OpenAI Whisper 自動語音識別模型的高效能推理引擎",
           "details": "MotsDits 使用 Whisper.cpp 進行快速的本機語音轉文字處理。感謝 Georgi Gerganov 和貢獻者們的傑出工作"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "正在轉錄...",
-    "processing": "處理中..."
+    "processing": "處理中...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

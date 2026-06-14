@@ -3,7 +3,7 @@
 //! This module provides shortcut functionality using Tauri's built-in
 //! global-shortcut plugin.
 
-use log::{error, warn};
+use log::{error, info, warn};
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -70,23 +70,28 @@ pub fn validate_shortcut(raw: &str) -> Result<(), String> {
 
 /// Register a shortcut using Tauri's global-shortcut plugin
 pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<(), String> {
+    register_shortcut_value(app, &binding.id, &binding.current_binding)
+}
+
+pub fn register_shortcut_value(
+    app: &AppHandle,
+    binding_id: &str,
+    shortcut_value: &str,
+) -> Result<(), String> {
     // Validate for Tauri requirements
-    if let Err(e) = validate_shortcut(&binding.current_binding) {
+    if let Err(e) = validate_shortcut(shortcut_value) {
         warn!(
             "register_tauri_shortcut validation error for binding '{}': {}",
-            binding.current_binding, e
+            shortcut_value, e
         );
         return Err(e);
     }
 
     // Parse shortcut and return error if it fails
-    let shortcut = match binding.current_binding.parse::<Shortcut>() {
+    let shortcut = match shortcut_value.parse::<Shortcut>() {
         Ok(s) => s,
         Err(e) => {
-            let error_msg = format!(
-                "Failed to parse shortcut '{}': {}",
-                binding.current_binding, e
-            );
+            let error_msg = format!("Failed to parse shortcut '{}': {}", shortcut_value, e);
             error!("register_tauri_shortcut parse error: {}", error_msg);
             return Err(error_msg);
         }
@@ -94,13 +99,12 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
 
     // Prevent duplicate registrations that would silently shadow one another
     if app.global_shortcut().is_registered(shortcut) {
-        let error_msg = format!("Shortcut '{}' is already in use", binding.current_binding);
+        let error_msg = format!("Shortcut '{}' is already in use", shortcut_value);
         warn!("register_tauri_shortcut duplicate error: {}", error_msg);
         return Err(error_msg);
     }
 
-    // Clone binding.id for use in the closure
-    let binding_id_for_closure = binding.id.clone();
+    let binding_id_for_closure = binding_id.to_string();
 
     app.global_shortcut()
         .on_shortcut(shortcut, move |app_handle, scut, event| {
@@ -116,14 +120,15 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
             }
         })
         .map_err(|e| {
-            let error_msg = format!(
-                "Couldn't register shortcut '{}': {}",
-                binding.current_binding, e
-            );
+            let error_msg = format!("Couldn't register shortcut '{}': {}", shortcut_value, e);
             error!("register_tauri_shortcut registration error: {}", error_msg);
             error_msg
         })?;
 
+    info!(
+        "Registered Tauri shortcut: {} -> {}",
+        binding_id, shortcut_value
+    );
     Ok(())
 }
 

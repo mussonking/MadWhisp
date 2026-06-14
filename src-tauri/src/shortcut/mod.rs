@@ -42,17 +42,14 @@ pub fn init_shortcuts(app: &AppHandle) {
         KeyboardImplementation::HandyKeys => {
             if let Err(e) = handy_keys::init_shortcuts(app) {
                 error!("Failed to initialize handy-keys shortcuts: {}", e);
-                // Fall back to Tauri implementation and persist this fallback
-                warn!("Falling back to Tauri global shortcut implementation and saving fallback to settings");
-
-                // Update settings to persist the fallback so we don't retry HandyKeys on next launch
-                let mut settings = settings::get_settings(app);
-                settings.keyboard_implementation = KeyboardImplementation::Tauri;
-                settings::write_settings(app, settings);
-
+                warn!("Falling back to Tauri global shortcut implementation for this launch");
                 tauri_impl::init_shortcuts(app);
             }
         }
+    }
+
+    if let Err(e) = reconcile_static_shortcuts(app) {
+        error!("Shortcut reconciliation after init failed: {}", e);
     }
 }
 
@@ -80,6 +77,22 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
     match settings.keyboard_implementation {
         KeyboardImplementation::Tauri => tauri_impl::register_shortcut(app, binding),
         KeyboardImplementation::HandyKeys => handy_keys::register_shortcut(app, binding),
+    }
+}
+
+fn register_shortcut_value(
+    app: &AppHandle,
+    implementation: KeyboardImplementation,
+    binding_id: &str,
+    shortcut_value: &str,
+) -> Result<(), String> {
+    match implementation {
+        KeyboardImplementation::Tauri => {
+            tauri_impl::register_shortcut_value(app, binding_id, shortcut_value)
+        }
+        KeyboardImplementation::HandyKeys => {
+            handy_keys::register_shortcut_value(app, binding_id, shortcut_value)
+        }
     }
 }
 
@@ -159,30 +172,54 @@ pub fn change_binding(
         }
     }
 
-    // Unregister the existing binding
-    if let Err(e) = unregister_shortcut(&app, binding_to_modify.clone()) {
-        let error_msg = format!("Failed to unregister shortcut: {}", e);
-        error!("change_binding error: {}", error_msg);
-    }
+    let implementation = settings.keyboard_implementation;
 
-    // Validate the new shortcut for the current keyboard implementation
-    if let Err(e) = validate_shortcut_for_implementation(&binding, settings.keyboard_implementation)
-    {
+    // Validate the new shortcut before touching the active registration.
+    if let Err(e) = validate_shortcut_for_implementation(&binding, implementation) {
         warn!("change_binding validation error: {}", e);
         return Err(e);
     }
 
     // Create an updated binding
-    let mut updated_binding = binding_to_modify;
+    let mut updated_binding = binding_to_modify.clone();
     updated_binding.current_binding = binding;
 
-    // Register the new binding
-    if let Err(e) = register_shortcut(&app, updated_binding.clone()) {
-        let error_msg = format!("Failed to register shortcut: {}", e);
+    // Unregister the existing binding only after validation, then restore it if the new registration fails.
+    if let Err(e) = unregister_shortcut(&app, binding_to_modify.clone()) {
+        let error_msg = format!("Failed to unregister shortcut: {}", e);
         error!("change_binding error: {}", error_msg);
         return Ok(BindingResponse {
             success: false,
-            binding: None,
+            binding: Some(binding_to_modify),
+            error: Some(error_msg),
+        });
+    }
+
+    // Register the new binding
+    if let Err(e) =
+        register_shortcut_value(&app, implementation, &id, &updated_binding.current_binding)
+    {
+        let restore_result = register_shortcut_value(
+            &app,
+            implementation,
+            &id,
+            &binding_to_modify.current_binding,
+        );
+        let error_msg = match restore_result {
+            Ok(()) => format!(
+                "Failed to register shortcut '{}': {}. Restored previous shortcut '{}'.",
+                updated_binding.current_binding, e, binding_to_modify.current_binding
+            ),
+            Err(restore_error) => format!(
+                "Failed to register shortcut '{}': {}. Also failed to restore previous shortcut '{}': {}",
+                updated_binding.current_binding, e, binding_to_modify.current_binding, restore_error
+            ),
+        };
+        error!("change_binding error: {}", error_msg);
+        let _ = reconcile_shortcuts(app.clone());
+        return Ok(BindingResponse {
+            success: false,
+            binding: Some(binding_to_modify),
             error: Some(error_msg),
         });
     }
@@ -232,7 +269,78 @@ pub fn resume_binding(app: AppHandle, id: String) -> Result<(), String> {
             return Err(e);
         }
     }
-    Ok(())
+    reconcile_static_shortcuts(&app)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn reconcile_shortcuts(app: AppHandle) -> Result<(), String> {
+    reconcile_static_shortcuts(&app)
+}
+
+fn reconcile_static_shortcuts(app: &AppHandle) -> Result<(), String> {
+    let app_settings = settings::get_settings(app);
+    let default_bindings = settings::get_default_settings().bindings;
+    let mut errors = Vec::new();
+
+    for (id, default_binding) in default_bindings {
+        if id == "cancel" {
+            continue;
+        }
+        if id == "transcribe_with_post_process" && !app_settings.post_process_enabled {
+            continue;
+        }
+
+        let binding = app_settings
+            .bindings
+            .get(&id)
+            .cloned()
+            .unwrap_or(default_binding);
+
+        match register_shortcut_value(
+            app,
+            app_settings.keyboard_implementation,
+            &binding.id,
+            &binding.current_binding,
+        ) {
+            Ok(()) => {
+                if id == "transcribe" {
+                    info!(
+                        "Shortcut reconciliation confirmed transcribe binding '{}'",
+                        binding.current_binding
+                    );
+                }
+            }
+            Err(e) if app_settings.keyboard_implementation == KeyboardImplementation::Tauri
+                && e.contains("already in use") =>
+            {
+                if id == "transcribe" {
+                    info!(
+                        "Shortcut reconciliation confirmed transcribe binding '{}' is already registered",
+                        binding.current_binding
+                    );
+                }
+            }
+            Err(e) => {
+                let message = format!(
+                    "Failed to reconcile shortcut '{}' ({}) for {:?}: {}",
+                    id, binding.current_binding, app_settings.keyboard_implementation, e
+                );
+                if id == "transcribe" {
+                    error!("{}", message);
+                } else {
+                    warn!("{}", message);
+                }
+                errors.push(message);
+            }
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors.join("; "))
+    }
 }
 
 // ============================================================================
@@ -450,13 +558,9 @@ fn initialize_handy_keys_with_rollback(app: &AppHandle) -> Result<bool, String> 
 
     if let Err(e) = handy_keys::init_shortcuts(app) {
         error!("Failed to initialize HandyKeys: {}", e);
-        // Rollback to Tauri
-        let mut settings = settings::get_settings(app);
-        settings.keyboard_implementation = KeyboardImplementation::Tauri;
-        settings::write_settings(app, settings);
         tauri_impl::init_shortcuts(app);
         return Err(format!(
-            "Failed to initialize HandyKeys: {}. Reverted to Tauri.",
+            "Failed to initialize HandyKeys: {}. Using Tauri shortcuts for this launch.",
             e
         ));
     }

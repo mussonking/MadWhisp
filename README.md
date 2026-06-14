@@ -62,11 +62,12 @@ MotsDits is a desktop speech-to-text app powered by [Whisper](https://github.com
 
 Grab the latest release for your system:
 
-| Platform                       | Download                                                              |
-| ------------------------------ | --------------------------------------------------------------------- |
-| **Ubuntu / Debian / Pop!\_OS** | [`.deb`](https://github.com/mussonking/MotsDits/releases/latest)      |
-| **Fedora / RHEL**              | [`.rpm`](https://github.com/mussonking/MotsDits/releases/latest)      |
-| **Any Linux**                  | [`.AppImage`](https://github.com/mussonking/MotsDits/releases/latest) |
+| Platform                       | Download                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| **Windows**                    | [`MotsDits_0.2.0_x64-setup.exe`](https://github.com/mussonking/MotsDits/releases/latest) |
+| **Ubuntu / Debian / Pop!\_OS** | [`.deb`](https://github.com/mussonking/MotsDits/releases/latest)                         |
+| **Fedora / RHEL**              | [`.rpm`](https://github.com/mussonking/MotsDits/releases/latest)                         |
+| **Any Linux**                  | [`.AppImage`](https://github.com/mussonking/MotsDits/releases/latest)                    |
 
 ### Build from source
 

@@ -437,6 +437,34 @@
     url = "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.52.5.tgz";
     hash = "sha512-TAcgQh2sSkykPRWLrdyy2AiceMckNf5loITqXxFI5VuQjS5tSuw3WlwdN8qv8vzjLAUTvYaH/mVjSFpbkFbpTg==";
   };
+  "@sentry-internal/browser-utils@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry-internal/browser-utils/-/browser-utils-10.53.1.tgz";
+    hash = "sha512-X4d6y8sBMjmNhcDW4eMBU3ASsNIMz8dqaFkhyIMN/dkYr/yZKnbRZPaVuVUGvHKjnlficPpIH0/HK9KBjrYxPw==";
+  };
+  "@sentry-internal/feedback@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry-internal/feedback/-/feedback-10.53.1.tgz";
+    hash = "sha512-vVpTI/aEYN5d9IgZeYJWMqVaN0+iFgidSrYNAsZTh1US5sJUzF/wrl+68KdpmCtFROrN3jiAn1oPSwL5CKvEJA==";
+  };
+  "@sentry-internal/replay-canvas@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry-internal/replay-canvas/-/replay-canvas-10.53.1.tgz";
+    hash = "sha512-aueLaf/2prExwA76BGU5/bOXCKWqtt6jQXWA6WJQNrmKpPEtZJB4ypnpsou0McXQCF8tur2Y8U0TEkwQP13yJQ==";
+  };
+  "@sentry-internal/replay@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry-internal/replay/-/replay-10.53.1.tgz";
+    hash = "sha512-wZNzTBYkgGUPWMuUQv7L64+OJmoCnz7GQNiTrTFK6EVAjJXFBCSsPp/nhif0bLhbk8+0g4xz633uOhpXuQbFdw==";
+  };
+  "@sentry/browser@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry/browser/-/browser-10.53.1.tgz";
+    hash = "sha512-zXF373hzUOGzUOrqd8xb1U3LQi5uYC3mwv+z5OMKUUinQlu30tTWBs7ypy6YTchtix9QlYaHWlayUF8vBZ5UjA==";
+  };
+  "@sentry/core@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry/core/-/core-10.53.1.tgz";
+    hash = "sha512-XG4ezlkyuAPjBC5+9kXC94rXXuqYTw9NRhfaDHssbTFaGnqBR8vQX2UUgZfY7ucbeelRDGfBu1sywoU+mB04uA==";
+  };
+  "@sentry/react@10.53.1" = fetchurl {
+    url = "https://registry.npmjs.org/@sentry/react/-/react-10.53.1.tgz";
+    hash = "sha512-lrwNq5T/zW84l60894TpKHPcvFuc1I/Hnohecc0TfYVpIcYYuw2orCHoU4v4wgkFaJUpegVetbgdOphViyLVjA==";
+  };
   "@tailwindcss/node@4.1.16" = fetchurl {
     url = "https://registry.npmjs.org/@tailwindcss/node/-/node-4.1.16.tgz";
     hash = "sha512-BX5iaSsloNuvKNHRN3k2RcCuTEgASTo77mofW0vmeHkfrDWaoFAFvNHpEgtu0eqyypcyiBkDWzSMxJhp3AUVcw==";

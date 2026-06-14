@@ -13,9 +13,9 @@ Last updated: {{EFFECTIVE_DATE}}
 {{COMPANY_LEGAL_NAME}} ("MotsDits", "we", "us") respects your privacy. This
 Privacy Policy describes what personal information we collect (if any), how
 we use it, and your rights under applicable privacy laws, including Quebec's
-*Act respecting the protection of personal information in the private sector*
-("Loi 25") and Canada's *Personal Information Protection and Electronic
-Documents Act* ("PIPEDA").
+_Act respecting the protection of personal information in the private sector_
+("Loi 25") and Canada's _Personal Information Protection and Electronic
+Documents Act_ ("PIPEDA").
 
 ## 1. Privacy by Design — On-Device Processing
 
@@ -94,6 +94,7 @@ We use the limited information described in section 2 only to:
 - Comply with applicable legal obligations.
 
 We do **not**:
+
 - Sell, rent, or trade your personal information.
 - Use your information for behavioural advertising.
 - Profile you for marketing purposes.
@@ -125,8 +126,8 @@ Subject to applicable law, you have the right to:
   subject to legal retention requirements.
 - **Data portability** — receive your information in a structured,
   commonly-used, machine-readable format.
-- **Lodge a complaint** with the *Commission d'accès à l'information du
-  Québec* (CAI) at <https://www.cai.gouv.qc.ca/> or with the Office of the
+- **Lodge a complaint** with the _Commission d'accès à l'information du
+  Québec_ (CAI) at <https://www.cai.gouv.qc.ca/> or with the Office of the
   Privacy Commissioner of Canada at <https://www.priv.gc.ca/>.
 
 To exercise any of these rights, contact our Privacy Officer at

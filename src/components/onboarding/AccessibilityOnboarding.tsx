@@ -74,6 +74,48 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
     return microphoneStatus.overall_access !== "denied";
   }, []);
 
+  const initializeMacInput = useCallback(async () => {
+    try {
+      await Promise.all([
+        commands.initializeEnigo(),
+        commands.initializeShortcuts(),
+      ]);
+    } catch (e) {
+      console.warn("Failed to initialize after permission grant:", e);
+    }
+  }, []);
+
+  const refreshMacPermissions = useCallback(async (): Promise<boolean> => {
+    const [accessibilityGranted, microphoneGranted] = await Promise.all([
+      checkAccessibilityPermission(),
+      checkMicrophonePermission(),
+    ]);
+
+    if (accessibilityGranted) {
+      await initializeMacInput();
+    }
+
+    setPermissions((prev) => ({
+      accessibility: accessibilityGranted
+        ? "granted"
+        : prev.accessibility === "waiting"
+          ? "waiting"
+          : "needed",
+      microphone: microphoneGranted
+        ? "granted"
+        : prev.microphone === "waiting"
+          ? "waiting"
+          : "needed",
+    }));
+
+    if (accessibilityGranted && microphoneGranted) {
+      await completeOnboarding();
+      return true;
+    }
+
+    return false;
+  }, [completeOnboarding, initializeMacInput]);
+
   // Check platform and permission status on mount
   useEffect(() => {
     const currentPlatform = platform();
@@ -95,33 +137,7 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
     const checkInitial = async () => {
       if (nextPlatform === "macos") {
         try {
-          const [accessibilityGranted, microphoneGranted] = await Promise.all([
-            checkAccessibilityPermission(),
-            checkMicrophonePermission(),
-          ]);
-
-          // If accessibility is granted, initialize Enigo and shortcuts
-          if (accessibilityGranted) {
-            try {
-              await Promise.all([
-                commands.initializeEnigo(),
-                commands.initializeShortcuts(),
-              ]);
-            } catch (e) {
-              console.warn("Failed to initialize after permission grant:", e);
-            }
-          }
-
-          const newState: PermissionsState = {
-            accessibility: accessibilityGranted ? "granted" : "needed",
-            microphone: microphoneGranted ? "granted" : "needed",
-          };
-
-          setPermissions(newState);
-
-          if (accessibilityGranted && microphoneGranted) {
-            await completeOnboarding();
-          }
+          await refreshMacPermissions();
         } catch (error) {
           console.error("Failed to check macOS permissions:", error);
           toast.error(t("onboarding.permissions.errors.checkFailed"));
@@ -156,7 +172,13 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
     };
 
     checkInitial();
-  }, [completeOnboarding, hasWindowsMicrophoneAccess, onComplete, t]);
+  }, [
+    completeOnboarding,
+    hasWindowsMicrophoneAccess,
+    onComplete,
+    refreshMacPermissions,
+    t,
+  ]);
 
   // Polling for permissions after user clicks a button
   const startPolling = useCallback(() => {
@@ -182,39 +204,11 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
           return;
         }
 
-        const [accessibilityGranted, microphoneGranted] = await Promise.all([
-          checkAccessibilityPermission(),
-          checkMicrophonePermission(),
-        ]);
+        const completed = await refreshMacPermissions();
 
-        setPermissions((prev) => {
-          const newState = { ...prev };
-
-          if (accessibilityGranted && prev.accessibility !== "granted") {
-            newState.accessibility = "granted";
-            // Initialize Enigo and shortcuts when accessibility is granted
-            Promise.all([
-              commands.initializeEnigo(),
-              commands.initializeShortcuts(),
-            ]).catch((e) => {
-              console.warn("Failed to initialize after permission grant:", e);
-            });
-          }
-
-          if (microphoneGranted && prev.microphone !== "granted") {
-            newState.microphone = "granted";
-          }
-
-          return newState;
-        });
-
-        // If both granted, stop polling, refresh audio devices, and proceed
-        if (accessibilityGranted && microphoneGranted) {
-          if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
-          await completeOnboarding();
+        if (completed && pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
         }
 
         // Reset error count on success
@@ -234,6 +228,24 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
       }
     }, 1000);
   }, [completeOnboarding, hasWindowsMicrophoneAccess, permissionPlatform, t]);
+
+  useEffect(() => {
+    if (permissionPlatform !== "macos" || allGranted) return;
+
+    const refreshWhenActive = () => {
+      if (document.visibilityState === "visible") {
+        void refreshMacPermissions();
+      }
+    };
+
+    window.addEventListener("focus", refreshWhenActive);
+    document.addEventListener("visibilitychange", refreshWhenActive);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenActive);
+      document.removeEventListener("visibilitychange", refreshWhenActive);
+    };
+  }, [allGranted, permissionPlatform, refreshMacPermissions]);
 
   // Cleanup polling and timeouts on unmount
   useEffect(() => {

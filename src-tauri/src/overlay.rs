@@ -229,8 +229,8 @@ pub fn create_recording_overlay(app_handle: &AppHandle) {
     .focused(false)
     .visible(false);
 
-    if let Some(data_dir) = crate::portable::data_dir() {
-        builder = builder.data_directory(data_dir.join("webview"));
+    if let Some(data_dir) = crate::platform::webview_profile::data_dir(app_handle) {
+        builder = builder.data_directory(data_dir);
     }
 
     #[allow(unused_variables)]

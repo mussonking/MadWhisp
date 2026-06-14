@@ -2,6 +2,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use log::info;
 use transcribe_rs::{
     get_whisper_accelerator, get_whisper_gpu_device, whisper_cpp::WhisperInferenceParams,
     TranscribeError, TranscriptionResult, TranscriptionSegment,
@@ -16,14 +17,26 @@ pub struct CancellableWhisperEngine {
     context: WhisperContext,
 }
 
+fn compiled_whisper_backend() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "metal"
+    } else if cfg!(target_os = "windows") || cfg!(target_os = "linux") {
+        "vulkan"
+    } else {
+        "cpu"
+    }
+}
+
 impl CancellableWhisperEngine {
     pub fn load(model_path: &Path) -> Result<Self, TranscribeError> {
         if !model_path.exists() {
             return Err(TranscribeError::ModelNotFound(model_path.to_path_buf()));
         }
 
+        let whisper_accelerator = get_whisper_accelerator();
+        let use_gpu = whisper_accelerator.use_gpu();
         let mut context_params = WhisperContextParameters {
-            use_gpu: get_whisper_accelerator().use_gpu(),
+            use_gpu,
             flash_attn: true,
             ..Default::default()
         };
@@ -32,6 +45,18 @@ impl CancellableWhisperEngine {
         if gpu_device >= 0 {
             context_params.gpu_device = gpu_device;
         }
+
+        info!(
+            "Loading Whisper model with accelerator={}, compiled_backend={}, use_gpu={}, gpu_device={}",
+            whisper_accelerator,
+            compiled_whisper_backend(),
+            use_gpu,
+            if gpu_device >= 0 {
+                gpu_device.to_string()
+            } else {
+                "auto".to_string()
+            }
+        );
 
         let context = WhisperContext::new_with_params(model_path, context_params)
             .map_err(|e| TranscribeError::Inference(e.to_string()))?;

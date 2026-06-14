@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Obecné",
-    "models": "Modely",
+    "listening": "Listening Quality",
     "advanced": "Pokročilé",
     "postProcessing": "Následné zpracování",
     "history": "Historie",
@@ -119,6 +119,7 @@
   "modelSelector": {
     "custom": "Vlastní",
     "active": "Aktivní",
+    "switching": "Přepínání...",
     "noModelsAvailable": "Nejsou dostupné žádné modely",
     "extracting": "Rozbaluji {{modelName}}...",
     "extractingMultiple": "Rozbaluji {{count}} modelů...",
@@ -132,41 +133,22 @@
     "modelUnloaded": "Model uvolněn",
     "noModelDownloadRequired": "Žádný model - je nutné stáhnout",
     "deleteModel": "Smazat {{modelName}}",
-    "switching": "Přepínání...",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "Zrušit",
+    "cancelDownload": "Zrušit stahování",
     "capabilities": {
       "languageSelection": "Podporuje více vstupních jazyků",
-      "multiLanguage": "Vícejazyčný",
-      "translation": "Umí překládat do angličtiny",
-      "translate": "Přeložit do angličtiny",
       "singleLanguage": "Podporuje pouze tento jazyk",
-      "languageOnly": "Pouze {{language}}"
-    },
-    "cancel": "Zrušit",
-    "cancelDownload": "Zrušit stahování"
+      "multiLanguage": "Vícejazyčný",
+      "languageOnly": "Pouze {{language}}",
+      "translation": "Umí překládat do angličtiny",
+      "translate": "Přeložit do angličtiny"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "Nastavení {{model}}",
       "noSettingsNeeded": "Tento model funguje automaticky bez nutnosti konfigurace."
-    },
-    "models": {
-      "title": "Modely přepisu",
-      "description": "Vyberte model přepisu nebo stáhněte další modely. Různé modely nabízejí různé úrovně přesnosti a rychlosti.",
-      "downloaded": "Staženo",
-      "available": "K dispozici ke stažení",
-      "deleteConfirm": "Opravdu chcete smazat {{modelName}}? Pro opětovné použití jej budete muset znovu stáhnout.",
-      "deleteActiveConfirm": "{{modelName}} je váš aktivní model. Jeho smazáním se zastaví přepisy, dokud nevyberete nový model. Opravdu chcete pokračovat?",
-      "deleteTitle": "Smazat model",
-      "filters": {
-        "all": "Vše",
-        "multiLanguage": "Vícejazyčný",
-        "translation": "Překlad",
-        "allLanguages": "Všechny jazyky"
-      },
-      "noModelsMatch": "Tomuto filtru neodpovídají žádné modely.",
-      "yourModels": "Stažené modely",
-      "availableModels": "Dostupné ke stažení"
     },
     "general": {
       "title": "Obecné",
@@ -209,6 +191,24 @@
         "label": "Stisk a mluv",
         "description": "Podržte pro nahrávání, uvolněte pro zastavení"
       }
+    },
+    "models": {
+      "title": "Modely přepisu",
+      "description": "Vyberte model přepisu nebo stáhněte další modely. Různé modely nabízejí různé úrovně přesnosti a rychlosti.",
+      "yourModels": "Stažené modely",
+      "availableModels": "Dostupné ke stažení",
+      "downloaded": "Staženo",
+      "available": "K dispozici ke stažení",
+      "deleteConfirm": "Opravdu chcete smazat {{modelName}}? Pro opětovné použití jej budete muset znovu stáhnout.",
+      "deleteActiveConfirm": "{{modelName}} je váš aktivní model. Jeho smazáním se zastaví přepisy, dokud nevyberete nový model. Opravdu chcete pokračovat?",
+      "deleteTitle": "Smazat model",
+      "filters": {
+        "all": "Vše",
+        "multiLanguage": "Vícejazyčný",
+        "translation": "Překlad",
+        "allLanguages": "Všechny jazyky"
+      },
+      "noModelsMatch": "Tomuto filtru neodpovídají žádné modely."
     },
     "sound": {
       "title": "Zvuk",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Vyhledejte nebo vyberte model",
           "placeholderNoOptions": "Zadejte název modelu",
           "refreshModels": "Obnovit modely"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Následné zpracování",
         "description": "Povolit AI vylepšení textu po přepisu"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Ztlumit při nahrávání",
         "description": "Ztlumit systémový zvuk během nahrávání"
@@ -515,12 +525,42 @@
         "description": "Pomozte nám pokračovat ve vývoji MotsDits",
         "button": "Přispět"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Poděkování",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Vysoce výkonné inferenční zpracování modelu automatického rozpoznávání řeči Whisper od OpenAI",
           "details": "MotsDits používá Whisper.cpp pro rychlé lokální zpracování řeči na text. Díky skvělé práci Georgiho Gerganova a přispěvatelů."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Přepisuji...",
-    "processing": "Zpracovávám..."
+    "processing": "Zpracovávám...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

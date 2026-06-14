@@ -68,11 +68,10 @@ const QualitySlider: React.FC<QualitySliderProps> = ({
         className={`relative h-9 touch-none ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
         onPointerDown={handleTrackPointerDown}
       >
-
         {/* Inactive track */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-mid-gray/30" />
 
-        {/* Active fill — animated */}
+        {/* Active fill -- animated */}
         <div
           className="absolute left-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-logo-primary/50 transition-[width] duration-300 ease-out"
           style={{ width: `${positionPercent}%` }}
@@ -91,7 +90,7 @@ const QualitySlider: React.FC<QualitySliderProps> = ({
           />
         ))}
 
-        {/* Thumb — animated glide */}
+        {/* Thumb -- animated glide */}
         <div
           className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-logo-primary border-2 border-background shadow-lg transition-[left] duration-300 ease-out ${
             isDragging ? "scale-110" : "hover:scale-105"
@@ -141,7 +140,15 @@ const MULTI_LINGUAL_ID = "large";
 
 export const ListeningQuality: React.FC = () => {
   const { t } = useTranslation();
-  const { currentModel, selectModel, loading } = useModelStore();
+  const {
+    currentModel,
+    selectModel,
+    loading,
+    models,
+    downloadModel,
+    isModelDownloading,
+    getDownloadProgress,
+  } = useModelStore();
   const { updateSetting } = useSettings();
 
   const qcIndex = QC_TIERS.indexOf(currentModel as (typeof QC_TIERS)[number]);
@@ -149,15 +156,54 @@ export const ListeningQuality: React.FC = () => {
   const isEnglishNative = currentModel === ENGLISH_NATIVE_ID;
   const isMultiLingual = currentModel === MULTI_LINGUAL_ID;
 
+  const [pendingModel, setPendingModel] = useState<string | null>(null);
+  const pendingTranslateRef = useRef(false);
+
   const sliderValue = isQc ? qcIndex : 1;
 
   const switchTo = async (
     modelId: string,
     options: { translate?: boolean } = {},
   ) => {
-    await updateSetting("translate_to_english", options.translate ?? false);
+    const info = models.find((m) => m.id === modelId);
+    const translate = options.translate ?? false;
+    const needsDownload = info && !info.is_downloaded;
+    const hasDownloadUrl = info?.url != null && info.url !== "";
+    if (needsDownload && hasDownloadUrl) {
+      pendingTranslateRef.current = translate;
+      setPendingModel(modelId);
+      if (!isModelDownloading(modelId)) {
+        const ok = await downloadModel(modelId);
+        if (!ok) {
+          setPendingModel(null);
+        }
+      }
+      return;
+    }
+    await updateSetting("translate_to_english", translate);
     await selectModel(modelId);
   };
+
+  useEffect(() => {
+    if (!pendingModel) return;
+    const info = models.find((m) => m.id === pendingModel);
+    if (info?.is_downloaded) {
+      const translate = pendingTranslateRef.current;
+      const id = pendingModel;
+      setPendingModel(null);
+      void (async () => {
+        await updateSetting("translate_to_english", translate);
+        await selectModel(id);
+      })();
+    }
+  }, [pendingModel, models, selectModel, updateSetting]);
+
+  const pendingProgress = pendingModel
+    ? getDownloadProgress(pendingModel)
+    : undefined;
+  const pendingModelInfo = pendingModel
+    ? models.find((m) => m.id === pendingModel)
+    : undefined;
 
   const handleSliderChange = (idx: number) => {
     void switchTo(QC_TIERS[idx]);
@@ -191,6 +237,24 @@ export const ListeningQuality: React.FC = () => {
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
+      {pendingModel && (
+        <div className="p-3 rounded-md border border-logo-primary/30 bg-logo-primary/5 flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-logo-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-text">
+              {t("settings.listening.autoDownload.title", {
+                defaultValue: "Telechargement du modele en cours...",
+              })}
+            </p>
+            <p className="text-xs text-text/60 truncate">
+              {pendingModelInfo?.name ?? pendingModel}
+              {pendingProgress && pendingProgress.total > 0
+                ? " - " + Math.round(pendingProgress.percentage) + "%"
+                : ""}
+            </p>
+          </div>
+        </div>
+      )}
       <SettingsGroup
         title={t("settings.listening.qualityGroup", {
           defaultValue: "Qualité d'écoute",
@@ -254,7 +318,7 @@ export const ListeningQuality: React.FC = () => {
           checked={isMultiLingual}
           onChange={handleMultiLingualToggle}
           label={t("settings.listening.multiLingual.label", {
-            defaultValue: "Multi-lingue → traduction anglais instantanée",
+            defaultValue: "Multi-lingue -> traduction anglais instantanée",
           })}
           description={t("settings.listening.multiLingual.description", {
             defaultValue:

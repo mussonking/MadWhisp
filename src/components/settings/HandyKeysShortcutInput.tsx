@@ -34,7 +34,6 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
     useSettings();
   const [isRecording, setIsRecording] = useState(false);
   const [currentKeys, setCurrentKeys] = useState<string>("");
-  const [originalBinding, setOriginalBinding] = useState<string>("");
   const shortcutRef = useRef<HTMLDivElement | null>(null);
   const unlistenRef = useRef<(() => void) | null>(null);
   // Use a ref to track currentKeys for the event handler (avoids stale closure)
@@ -43,34 +42,37 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
 
   const bindings = getSetting("bindings") || {};
 
-  // Handle cancellation
-  const cancelRecording = useCallback(async () => {
-    if (!isRecording) return;
+  const reconcileShortcuts = useCallback(async () => {
+    const result = await commands.reconcileShortcuts();
+    if (result.status === "error") {
+      throw new Error(result.error);
+    }
+  }, []);
 
-    // Stop listening for backend events
+  const stopRecordingAndReconcile = useCallback(async () => {
     if (unlistenRef.current) {
       unlistenRef.current();
       unlistenRef.current = null;
     }
 
-    // Stop backend recording
     await commands.stopHandyKeysRecording().catch(console.error);
-
-    // Restore original binding
-    if (originalBinding) {
-      try {
-        await updateBinding(shortcutId, originalBinding);
-      } catch (error) {
-        console.error("Failed to restore original binding:", error);
-        toast.error(t("settings.general.shortcut.errors.restore"));
-      }
-    }
-
     setIsRecording(false);
     setCurrentKeys("");
     currentKeysRef.current = "";
-    setOriginalBinding("");
-  }, [isRecording, originalBinding, shortcutId, updateBinding, t]);
+
+    try {
+      await reconcileShortcuts();
+    } catch (error) {
+      console.error("Failed to reconcile shortcuts:", error);
+      toast.error(t("settings.general.shortcut.errors.restore"));
+    }
+  }, [reconcileShortcuts, t]);
+
+  // Handle cancellation
+  const cancelRecording = useCallback(async () => {
+    if (!isRecording) return;
+    await stopRecordingAndReconcile();
+  }, [isRecording, stopRecordingAndReconcile]);
 
   // Set up event listener for handy-keys events
   useEffect(() => {
@@ -104,27 +106,9 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
                 }),
               );
 
-              // Reset to original binding on error
-              if (originalBinding) {
-                try {
-                  await updateBinding(shortcutId, originalBinding);
-                } catch (resetError) {
-                  console.error("Failed to reset binding:", resetError);
-                  toast.error(t("settings.general.shortcut.errors.reset"));
-                }
-              }
             }
 
-            // Stop recording
-            if (unlistenRef.current) {
-              unlistenRef.current();
-              unlistenRef.current = null;
-            }
-            await commands.stopHandyKeysRecording().catch(console.error);
-            setIsRecording(false);
-            setCurrentKeys("");
-            currentKeysRef.current = "";
-            setOriginalBinding("");
+            await stopRecordingAndReconcile();
           }
         },
       );
@@ -153,13 +137,17 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
       }
       // Stop backend recording on unmount to prevent orphaned recording loops
       commands.stopHandyKeysRecording().catch(console.error);
+      reconcileShortcuts().catch((error) => {
+        console.error("Failed to reconcile shortcuts during cleanup:", error);
+      });
     };
   }, [
     isRecording,
     shortcutId,
-    originalBinding,
     updateBinding,
     cancelRecording,
+    stopRecordingAndReconcile,
+    reconcileShortcuts,
     t,
   ]);
 
@@ -178,17 +166,15 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
 
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
-  }, [isRecording, cancelRecording]);
+  }, [isRecording, cancelRecording, reconcileShortcuts]);
 
   // Start recording a new shortcut
   const startRecording = async () => {
     if (isRecording) return;
 
-    // Store the original binding to restore if canceled
-    setOriginalBinding(bindings[shortcutId]?.current_binding || "");
-
     // Start backend recording
     try {
+      await reconcileShortcuts();
       await commands.startHandyKeysRecording(shortcutId);
       setIsRecording(true);
       setCurrentKeys("");

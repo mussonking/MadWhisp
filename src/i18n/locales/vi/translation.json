@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Chung",
-    "models": "Mô hình",
+    "listening": "Listening Quality",
     "advanced": "Nâng cao",
     "postProcessing": "Xử lý sau",
     "history": "Lịch sử",
@@ -134,39 +134,21 @@
     "noModelDownloadRequired": "Chưa Có Mô Hình - Cần Tải Xuống",
     "deleteModel": "Xóa {{modelName}}",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "Hủy",
+    "cancelDownload": "Hủy tải xuống",
     "capabilities": {
       "languageSelection": "Hỗ trợ nhiều ngôn ngữ đầu vào",
-      "multiLanguage": "Đa ngôn ngữ",
-      "translation": "Có thể dịch sang tiếng Anh",
-      "translate": "Dịch sang tiếng Anh",
       "singleLanguage": "Chỉ hỗ trợ ngôn ngữ này",
-      "languageOnly": "Chỉ {{language}}"
-    },
-    "cancel": "Hủy",
-    "cancelDownload": "Hủy tải xuống"
+      "multiLanguage": "Đa ngôn ngữ",
+      "languageOnly": "Chỉ {{language}}",
+      "translation": "Có thể dịch sang tiếng Anh",
+      "translate": "Dịch sang tiếng Anh"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "Cài đặt {{model}}",
       "noSettingsNeeded": "Mô hình này hoạt động tự động mà không cần cấu hình."
-    },
-    "models": {
-      "title": "Mô hình chuyển đổi",
-      "description": "Chọn mô hình chuyển đổi hoặc tải thêm mô hình. Các mô hình khác nhau có mức độ chính xác và tốc độ khác nhau.",
-      "downloaded": "Đã tải xuống",
-      "available": "Có thể tải xuống",
-      "deleteConfirm": "Bạn có chắc chắn muốn xóa {{modelName}}? Bạn sẽ cần tải lại để sử dụng.",
-      "deleteActiveConfirm": "{{modelName}} là mô hình đang hoạt động của bạn. Xóa nó sẽ dừng phiên âm cho đến khi bạn chọn một mô hình mới. Bạn có chắc không?",
-      "deleteTitle": "Xóa mô hình",
-      "filters": {
-        "all": "Tất cả",
-        "multiLanguage": "Đa ngôn ngữ",
-        "translation": "Dịch thuật",
-        "allLanguages": "Tất cả ngôn ngữ"
-      },
-      "noModelsMatch": "Không có mô hình nào khớp với bộ lọc này.",
-      "yourModels": "Mô hình đã tải",
-      "availableModels": "Có sẵn để tải xuống"
     },
     "general": {
       "title": "Chung",
@@ -209,6 +191,24 @@
         "label": "Nhấn để nói",
         "description": "Giữ để ghi âm, thả để dừng"
       }
+    },
+    "models": {
+      "title": "Mô hình chuyển đổi",
+      "description": "Chọn mô hình chuyển đổi hoặc tải thêm mô hình. Các mô hình khác nhau có mức độ chính xác và tốc độ khác nhau.",
+      "yourModels": "Mô hình đã tải",
+      "availableModels": "Có sẵn để tải xuống",
+      "downloaded": "Đã tải xuống",
+      "available": "Có thể tải xuống",
+      "deleteConfirm": "Bạn có chắc chắn muốn xóa {{modelName}}? Bạn sẽ cần tải lại để sử dụng.",
+      "deleteActiveConfirm": "{{modelName}} là mô hình đang hoạt động của bạn. Xóa nó sẽ dừng phiên âm cho đến khi bạn chọn một mô hình mới. Bạn có chắc không?",
+      "deleteTitle": "Xóa mô hình",
+      "filters": {
+        "all": "Tất cả",
+        "multiLanguage": "Đa ngôn ngữ",
+        "translation": "Dịch thuật",
+        "allLanguages": "Tất cả ngôn ngữ"
+      },
+      "noModelsMatch": "Không có mô hình nào khớp với bộ lọc này."
     },
     "sound": {
       "title": "Âm thanh",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Tìm kiếm hoặc chọn một mô hình",
           "placeholderNoOptions": "Nhập tên mô hình",
           "refreshModels": "Làm mới mô hình"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Xử lý sau",
         "description": "Bật tinh chỉnh văn bản bằng AI sau khi chuyển đổi"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Tắt tiếng khi ghi âm",
         "description": "Tắt tiếng âm thanh hệ thống trong khi ghi âm"
@@ -515,12 +525,42 @@
         "description": "Giúp chúng tôi tiếp tục xây dựng MotsDits",
         "button": "Quyên góp"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Lời cảm ơn",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Suy luận hiệu suất cao của mô hình nhận dạng giọng nói tự động Whisper của OpenAI",
           "details": "MotsDits sử dụng Whisper.cpp để xử lý chuyển đổi giọng nói thành văn bản nhanh, cục bộ. Cảm ơn công việc tuyệt vời của Georgi Gerganov và các cộng tác viên."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Đang chuyển đổi...",
-    "processing": "Đang xử lý..."
+    "processing": "Đang xử lý...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

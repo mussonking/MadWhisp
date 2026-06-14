@@ -464,7 +464,7 @@ export const useSettingsStore = create<SettingsStore>()(
       const { setUpdating, refreshSettings, settings } = get();
       const updateKey = `post_process_base_url:${providerId}`;
 
-      // Compare against current persisted URL — if unchanged, skip everything.
+      // Compare against current persisted URL -- if unchanged, skip everything.
       // This prevents an onBlur with no edits from wiping the user's stored model.
       const currentUrl =
         settings?.post_process_providers?.find((p) => p.id === providerId)
@@ -486,7 +486,7 @@ export const useSettingsStore = create<SettingsStore>()(
         }
 
         // Clear cached model options since the new endpoint likely exposes a
-        // different model list. The stored model itself is preserved — the
+        // different model list. The stored model itself is preserved -- the
         // user can refresh the model list and pick a new one if needed.
         set((state) => ({
           postProcessModelOptions: {

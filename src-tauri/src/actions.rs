@@ -569,8 +569,7 @@ impl ShortcutAction for TranscribeAction {
                                     // notices the post-processing fallback occurred.
                                     let ah_for_hide = ah_clone.clone();
                                     tauri::async_runtime::spawn(async move {
-                                        tokio::time::sleep(std::time::Duration::from_secs(3))
-                                            .await;
+                                        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
                                         utils::hide_recording_overlay(&ah_for_hide);
                                     });
                                 } else {

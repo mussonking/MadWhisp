@@ -1,0 +1,26 @@
+# Normalize line endings: store everything as LF in the repo.
+# Prevents spurious CRLF/LF "modified" churn when editing on Windows/WSL.
+* text=auto eol=lf
+
+# Windows-native scripts must keep CRLF on checkout.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Explicit binaries (belt-and-suspenders; text=auto already detects most).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.onnx binary
+*.bin binary
+*.dll binary
+*.dylib binary
+*.so binary
+*.wav binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
+import { sendBugReport } from "@/lib/bugReport";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { platform } from "@tauri-apps/plugin-os";
@@ -26,13 +27,13 @@ const renderSettingsContent = (section: SidebarSection) => {
   return <ActiveComponent />;
 };
 
-const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "accentColor": "#8fb4d9",
-  "paperTint": "#fcf4dc",
-  "density": 1,
-  "radiusScale": 1,
-  "sketchOpacity": 0.14
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/ {
+  accentColor: "#8fb4d9",
+  paperTint: "#fcf4dc",
+  density: 1,
+  radiusScale: 1,
+  sketchOpacity: 0.14,
+}; /*EDITMODE-END*/
 
 void TWEAK_DEFAULTS;
 
@@ -121,8 +122,6 @@ function App() {
   };
   const activeSectionKicker = sectionKickers[currentSection];
 
-
-
   useEffect(() => {
     checkOnboardingStatus();
   }, []);
@@ -186,9 +185,13 @@ function App() {
         });
         toast.error(t("errors.micPermissionDeniedTitle"), { description });
       } else {
-        toast.error(
-          t("errors.recordingFailed", { error: detail ?? "Unknown error" }),
-        );
+        const errMsg = detail ?? "Unknown error";
+        toast.error(t("errors.recordingFailed", { error: errMsg }), {
+          action: {
+            label: "Report",
+            onClick: () => void sendBugReport(`Recording failed: ${errMsg}`),
+          },
+        });
       }
     });
 
@@ -200,15 +203,18 @@ function App() {
   useEffect(() => {
     const unlisten = listen<ModelStateEvent>("model-state-changed", (event) => {
       if (event.payload.event_type === "loading_failed") {
-        toast.error(
-          t("errors.modelLoadFailed", {
-            model:
-              event.payload.model_name || t("errors.modelLoadFailedUnknown"),
-          }),
-          {
-            description: event.payload.error,
+        const modelName =
+          event.payload.model_name || t("errors.modelLoadFailedUnknown");
+        toast.error(t("errors.modelLoadFailed", { model: modelName }), {
+          description: event.payload.error,
+          action: {
+            label: "Report",
+            onClick: () =>
+              void sendBugReport(
+                `Model load failed: ${modelName} -- ${event.payload.error ?? ""}`,
+              ),
           },
-        );
+        });
       }
     });
 
@@ -226,60 +232,52 @@ function App() {
   };
 
   const checkOnboardingStatus = async () => {
+    setIsReturningUser(true);
     try {
-      const result = await commands.hasAnyModelsAvailable();
-      const hasModels = result.status === "ok" && result.data;
       const currentPlatform = platform();
 
-      if (hasModels) {
-        setIsReturningUser(true);
-
-        if (currentPlatform === "macos") {
-          try {
-            const [hasAccessibility, hasMicrophone] = await Promise.all([
-              checkAccessibilityPermission(),
-              checkMicrophonePermission(),
-            ]);
-            if (!hasAccessibility || !hasMicrophone) {
-              await revealMainWindowForPermissions();
-              setOnboardingStep("accessibility");
-              return;
-            }
-          } catch (e) {
-            console.warn("Failed to check macOS permissions:", e);
+      if (currentPlatform === "macos") {
+        try {
+          const [hasAccessibility, hasMicrophone] = await Promise.all([
+            checkAccessibilityPermission(),
+            checkMicrophonePermission(),
+          ]);
+          if (!hasAccessibility || !hasMicrophone) {
+            await revealMainWindowForPermissions();
+            setOnboardingStep("accessibility");
+            return;
           }
+        } catch (e) {
+          console.warn("Failed to check macOS permissions:", e);
         }
-
-        if (currentPlatform === "windows") {
-          try {
-            const microphoneStatus =
-              await commands.getWindowsMicrophonePermissionStatus();
-            if (
-              microphoneStatus.supported &&
-              microphoneStatus.overall_access === "denied"
-            ) {
-              await revealMainWindowForPermissions();
-              setOnboardingStep("accessibility");
-              return;
-            }
-          } catch (e) {
-            console.warn("Failed to check Windows microphone permissions:", e);
-          }
-        }
-
-        setOnboardingStep("done");
-      } else {
-        setIsReturningUser(false);
-        setOnboardingStep("accessibility");
       }
+
+      if (currentPlatform === "windows") {
+        try {
+          const microphoneStatus =
+            await commands.getWindowsMicrophonePermissionStatus();
+          if (
+            microphoneStatus.supported &&
+            microphoneStatus.overall_access === "denied"
+          ) {
+            await revealMainWindowForPermissions();
+            setOnboardingStep("accessibility");
+            return;
+          }
+        } catch (e) {
+          console.warn("Failed to check Windows microphone permissions:", e);
+        }
+      }
+
+      setOnboardingStep("done");
     } catch (error) {
       console.error("Failed to check onboarding status:", error);
-      setOnboardingStep("accessibility");
+      setOnboardingStep("done");
     }
   };
 
   const handleAccessibilityComplete = () => {
-    setOnboardingStep(isReturningUser ? "done" : "model");
+    setOnboardingStep("done");
   };
 
   const handleModelSelected = () => {
@@ -308,7 +306,8 @@ function App() {
         toastOptions={{
           unstyled: true,
           classNames: {
-            toast: "paper-toast px-4 py-3 flex items-center gap-3 text-sm text-text",
+            toast:
+              "paper-toast px-4 py-3 flex items-center gap-3 text-sm text-text",
             title: "font-medium text-text",
             description: "text-mid-gray",
           },

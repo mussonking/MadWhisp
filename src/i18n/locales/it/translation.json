@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Generale",
-    "models": "Modelli",
+    "listening": "Listening Quality",
     "advanced": "Avanzate",
     "postProcessing": "Post-Elaborazione",
     "history": "Cronologia",
@@ -134,39 +134,21 @@
     "noModelDownloadRequired": "Nessun Modello - Download Richiesto",
     "deleteModel": "Elimina {{modelName}}",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "Annulla",
+    "cancelDownload": "Annulla download",
     "capabilities": {
       "languageSelection": "Supporta più lingue di input",
-      "multiLanguage": "Multilingua",
-      "translation": "Può tradurre in inglese",
-      "translate": "Traduci in inglese",
       "singleLanguage": "Supporta solo questa lingua",
-      "languageOnly": "Solo {{language}}"
-    },
-    "cancel": "Annulla",
-    "cancelDownload": "Annulla download"
+      "multiLanguage": "Multilingua",
+      "languageOnly": "Solo {{language}}",
+      "translation": "Può tradurre in inglese",
+      "translate": "Traduci in inglese"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "Impostazioni di {{model}}",
       "noSettingsNeeded": "Questo modello funziona automaticamente senza bisogno di configurazione."
-    },
-    "models": {
-      "title": "Modelli di Trascrizione",
-      "description": "Seleziona un modello di trascrizione o scarica modelli aggiuntivi. Diversi modelli offrono diversi livelli di accuratezza e velocità.",
-      "downloaded": "Scaricati",
-      "available": "Disponibili per il Download",
-      "deleteConfirm": "Sei sicuro di voler eliminare {{modelName}}? Dovrai scaricarlo di nuovo per usarlo.",
-      "deleteActiveConfirm": "{{modelName}} è il tuo modello attivo. Eliminarlo interromperà le trascrizioni fino a quando non selezionerai un nuovo modello. Sei sicuro?",
-      "deleteTitle": "Elimina modello",
-      "filters": {
-        "all": "Tutti",
-        "multiLanguage": "Multilingua",
-        "translation": "Traduzione",
-        "allLanguages": "Tutte le lingue"
-      },
-      "noModelsMatch": "Nessun modello corrisponde a questo filtro.",
-      "yourModels": "Modelli scaricati",
-      "availableModels": "Disponibili per il Download"
     },
     "general": {
       "title": "Generale",
@@ -209,6 +191,24 @@
         "label": "Premi per Parlare",
         "description": "Tieni premuto per parlare, rilascia per interrompere"
       }
+    },
+    "models": {
+      "title": "Modelli di Trascrizione",
+      "description": "Seleziona un modello di trascrizione o scarica modelli aggiuntivi. Diversi modelli offrono diversi livelli di accuratezza e velocità.",
+      "yourModels": "Modelli scaricati",
+      "availableModels": "Disponibili per il Download",
+      "downloaded": "Scaricati",
+      "available": "Disponibili per il Download",
+      "deleteConfirm": "Sei sicuro di voler eliminare {{modelName}}? Dovrai scaricarlo di nuovo per usarlo.",
+      "deleteActiveConfirm": "{{modelName}} è il tuo modello attivo. Eliminarlo interromperà le trascrizioni fino a quando non selezionerai un nuovo modello. Sei sicuro?",
+      "deleteTitle": "Elimina modello",
+      "filters": {
+        "all": "Tutti",
+        "multiLanguage": "Multilingua",
+        "translation": "Traduzione",
+        "allLanguages": "Tutte le lingue"
+      },
+      "noModelsMatch": "Nessun modello corrisponde a questo filtro."
     },
     "sound": {
       "title": "Suono",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Cerca o scegli un modello",
           "placeholderNoOptions": "Digita il nome di un modello",
           "refreshModels": "Aggiorna modelli"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Post-Elaborazione",
         "description": "Abilita il miglioramento della trascrizione con IA"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Silenzia durante la registrazione",
         "description": "Silenzia l'audio di sistema durante la registrazione"
@@ -515,12 +525,42 @@
         "description": "Aiutaci a sviluppare MotsDits",
         "button": "Dona"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Ringraziamenti",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Inferenza ad alte prestazioni del modello di riconoscimento vocale automatico Whisper di OpenAI",
           "details": "MotsDits usa Whisper.cpp per il riconoscimento vocale veloce in locale. Grazie a Georgi Gerganov e collaboratori per il fantastico lavoro."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Trascrizione...",
-    "processing": "Elaborazione..."
+    "processing": "Elaborazione...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

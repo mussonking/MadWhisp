@@ -35,7 +35,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onModelSelected }) => {
     const stillExtracting = selectedModelId in extractingModels;
 
     if (model?.is_downloaded && !stillDownloading && !stillExtracting) {
-      // Model is ready — select it and transition
+      // Model is ready -- select it and transition
       selectModel(selectedModelId).then((success) => {
         if (success) {
           onModelSelected();

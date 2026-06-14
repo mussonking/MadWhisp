@@ -54,7 +54,10 @@ export const AdvancedSettings: React.FC = () => {
         {experimentalEnabled && (
           <>
             <PostProcessingToggle descriptionMode="tooltip" grouped={true} />
-            <PostProcessingAutoToggle descriptionMode="tooltip" grouped={true} />
+            <PostProcessingAutoToggle
+              descriptionMode="tooltip"
+              grouped={true}
+            />
             <KeyboardImplementationSelector
               descriptionMode="tooltip"
               grouped={true}

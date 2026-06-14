@@ -13,3 +13,4 @@ pub mod overlay;
 pub mod shortcuts;
 pub mod transcription;
 pub mod tray;
+pub mod webview_profile;

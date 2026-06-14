@@ -117,7 +117,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
   return (
-    <aside className="paper-sidebar" aria-label={t("sidebar.navigation", { defaultValue: "Navigation" })}>
+    <aside
+      className="paper-sidebar"
+      aria-label={t("sidebar.navigation", { defaultValue: "Navigation" })}
+    >
       <BrandLogo className="paper-sidebar-logo" size="md" />
       <nav className="paper-sidebar-nav">
         {availableSections.map((section) => {

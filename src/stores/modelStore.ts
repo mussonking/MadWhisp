@@ -321,6 +321,8 @@ export const useModelStore = create<ModelsStore>()(
           }),
         );
         get().loadModels();
+        get().loadCurrentModel();
+        get().checkFirstRun();
       });
 
       listen<string>("model-extraction-started", (event) => {

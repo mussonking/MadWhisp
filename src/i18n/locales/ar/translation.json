@@ -10,12 +10,12 @@
   },
   "sidebar": {
     "general": "عام",
+    "listening": "Listening Quality",
     "advanced": "متقدم",
     "postProcessing": "معالجة لاحقة",
     "history": "السجل",
     "debug": "تصحيح الأخطاء",
     "about": "حول",
-    "models": "النماذج",
     "words": "Words"
   },
   "onboarding": {
@@ -119,6 +119,7 @@
   "modelSelector": {
     "custom": "مخصص",
     "active": "نشط",
+    "switching": "جارٍ التبديل...",
     "noModelsAvailable": "لا توجد نماذج متاحة",
     "extracting": "...جاري استخراج {{modelName}}",
     "extractingMultiple": "...جاري استخراج {{count}} من النماذج",
@@ -132,7 +133,6 @@
     "modelUnloaded": "تم إلغاء تحميل النموذج",
     "noModelDownloadRequired": "لا يوجد نموذج - التنزيل مطلوب",
     "deleteModel": "حذف {{modelName}}",
-    "switching": "جارٍ التبديل...",
     "downloadSpeed": "{{speed}} ميجابايت/ث",
     "cancel": "إلغاء",
     "cancelDownload": "إلغاء التنزيل",
@@ -146,6 +146,10 @@
     }
   },
   "settings": {
+    "modelSettings": {
+      "title": "إعدادات النموذج",
+      "noSettingsNeeded": "لا توجد إعدادات مطلوبة لهذا النموذج"
+    },
     "general": {
       "title": "عام",
       "shortcut": {
@@ -187,6 +191,24 @@
         "label": "اضغط للتحدث",
         "description": "استمر في الضغط للتسجيل، واترك للتوقف"
       }
+    },
+    "models": {
+      "title": "نماذج النسخ",
+      "description": "اختر نموذج نسخ أو قم بتنزيل نماذج إضافية. تقدم النماذج المختلفة مستويات متفاوتة من الدقة والسرعة.",
+      "yourModels": "النماذج المحمّلة",
+      "availableModels": "متاح للتنزيل",
+      "downloaded": "تم التنزيل",
+      "available": "متاح للتنزيل",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف {{modelName}}؟ ستحتاج إلى تنزيله مرة أخرى لاستخدامه.",
+      "deleteActiveConfirm": "{{modelName}} هو النموذج النشط حاليًا. حذفه سيوقف النسخ حتى تختار نموذجًا جديدًا. هل أنت متأكد؟",
+      "deleteTitle": "حذف النموذج",
+      "filters": {
+        "all": "الكل",
+        "multiLanguage": "متعدد اللغات",
+        "translation": "ترجمة",
+        "allLanguages": "جميع اللغات"
+      },
+      "noModelsMatch": "لا توجد نماذج مطابقة لهذا الفلتر."
     },
     "sound": {
       "title": "الصوت",
@@ -366,6 +388,12 @@
           "placeholderWithOptions": "ابحث عن نموذج أو اختره",
           "placeholderNoOptions": "اكتب اسم النموذج",
           "refreshModels": "تحديث النماذج"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -450,6 +478,10 @@
         "label": "معالجة لاحقة",
         "description": "تمكين تحسين النص المدعوم بالذكاء الاصطناعي بعد التفريغ الصوتي"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "كتم الصوت أثناء التسجيل",
         "description": "كتم صوت النظام أثناء التسجيل"
@@ -493,6 +525,18 @@
         "description": "ساعدنا في مواصلة بناء MotsDits",
         "button": "تبرع"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "شكر وتقدير",
         "whisper": {
@@ -500,29 +544,25 @@
           "description": "استنتاج عالي الأداء لنموذج التعرف التلقائي على الكلام Whisper من OpenAI",
           "details": ".يستخدم MotsDits برنامج Whisper.cpp لمعالجة سريعة ومحلية لتحويل الكلام إلى نص. شكراً للعمل الرائع الذي قام به Georgi Gerganov والمساهمون"
         }
-      }
-    },
-    "modelSettings": {
-      "title": "إعدادات النموذج",
-      "noSettingsNeeded": "لا توجد إعدادات مطلوبة لهذا النموذج"
-    },
-    "models": {
-      "title": "نماذج النسخ",
-      "description": "اختر نموذج نسخ أو قم بتنزيل نماذج إضافية. تقدم النماذج المختلفة مستويات متفاوتة من الدقة والسرعة.",
-      "yourModels": "النماذج المحمّلة",
-      "availableModels": "متاح للتنزيل",
-      "downloaded": "تم التنزيل",
-      "available": "متاح للتنزيل",
-      "deleteConfirm": "هل أنت متأكد أنك تريد حذف {{modelName}}؟ ستحتاج إلى تنزيله مرة أخرى لاستخدامه.",
-      "deleteActiveConfirm": "{{modelName}} هو النموذج النشط حاليًا. حذفه سيوقف النسخ حتى تختار نموذجًا جديدًا. هل أنت متأكد؟",
-      "deleteTitle": "حذف النموذج",
-      "filters": {
-        "all": "الكل",
-        "multiLanguage": "متعدد اللغات",
-        "translation": "ترجمة",
-        "allLanguages": "جميع اللغات"
       },
-      "noModelsMatch": "لا توجد نماذج مطابقة لهذا الفلتر."
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
+        }
+      }
     }
   },
   "footer": {
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "...جاري التفريغ",
-    "processing": "...جاري المعالجة"
+    "processing": "...جاري المعالجة",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

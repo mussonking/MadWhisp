@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Загальні",
-    "models": "Моделі",
+    "listening": "Listening Quality",
     "advanced": "Розширені",
     "postProcessing": "Постобробка",
     "history": "Історія",
@@ -119,6 +119,7 @@
   "modelSelector": {
     "custom": "Користувацька",
     "active": "Активна",
+    "switching": "Перемикання...",
     "noModelsAvailable": "Немає доступних моделей",
     "extracting": "Розпакування {{modelName}}...",
     "extractingMultiple": "Розпакування {{count}} моделей...",
@@ -132,18 +133,17 @@
     "modelUnloaded": "Модель вивантажена",
     "noModelDownloadRequired": "Немає моделі - потрібно завантажити",
     "deleteModel": "Видалити {{modelName}}",
-    "switching": "Перемикання...",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "Скасувати",
+    "cancelDownload": "Скасувати завантаження",
     "capabilities": {
       "languageSelection": "Підтримує кілька мов введення",
-      "multiLanguage": "Багатомовна",
-      "translation": "Може перекладати на англійську",
-      "translate": "Перекласти на англійську",
       "singleLanguage": "Підтримує лише цю мову",
-      "languageOnly": "Лише {{language}}"
-    },
-    "cancel": "Скасувати",
-    "cancelDownload": "Скасувати завантаження"
+      "multiLanguage": "Багатомовна",
+      "languageOnly": "Лише {{language}}",
+      "translation": "Може перекладати на англійську",
+      "translate": "Перекласти на англійську"
+    }
   },
   "settings": {
     "modelSettings": {
@@ -195,6 +195,8 @@
     "models": {
       "title": "Моделі транскрипції",
       "description": "Виберіть модель транскрипції або завантажте додаткові моделі. Різні моделі пропонують різні рівні точності та швидкості.",
+      "yourModels": "Завантажені моделі",
+      "availableModels": "Доступні для завантаження",
       "downloaded": "Завантажено",
       "available": "Доступні для завантаження",
       "deleteConfirm": "Ви впевнені, що хочете видалити {{modelName}}? Вам потрібно буде завантажити її знову, щоб використовувати.",
@@ -206,9 +208,7 @@
         "translation": "Переклад",
         "allLanguages": "Усі мови"
       },
-      "noModelsMatch": "Жодна модель не відповідає цьому фільтру.",
-      "yourModels": "Завантажені моделі",
-      "availableModels": "Доступні для завантаження"
+      "noModelsMatch": "Жодна модель не відповідає цьому фільтру."
     },
     "sound": {
       "title": "Звук",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Шукайте або оберіть модель",
           "placeholderNoOptions": "Введіть назву моделі",
           "refreshModels": "Оновити моделі"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Постобробка",
         "description": "Увімкнути покращення тексту за допомогою AI після транскрипції"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Вимкнути звук під час запису",
         "description": "Вимикати системний звук під час запису"
@@ -515,12 +525,42 @@
         "description": "Допоможіть нам продовжувати розвивати MotsDits",
         "button": "Підтримати"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Подяки",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Високопродуктивний інференс моделі автоматичного розпізнавання мовлення Whisper від OpenAI",
           "details": "MotsDits використовує Whisper.cpp для швидкої локальної обробки мовлення в текст. Дякуємо за чудову роботу Георгію Герганову та контриб'юторам."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Обробка...",
-    "processing": "Постобробка..."
+    "processing": "Постобробка...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

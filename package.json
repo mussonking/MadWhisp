@@ -1,7 +1,7 @@
 {
   "name": "motsdits",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Local speech-to-text desktop app with native Linux UI and GPU-accelerated Windows support.",
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
     "format:frontend": "prettier --write .",
     "format:backend": "cd src-tauri && cargo fmt",
     "build:windows": "powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1",
+    "build:macos:dev": "bash scripts/build-macos-dev.sh",
     "check:windows": "powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1 -Mode check",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
@@ -28,6 +29,7 @@
     "postinstall": "bun scripts/check-nix-deps.ts"
   },
   "dependencies": {
+    "@sentry/react": "^10.53.1",
     "@tailwindcss/vite": "^4.1.16",
     "@tauri-apps/api": "^2.10.0",
     "@tauri-apps/plugin-autostart": "~2.5.1",

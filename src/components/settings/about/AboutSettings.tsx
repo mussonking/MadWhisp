@@ -9,6 +9,7 @@ import { Button } from "../../ui/Button";
 import { AppDataDirectory } from "../AppDataDirectory";
 import { AppLanguageSelector } from "../AppLanguageSelector";
 import { LogDirectory } from "../debug";
+import { BugReportButton } from "./BugReportButton";
 
 export const AboutSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -70,6 +71,7 @@ export const AboutSettings: React.FC = () => {
 
         <AppDataDirectory descriptionMode="tooltip" grouped={true} />
         <LogDirectory grouped={true} />
+        <BugReportButton grouped={true} />
       </SettingsGroup>
 
       <SettingsGroup
@@ -88,7 +90,9 @@ export const AboutSettings: React.FC = () => {
           <Button
             variant="secondary"
             size="md"
-            onClick={() => openBundledLegalFile("legal/THIRD-PARTY-LICENSES.md")}
+            onClick={() =>
+              openBundledLegalFile("legal/THIRD-PARTY-LICENSES.md")
+            }
           >
             {t("settings.about.legal.thirdParty.button", {
               defaultValue: "Open",
@@ -101,8 +105,7 @@ export const AboutSettings: React.FC = () => {
             defaultValue: "Notice",
           })}
           description={t("settings.about.legal.notice.description", {
-            defaultValue:
-              "Copyright, attribution, and trademark information.",
+            defaultValue: "Copyright, attribution, and trademark information.",
           })}
           grouped={true}
         >

@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Ogólne",
-    "models": "Modele",
+    "listening": "Listening Quality",
     "advanced": "Zaawansowane",
     "postProcessing": "Postproces",
     "history": "Historia",
@@ -134,39 +134,21 @@
     "noModelDownloadRequired": "Brak modelu – wymagane pobranie",
     "deleteModel": "Usuń {{modelName}}",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "Anuluj",
+    "cancelDownload": "Anuluj pobieranie",
     "capabilities": {
       "languageSelection": "Obsługuje wiele języków wejściowych",
-      "multiLanguage": "Wielojęzyczny",
-      "translation": "Może tłumaczyć na angielski",
-      "translate": "Tłumacz na angielski",
       "singleLanguage": "Obsługuje tylko ten język",
-      "languageOnly": "Tylko {{language}}"
-    },
-    "cancel": "Anuluj",
-    "cancelDownload": "Anuluj pobieranie"
+      "multiLanguage": "Wielojęzyczny",
+      "languageOnly": "Tylko {{language}}",
+      "translation": "Może tłumaczyć na angielski",
+      "translate": "Tłumacz na angielski"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "Ustawienia {{model}}",
       "noSettingsNeeded": "Ten model działa automatycznie bez konieczności konfiguracji."
-    },
-    "models": {
-      "title": "Modele transkrypcji",
-      "description": "Wybierz model transkrypcji lub pobierz dodatkowe modele. Różne modele oferują różne poziomy dokładności i szybkości.",
-      "downloaded": "Pobrane",
-      "available": "Dostępne do pobrania",
-      "deleteConfirm": "Czy na pewno chcesz usunąć {{modelName}}? Będziesz musiał pobrać go ponownie, aby go użyć.",
-      "deleteActiveConfirm": "{{modelName}} jest Twoim aktywnym modelem. Usunięcie go zatrzyma transkrypcje, dopóki nie wybierzesz nowego modelu. Czy na pewno chcesz kontynuować?",
-      "deleteTitle": "Usuń model",
-      "filters": {
-        "all": "Wszystkie",
-        "multiLanguage": "Wielojęzyczne",
-        "translation": "Tłumaczenie",
-        "allLanguages": "Wszystkie języki"
-      },
-      "noModelsMatch": "Żadne modele nie pasują do tego filtra.",
-      "yourModels": "Pobrane modele",
-      "availableModels": "Dostępne do pobrania"
     },
     "general": {
       "title": "Ogólne",
@@ -209,6 +191,24 @@
         "label": "Push To Talk",
         "description": "Przytrzymaj, aby nagrywać, puść, aby zatrzymać"
       }
+    },
+    "models": {
+      "title": "Modele transkrypcji",
+      "description": "Wybierz model transkrypcji lub pobierz dodatkowe modele. Różne modele oferują różne poziomy dokładności i szybkości.",
+      "yourModels": "Pobrane modele",
+      "availableModels": "Dostępne do pobrania",
+      "downloaded": "Pobrane",
+      "available": "Dostępne do pobrania",
+      "deleteConfirm": "Czy na pewno chcesz usunąć {{modelName}}? Będziesz musiał pobrać go ponownie, aby go użyć.",
+      "deleteActiveConfirm": "{{modelName}} jest Twoim aktywnym modelem. Usunięcie go zatrzyma transkrypcje, dopóki nie wybierzesz nowego modelu. Czy na pewno chcesz kontynuować?",
+      "deleteTitle": "Usuń model",
+      "filters": {
+        "all": "Wszystkie",
+        "multiLanguage": "Wielojęzyczne",
+        "translation": "Tłumaczenie",
+        "allLanguages": "Wszystkie języki"
+      },
+      "noModelsMatch": "Żadne modele nie pasują do tego filtra."
     },
     "sound": {
       "title": "Dźwięk",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Wyszukaj lub wybierz model",
           "placeholderNoOptions": "Wpisz nazwę modelu",
           "refreshModels": "Odśwież modele"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Postprocess",
         "description": "Włącz AI do ulepszania tekstu po transkrypcji"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Wycisz podczas nagrywania",
         "description": "Wycisz dźwięk systemu podczas nagrywania"
@@ -515,12 +525,42 @@
         "description": "Pomóż nam dalej rozwijać MotsDits",
         "button": "Wesprzyj"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Podziękowania",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Wydajne wykonywanie modelu rozpoznawania mowy Whisper od OpenAI",
           "details": "MotsDits używa Whisper.cpp do szybkiego, lokalnego przetwarzania mowy na tekst. Dzięki niesamowitej pracy Georgi Gerganova i współtwórców."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Transkrypcja...",
-    "processing": "Przetwarzanie..."
+    "processing": "Przetwarzanie...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

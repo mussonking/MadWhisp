@@ -39,7 +39,7 @@ use managers::transcription::TranscriptionManager;
 use signal_hook::consts::{SIGUSR1, SIGUSR2};
 #[cfg(unix)]
 use signal_hook::iterator::Signals;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
 use tauri::image::Image;
 pub use transcription_coordinator::TranscriptionCoordinator;
@@ -54,6 +54,21 @@ use crate::settings::get_settings;
 // Global atomic to store the file log level filter
 // We use u8 to store the log::LevelFilter as a number
 pub static FILE_LOG_LEVEL: AtomicU8 = AtomicU8::new(log::LevelFilter::Debug as u8);
+
+#[derive(Default)]
+pub struct FrontendReadyState {
+    ready: AtomicBool,
+}
+
+impl FrontendReadyState {
+    pub fn mark_ready(&self) {
+        self.ready.store(true, Ordering::Release);
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.ready.load(Ordering::Acquire)
+    }
+}
 
 fn level_filter_from_u8(value: u8) -> log::LevelFilter {
     match value {
@@ -119,6 +134,17 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(model_manager.clone());
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
+
+    // First-launch: download the recommended model in the background if none exist
+    if let Some(model_id) = model_manager.pick_first_launch_model() {
+        log::info!("First launch detected — auto-downloading recommended model: {model_id}");
+        let mm = model_manager.clone();
+        tauri::async_runtime::spawn(async move {
+            if let Err(e) = mm.download_model(&model_id).await {
+                log::warn!("Auto-download of recommended model failed: {e}");
+            }
+        });
+    }
 
     // On frontendless platforms, platform adapters initialize shortcuts directly.
     platform::app::initialize_frontendless_shortcuts(app_handle);
@@ -261,6 +287,18 @@ fn show_main_window_command(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+#[specta::specta]
+fn mark_frontend_ready(app: AppHandle) -> Result<(), String> {
+    if let Some(state) = app.try_state::<FrontendReadyState>() {
+        state.mark_ready();
+        #[cfg(target_os = "windows")]
+        platform::webview_profile::clear_recovery_attempt(&app);
+        log::debug!("Frontend marked ready");
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run(cli_args: CliArgs) {
     // Detect portable mode before anything else
@@ -307,6 +345,7 @@ pub fn run(cli_args: CliArgs) {
         shortcut::update_custom_words,
         shortcut::suspend_binding,
         shortcut::resume_binding,
+        shortcut::reconcile_shortcuts,
         shortcut::change_mute_while_recording_setting,
         shortcut::change_append_trailing_space_setting,
         shortcut::change_app_language_setting,
@@ -321,6 +360,7 @@ pub fn run(cli_args: CliArgs) {
         shortcut::handy_keys::stop_handy_keys_recording,
         trigger_update_check,
         show_main_window_command,
+        mark_frontend_ready,
         commands::cancel_operation,
         commands::get_app_dir_path,
         commands::get_app_settings,
@@ -445,6 +485,7 @@ pub fn run(cli_args: CliArgs) {
             Some(vec![]),
         ))
         .manage(cli_args.clone())
+        .manage(FrontendReadyState::default())
         .setup(move |app| {
             // Create main window programmatically so we can set data_directory
             // for portable mode (redirects WebView2 cache to portable Data dir)
@@ -453,6 +494,7 @@ pub fn run(cli_args: CliArgs) {
             // alive (needed for managed state, single-instance, signals, etc.).
             // The native egui window is the actual UI.
             platform::app::create_main_window(app)?;
+            platform::app::start_frontend_ready_watchdog(app.handle().clone());
 
             let mut settings = get_settings(app.handle());
 
@@ -515,6 +557,11 @@ pub fn run(cli_args: CliArgs) {
                 log::info!("Theme changed to: {:?}", theme);
                 // Update tray icon to match new theme, maintaining idle state
                 utils::change_tray_icon(window.app_handle(), utils::TrayIconState::Idle);
+            }
+            tauri::WindowEvent::Focused(true) => {
+                if let Err(e) = shortcut::reconcile_shortcuts(window.app_handle().clone()) {
+                    log::warn!("Shortcut reconciliation on focus failed: {}", e);
+                }
             }
             _ => {}
         })

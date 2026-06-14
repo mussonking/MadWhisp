@@ -35,22 +35,22 @@ you have purchased ({{LICENSE_TIERS}}).
 You shall not, and shall not permit any third party to:
 
 (a) Copy, modify, adapt, translate, or create derivative works of the Software,
-    except as expressly permitted under section 5 (Open-Source Components);
+except as expressly permitted under section 5 (Open-Source Components);
 
 (b) Reverse engineer, disassemble, decompile, or otherwise attempt to derive
-    the source code of the Software, except to the extent such restriction is
-    prohibited by applicable law;
+the source code of the Software, except to the extent such restriction is
+prohibited by applicable law;
 
 (c) Sell, rent, lease, sublicense, distribute, transfer, or assign the
-    Software or any rights granted hereunder to any third party;
+Software or any rights granted hereunder to any third party;
 
 (d) Remove, alter, or obscure any proprietary notices, including copyright,
-    trademark, or license notices, in or on the Software;
+trademark, or license notices, in or on the Software;
 
 (e) Use the Software to develop a competing product or service;
 
 (f) Use the Software in violation of any applicable law or regulation,
-    including export-control laws.
+including export-control laws.
 
 ## 3. License Tiers and Activation
 
@@ -163,23 +163,23 @@ anglais.
 ## 13. Miscellaneous
 
 (a) **Entire Agreement.** This Agreement, together with the Privacy Policy
-    and `THIRD-PARTY-LICENSES.md`, constitutes the entire agreement between
-    you and {{COMPANY_LEGAL_NAME}} regarding the Software and supersedes all
-    prior or contemporaneous communications.
+and `THIRD-PARTY-LICENSES.md`, constitutes the entire agreement between
+you and {{COMPANY_LEGAL_NAME}} regarding the Software and supersedes all
+prior or contemporaneous communications.
 
 (b) **Severability.** If any provision of this Agreement is held to be
-    unenforceable, the remaining provisions shall remain in full force and
-    effect.
+unenforceable, the remaining provisions shall remain in full force and
+effect.
 
 (c) **No Waiver.** No waiver of any provision of this Agreement shall be
-    effective unless in writing and signed by an authorized representative
-    of {{COMPANY_LEGAL_NAME}}.
+effective unless in writing and signed by an authorized representative
+of {{COMPANY_LEGAL_NAME}}.
 
 (d) **Assignment.** You may not assign this Agreement without our prior
-    written consent. {{COMPANY_LEGAL_NAME}} may assign this Agreement freely.
+written consent. {{COMPANY_LEGAL_NAME}} may assign this Agreement freely.
 
 (e) **Contact.** Questions regarding this Agreement should be directed to
-    {{LEGAL_EMAIL}}.
+{{LEGAL_EMAIL}}.
 
 ---
 

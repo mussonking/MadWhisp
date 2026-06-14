@@ -152,6 +152,8 @@ export const ModelsSettings: React.FC = () => {
   // Filter models based on language filter
   const filteredModels = useMemo(() => {
     return models.filter((model: ModelInfo) => {
+      // Hide models that can't be downloaded and aren't already on disk
+      if (!model.is_downloaded && !model.is_custom && !model.url) return false;
       if (languageFilter !== "all") {
         if (!modelSupportsLanguage(model, languageFilter)) return false;
       }
@@ -213,7 +215,7 @@ export const ModelsSettings: React.FC = () => {
       </div>
       {filteredModels.length > 0 ? (
         <div className="space-y-6">
-          {/* Downloaded Models Section — header always visible so filter stays accessible */}
+          {/* Downloaded Models Section -- header always visible so filter stays accessible */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-medium text-text/60">

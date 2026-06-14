@@ -134,39 +134,21 @@
     "noModelDownloadRequired": "Aucun Modèle - Téléchargement Requis",
     "deleteModel": "Supprimer {{modelName}}",
     "downloadSpeed": "{{speed}} Mo/s",
+    "cancel": "Annuler",
+    "cancelDownload": "Annuler le téléchargement",
     "capabilities": {
       "languageSelection": "Prend en charge plusieurs langues d'entrée",
-      "multiLanguage": "Multilingue",
-      "translation": "Peut traduire en anglais",
-      "translate": "Traduire en anglais",
       "singleLanguage": "Prend en charge uniquement cette langue",
-      "languageOnly": "{{language}} uniquement"
-    },
-    "cancel": "Annuler",
-    "cancelDownload": "Annuler le téléchargement"
+      "multiLanguage": "Multilingue",
+      "languageOnly": "{{language}} uniquement",
+      "translation": "Peut traduire en anglais",
+      "translate": "Traduire en anglais"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "Paramètres de {{model}}",
       "noSettingsNeeded": "Ce modèle fonctionne automatiquement sans configuration nécessaire."
-    },
-    "models": {
-      "title": "Modèles de Transcription",
-      "description": "Sélectionnez un modèle de transcription ou téléchargez des modèles supplémentaires. Différents modèles offrent différents niveaux de précision et de vitesse.",
-      "downloaded": "Téléchargés",
-      "available": "Disponibles au Téléchargement",
-      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer {{modelName}} ? Vous devrez le télécharger à nouveau pour l'utiliser.",
-      "deleteActiveConfirm": "{{modelName}} est votre modèle actif. Le supprimer arrêtera les transcriptions jusqu'à ce que vous sélectionniez un nouveau modèle. Êtes-vous sûr ?",
-      "deleteTitle": "Supprimer le modèle",
-      "filters": {
-        "all": "Tous",
-        "multiLanguage": "Multilingue",
-        "translation": "Traduction",
-        "allLanguages": "Toutes les langues"
-      },
-      "noModelsMatch": "Aucun modèle ne correspond à ce filtre.",
-      "yourModels": "Modèles téléchargés",
-      "availableModels": "Disponibles au téléchargement"
     },
     "general": {
       "title": "Général",
@@ -209,6 +191,24 @@
         "label": "Appuyer pour parler",
         "description": "Maintenez pour enregistrer, relâchez pour arrêter"
       }
+    },
+    "models": {
+      "title": "Modèles de Transcription",
+      "description": "Sélectionnez un modèle de transcription ou téléchargez des modèles supplémentaires. Différents modèles offrent différents niveaux de précision et de vitesse.",
+      "yourModels": "Modèles téléchargés",
+      "availableModels": "Disponibles au téléchargement",
+      "downloaded": "Téléchargés",
+      "available": "Disponibles au Téléchargement",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer {{modelName}} ? Vous devrez le télécharger à nouveau pour l'utiliser.",
+      "deleteActiveConfirm": "{{modelName}} est votre modèle actif. Le supprimer arrêtera les transcriptions jusqu'à ce que vous sélectionniez un nouveau modèle. Êtes-vous sûr ?",
+      "deleteTitle": "Supprimer le modèle",
+      "filters": {
+        "all": "Tous",
+        "multiLanguage": "Multilingue",
+        "translation": "Traduction",
+        "allLanguages": "Toutes les langues"
+      },
+      "noModelsMatch": "Aucun modèle ne correspond à ce filtre."
     },
     "sound": {
       "title": "Son",
@@ -525,6 +525,18 @@
         "description": "Aidez-nous à continuer à construire MotsDits",
         "button": "Faire un don"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Remerciements",
         "whisper": {
@@ -616,5 +628,13 @@
     "transcribing": "Transcription...",
     "processing": "Traitement...",
     "processingError": "Échec du post-traitement"
+  },
+  "crash": {
+    "title": "Une erreur est survenue",
+    "description": "MotsDits a rencontré une erreur inattendue. Vous pouvez envoyer un rapport de bogue pour nous aider à la corriger, puis recharger l’app.",
+    "sending": "Envoi...",
+    "sendReport": "Envoyer un rapport",
+    "reportSent": "Rapport envoyé. Merci!",
+    "reload": "Recharger"
   }
 }

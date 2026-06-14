@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "一般",
-    "models": "モデル",
+    "listening": "Listening Quality",
     "advanced": "詳細設定",
     "postProcessing": "後処理",
     "history": "履歴",
@@ -134,39 +134,21 @@
     "noModelDownloadRequired": "モデルなし - ダウンロードが必要",
     "deleteModel": "{{modelName}}を削除",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "キャンセル",
+    "cancelDownload": "ダウンロードをキャンセル",
     "capabilities": {
       "languageSelection": "複数の入力言語をサポート",
-      "multiLanguage": "多言語",
-      "translation": "英語への翻訳が可能",
-      "translate": "英語に翻訳",
       "singleLanguage": "この言語のみ対応",
-      "languageOnly": "{{language}}のみ"
-    },
-    "cancel": "キャンセル",
-    "cancelDownload": "ダウンロードをキャンセル"
+      "multiLanguage": "多言語",
+      "languageOnly": "{{language}}のみ",
+      "translation": "英語への翻訳が可能",
+      "translate": "英語に翻訳"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "{{model}} 設定",
       "noSettingsNeeded": "このモデルは設定不要で自動的に動作します。"
-    },
-    "models": {
-      "title": "転写モデル",
-      "description": "転写モデルを選択するか、追加のモデルをダウンロードします。異なるモデルは精度と速度のレベルが異なります。",
-      "downloaded": "ダウンロード済み",
-      "available": "ダウンロード可能",
-      "deleteConfirm": "{{modelName}}を削除してもよろしいですか？再度使用するにはダウンロードが必要です。",
-      "deleteActiveConfirm": "{{modelName}}は現在使用中のモデルです。削除すると、新しいモデルを選択するまで文字起こしが停止します。本当に削除しますか？",
-      "deleteTitle": "モデルを削除",
-      "filters": {
-        "all": "すべて",
-        "multiLanguage": "多言語",
-        "translation": "翻訳",
-        "allLanguages": "すべての言語"
-      },
-      "noModelsMatch": "このフィルターに一致するモデルがありません。",
-      "yourModels": "ダウンロード済みモデル",
-      "availableModels": "ダウンロード可能"
     },
     "general": {
       "title": "一般",
@@ -209,6 +191,24 @@
         "label": "プッシュトゥトーク",
         "description": "押し続けて録音、離して停止"
       }
+    },
+    "models": {
+      "title": "転写モデル",
+      "description": "転写モデルを選択するか、追加のモデルをダウンロードします。異なるモデルは精度と速度のレベルが異なります。",
+      "yourModels": "ダウンロード済みモデル",
+      "availableModels": "ダウンロード可能",
+      "downloaded": "ダウンロード済み",
+      "available": "ダウンロード可能",
+      "deleteConfirm": "{{modelName}}を削除してもよろしいですか？再度使用するにはダウンロードが必要です。",
+      "deleteActiveConfirm": "{{modelName}}は現在使用中のモデルです。削除すると、新しいモデルを選択するまで文字起こしが停止します。本当に削除しますか？",
+      "deleteTitle": "モデルを削除",
+      "filters": {
+        "all": "すべて",
+        "multiLanguage": "多言語",
+        "translation": "翻訳",
+        "allLanguages": "すべての言語"
+      },
+      "noModelsMatch": "このフィルターに一致するモデルがありません。"
     },
     "sound": {
       "title": "サウンド",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "モデルを検索または選択",
           "placeholderNoOptions": "モデル名を入力",
           "refreshModels": "モデルを更新"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "後処理",
         "description": "文字起こし後のAIによるテキスト改善を有効化"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "録音中にミュート",
         "description": "録音中にシステムオーディオをミュート"
@@ -515,12 +525,42 @@
         "description": "MotsDitsの開発を支援してください",
         "button": "寄付する"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "謝辞",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "OpenAIのWhisper自動音声認識モデルの高性能推論",
           "details": "MotsDitsは高速でローカルな音声からテキストへの変換にWhisper.cppを使用しています。Georgi Gerganov氏と貢献者の皆様の素晴らしい仕事に感謝します。"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "文字起こし中...",
-    "processing": "処理中..."
+    "processing": "処理中...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }

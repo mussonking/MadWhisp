@@ -549,7 +549,10 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
         paste_method, paste_delay_ms
     );
 
-    // Get the managed Enigo instance
+    if app_handle.try_state::<EnigoState>().is_none() {
+        crate::commands::initialize_enigo(app_handle.clone())?;
+    }
+
     let enigo_state = app_handle
         .try_state::<EnigoState>()
         .ok_or("Enigo state not initialized")?;

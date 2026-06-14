@@ -15,7 +15,7 @@ interface CustomWordsProps {
 
 type TokenField = "aliases" | "blacklist";
 
-// Trim only — alias and word strings flow through React (auto-escaped) and a
+// Trim only -- alias and word strings flow through React (auto-escaped) and a
 // literal-string matcher in Rust, so there's no XSS or regex-injection surface
 // to defend against. Stripping characters here was breaking legitimate input
 // like French aliases ("l'app", "j'ai", "n'importe").
@@ -283,7 +283,9 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
           </div>
         </SettingContainer>
 
-        <div className={grouped ? "words-list words-list-grouped" : "words-list"}>
+        <div
+          className={grouped ? "words-list words-list-grouped" : "words-list"}
+        >
           {sortedCustomWords.length === 0 ? (
             <p className="words-empty-state">
               {t("settings.advanced.customWords.empty", {

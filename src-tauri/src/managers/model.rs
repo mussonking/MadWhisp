@@ -98,8 +98,9 @@ impl ModelManager {
             ModelInfo {
                 id: "parakeet-tdt-0.6b-v2".to_string(),
                 name: "Express EN".to_string(),
-                description: "Modèle anglais rapide et précis. Meilleur choix pour la dictée en anglais."
-                    .to_string(),
+                description:
+                    "Modèle anglais rapide et précis. Meilleur choix pour la dictée en anglais."
+                        .to_string(),
                 filename: "parakeet-tdt-0.6b-v2-int8".to_string(),
                 url: Some("https://blob.handy.computer/parakeet-v2-int8.tar.gz".to_string()),
                 size_mb: 473,
@@ -127,7 +128,7 @@ impl ModelManager {
                     "Fine-tuné pour le français québécois. Variante compacte pour CPU et GPU intégré."
                         .to_string(),
                 filename: "ggml-large-v3-turbo-fr-quebecois-q4_0.bin".to_string(),
-                url: None,
+                url: Some("https://huggingface.co/MaderaTools/ggml-large-v3-turbo-fr-quebecois-q4_0/resolve/main/ggml-large-v3-turbo-fr-quebecois-q4_0.bin".to_string()),
                 size_mb: 452,
                 is_downloaded: false,
                 is_downloading: false,
@@ -137,7 +138,7 @@ impl ModelManager {
                 accuracy_score: 0.84,
                 speed_score: 0.70,
                 supports_translation: false,
-                is_recommended: false,
+                is_recommended: true,
                 supported_languages: vec!["fr".to_string()],
                 supports_language_selection: false,
                 is_custom: false,
@@ -153,7 +154,7 @@ impl ModelManager {
                     "Fine-tuné pour le français québécois. Compromis recommandé pour GPU 4–6 Go."
                         .to_string(),
                 filename: "ggml-large-v3-turbo-fr-quebecois-q5_k.bin".to_string(),
-                url: None,
+                url: Some("https://huggingface.co/MaderaTools/ggml-large-v3-turbo-fr-quebecois-q5_k/resolve/main/ggml-large-v3-turbo-fr-quebecois-q5_k.bin".to_string()),
                 size_mb: 547,
                 is_downloaded: false,
                 is_downloading: false,
@@ -163,7 +164,7 @@ impl ModelManager {
                 accuracy_score: 0.88,
                 speed_score: 0.55,
                 supports_translation: false,
-                is_recommended: true,
+                is_recommended: false,
                 supported_languages: vec!["fr".to_string()],
                 supports_language_selection: false,
                 is_custom: false,
@@ -179,7 +180,7 @@ impl ModelManager {
                     "Fine-tuné pour le français québécois. Précision maximale, GPU 8 Go ou plus."
                         .to_string(),
                 filename: "ggml-large-v3-turbo-fr-quebecois.bin".to_string(),
-                url: None,
+                url: Some("https://huggingface.co/MaderaTools/ggml-large-v3-turbo-fr-quebecois/resolve/main/ggml-large-v3-turbo-fr-quebecois.bin".to_string()),
                 size_mb: 1550,
                 is_downloaded: false,
                 is_downloading: false,
@@ -224,7 +225,6 @@ impl ModelManager {
                 is_custom: false,
             },
         );
-
 
         // Auto-discover custom Whisper models (.bin files) in the models directory
         if let Err(e) = Self::discover_custom_whisper_models(&models_dir, &mut available_models) {
@@ -360,26 +360,38 @@ impl ModelManager {
             }
         }
 
-        // If no model is selected, pick the first downloaded one
+        // If no model is selected, pick a downloaded one — recommended first, then any other
         if settings.selected_model.is_empty() {
-            // Find the first available (downloaded) model
             let models = self.available_models.lock().unwrap();
-            if let Some(available_model) = models.values().find(|model| model.is_downloaded) {
-                info!(
-                    "Auto-selecting model: {} ({})",
-                    available_model.id, available_model.name
-                );
-
-                // Update settings with the selected model
+            let mut downloaded: Vec<&ModelInfo> =
+                models.values().filter(|m| m.is_downloaded).collect();
+            // Stable order: recommended first, then non-custom before custom, then by id
+            downloaded.sort_by_key(|m| (!m.is_recommended, m.is_custom, m.id.clone()));
+            if let Some(chosen) = downloaded.first() {
+                info!("Auto-selecting model: {} ({})", chosen.id, chosen.name);
                 let mut updated_settings = settings;
-                updated_settings.selected_model = available_model.id.clone();
+                updated_settings.selected_model = chosen.id.clone();
                 write_settings(&self.app_handle, updated_settings);
-
-                info!("Successfully auto-selected model: {}", available_model.id);
+                info!("Successfully auto-selected model: {}", chosen.id);
             }
         }
 
         Ok(())
+    }
+
+    /// Returns the recommended model to download on first launch if no model
+    /// is currently downloaded. The recommended model must have a URL.
+    pub fn pick_first_launch_model(&self) -> Option<String> {
+        let models = self.available_models.lock().unwrap();
+        let any_downloaded = models.values().any(|m| m.is_downloaded);
+        if any_downloaded {
+            return None;
+        }
+        models
+            .values()
+            .filter(|m| m.is_recommended && m.url.is_some() && !m.is_custom)
+            .map(|m| m.id.clone())
+            .next()
     }
 
     /// Discover custom Whisper models (.bin files) in the models directory.
@@ -839,6 +851,8 @@ impl ModelManager {
             let mut flags = self.cancel_flags.lock().unwrap();
             flags.remove(model_id);
         }
+
+        self.auto_select_model_if_needed()?;
 
         // Emit completion event
         let _ = self.app_handle.emit("model-download-complete", model_id);

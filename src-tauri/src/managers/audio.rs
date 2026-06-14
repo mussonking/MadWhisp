@@ -141,10 +141,21 @@ impl AudioRecordingManager {
             .app_handle
             .path()
             .resolve(
-                "resources/models/silero_vad_v4.onnx",
+                "resources/silero_vad_v4.onnx",
                 tauri::path::BaseDirectory::Resource,
             )
             .map_err(|e| anyhow::anyhow!("Failed to resolve VAD path: {}", e))?;
+        let vad_path = if vad_path.exists() {
+            vad_path
+        } else {
+            self.app_handle
+                .path()
+                .resolve(
+                    "resources/models/silero_vad_v4.onnx",
+                    tauri::path::BaseDirectory::Resource,
+                )
+                .map_err(|e| anyhow::anyhow!("Failed to resolve VAD fallback path: {}", e))?
+        };
         debug!("Preparing microphone recorder");
         let mut recorder_opt = self.recorder.lock().unwrap();
 

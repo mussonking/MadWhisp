@@ -10,7 +10,7 @@
   },
   "sidebar": {
     "general": "Genel",
-    "models": "Modeller",
+    "listening": "Listening Quality",
     "advanced": "Gelişmiş",
     "postProcessing": "Son İşlem",
     "history": "Geçmiş",
@@ -119,6 +119,7 @@
   "modelSelector": {
     "custom": "Özel",
     "active": "Aktif",
+    "switching": "Değiştiriliyor...",
     "noModelsAvailable": "Kullanılabilir model yok",
     "extracting": "{{modelName}} çıkarılıyor...",
     "extractingMultiple": "{{count}} model çıkarılıyor...",
@@ -132,41 +133,22 @@
     "modelUnloaded": "Model Boşaltıldı",
     "noModelDownloadRequired": "Model Yok – İndirme Gerekli",
     "deleteModel": "{{modelName}} Sil",
-    "switching": "Değiştiriliyor...",
     "downloadSpeed": "{{speed}} MB/s",
+    "cancel": "İptal",
+    "cancelDownload": "İndirmeyi iptal et",
     "capabilities": {
       "languageSelection": "Birden fazla giriş dilini destekler",
-      "multiLanguage": "Çok dilli",
-      "translation": "İngilizce'ye çevirebilir",
-      "translate": "İngilizce'ye çevir",
       "singleLanguage": "Yalnızca bu dili destekler",
-      "languageOnly": "Yalnızca {{language}}"
-    },
-    "cancel": "İptal",
-    "cancelDownload": "İndirmeyi iptal et"
+      "multiLanguage": "Çok dilli",
+      "languageOnly": "Yalnızca {{language}}",
+      "translation": "İngilizce'ye çevirebilir",
+      "translate": "İngilizce'ye çevir"
+    }
   },
   "settings": {
     "modelSettings": {
       "title": "{{model}} Ayarları",
       "noSettingsNeeded": "Bu model yapılandırma gerektirmeden otomatik olarak çalışır."
-    },
-    "models": {
-      "title": "Transkripsiyon Modelleri",
-      "description": "Bir transkripsiyon modeli seçin veya ek modeller indirin. Farklı modeller değişen doğruluk ve hız seviyeleri sunar.",
-      "downloaded": "İndirildi",
-      "available": "İndirilebilir",
-      "deleteConfirm": "{{modelName}} modelini silmek istediğinizden emin misiniz? Kullanmak için tekrar indirmeniz gerekecek.",
-      "deleteActiveConfirm": "{{modelName}} aktif modelinizdir. Silmek, yeni bir model seçene kadar transkripsiyonları durduracaktır. Emin misiniz?",
-      "deleteTitle": "Modeli Sil",
-      "filters": {
-        "all": "Tümü",
-        "multiLanguage": "Çok dilli",
-        "translation": "Çeviri",
-        "allLanguages": "Tüm Diller"
-      },
-      "noModelsMatch": "Bu filtreyle eşleşen model yok.",
-      "yourModels": "İndirilen modeller",
-      "availableModels": "İndirilebilir"
     },
     "general": {
       "title": "Genel",
@@ -209,6 +191,24 @@
         "label": "Bas Konuş",
         "description": "Kaydetmek için basılı tutun, durdurmak için bırakın"
       }
+    },
+    "models": {
+      "title": "Transkripsiyon Modelleri",
+      "description": "Bir transkripsiyon modeli seçin veya ek modeller indirin. Farklı modeller değişen doğruluk ve hız seviyeleri sunar.",
+      "yourModels": "İndirilen modeller",
+      "availableModels": "İndirilebilir",
+      "downloaded": "İndirildi",
+      "available": "İndirilebilir",
+      "deleteConfirm": "{{modelName}} modelini silmek istediğinizden emin misiniz? Kullanmak için tekrar indirmeniz gerekecek.",
+      "deleteActiveConfirm": "{{modelName}} aktif modelinizdir. Silmek, yeni bir model seçene kadar transkripsiyonları durduracaktır. Emin misiniz?",
+      "deleteTitle": "Modeli Sil",
+      "filters": {
+        "all": "Tümü",
+        "multiLanguage": "Çok dilli",
+        "translation": "Çeviri",
+        "allLanguages": "Tüm Diller"
+      },
+      "noModelsMatch": "Bu filtreyle eşleşen model yok."
     },
     "sound": {
       "title": "Ses",
@@ -388,6 +388,12 @@
           "placeholderWithOptions": "Model ara veya seç",
           "placeholderNoOptions": "Model adı yazın",
           "refreshModels": "Modelleri Yenile"
+        },
+        "test": {
+          "button": "Test connection",
+          "running": "Testing...",
+          "success": "Connection OK — provider replied: \"{{response}}\"",
+          "failure": "Test failed: {{error}}"
         }
       },
       "prompts": {
@@ -472,6 +478,10 @@
         "label": "Son İşlem",
         "description": "Transkripsiyon sonrası yapay zekâ destekli metin iyileştirmeyi etkinleştirir"
       },
+      "postProcessingAutoToggle": {
+        "label": "Auto post-processing",
+        "description": "Apply post-processing to every transcription automatically (no separate hotkey needed). Requires post-processing to be enabled."
+      },
       "muteWhileRecording": {
         "label": "Kayıt Sırasında Sessize Al",
         "description": "Kayıt sırasında sistem sesini kapatır"
@@ -515,12 +525,42 @@
         "description": "MotsDits'yi geliştirmeye devam etmemize yardımcı olun",
         "button": "Bağış Yap"
       },
+      "bugReport": {
+        "title": "Send Bug Report",
+        "description": "Encountered a problem? Send a report to help us fix it.",
+        "button": "Report a Bug",
+        "placeholder": "Describe what happened (optional)...",
+        "disclosure": "Includes: app version, OS, selected model, accelerator, log level. Never includes audio, transcriptions, or API keys.",
+        "send": "Send",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Bug report sent. Thank you!",
+        "error": "Failed to send report. Please try again."
+      },
       "acknowledgments": {
         "title": "Teşekkürler",
         "whisper": {
           "title": "Whisper.cpp",
           "description": "OpenAI'nin Whisper otomatik konuşma tanıma modelinin yüksek performanslı çıkarımı",
           "details": "MotsDits, hızlı ve yerel konuşmadan metne dönüştürme için Whisper.cpp kullanır. Georgi Gerganov ve katkıda bulunanların harika çalışmaları için teşekkür ederiz."
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "thirdParty": {
+          "title": "Third-party licenses",
+          "description": "Open-source components incorporated into MotsDits and their licenses.",
+          "button": "Open"
+        },
+        "notice": {
+          "title": "Notice",
+          "description": "Copyright, attribution, and trademark information.",
+          "button": "Open"
+        },
+        "handyMit": {
+          "title": "Upstream MIT license (Handy)",
+          "description": "MIT license of the upstream Handy project from which MotsDits was forked.",
+          "button": "Open"
         }
       }
     }
@@ -586,6 +626,15 @@
   },
   "overlay": {
     "transcribing": "Transkribe ediliyor...",
-    "processing": "İşleniyor..."
+    "processing": "İşleniyor...",
+    "processingError": "Post-processing failed"
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "description": "MotsDits encountered an unexpected error. You can send a bug report to help us fix it, then reload the app.",
+    "sending": "Sending...",
+    "sendReport": "Send Bug Report",
+    "reportSent": "Report sent. Thank you!",
+    "reload": "Reload"
   }
 }
