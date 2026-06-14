@@ -6,24 +6,29 @@ use tauri::Manager;
 
 #[cfg(target_os = "windows")]
 pub fn configure(app: &tauri::AppHandle) {
-    let dll_path = match app.path().resolve(
+    // Depending on how the Tauri bundler lays out resources, onnxruntime.dll can
+    // land either in the arch-specific subfolder or flattened directly into
+    // `resources/`. Probe both so ONNX models (Parakeet, Canary, …) load
+    // regardless of the bundle layout.
+    let candidates = [
         format!("{}/onnxruntime.dll", resource_dir()),
-        tauri::path::BaseDirectory::Resource,
-    ) {
-        Ok(path) => path,
-        Err(err) => {
-            log::warn!("Could not resolve bundled ONNX Runtime DLL: {err}");
-            return;
-        }
-    };
+        "resources/onnxruntime.dll".to_string(),
+    ];
 
-    if !dll_path.exists() {
+    let dll_path = candidates.iter().find_map(|rel| {
+        app.path()
+            .resolve(rel, tauri::path::BaseDirectory::Resource)
+            .ok()
+            .filter(|path| path.exists())
+    });
+
+    let Some(dll_path) = dll_path else {
         log::warn!(
-            "Bundled ONNX Runtime DLL is missing at {}. ONNX models may fail to load.",
-            dll_path.display()
+            "Bundled ONNX Runtime DLL not found in any known location ({}). ONNX models may fail to load.",
+            candidates.join(", ")
         );
         return;
-    }
+    };
 
     std::env::set_var("ORT_DYLIB_PATH", &dll_path);
     if let Some(dir) = dll_path.parent() {
