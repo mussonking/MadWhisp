@@ -159,6 +159,7 @@
         "none": "Chưa cấu hình phím tắt",
         "notFound": "Không tìm thấy phím tắt",
         "pressKeys": "Nhấn phím...",
+        "notSet": "Nhấn để đặt",
         "bindings": {
           "transcribe": {
             "name": "Phím tắt chuyển đổi",
@@ -171,6 +172,10 @@
           "transcribe_with_post_process": {
             "name": "Phím tắt xử lý sau",
             "description": "Tùy chọn: Phím tắt chuyên dụng luôn áp dụng xử lý sau bằng AI cho bản chuyển đổi của bạn."
+          },
+          "paste_last_transcript": {
+            "name": "Dán bản ghi gần nhất",
+            "description": "Tùy chọn: Phím tắt để dán bản chuyển đổi gần nhất vào ứng dụng đang hoạt động."
           }
         },
         "errors": {

@@ -123,12 +123,31 @@ pub fn change_binding(
     id: String,
     binding: String,
 ) -> Result<BindingResponse, String> {
-    // Reject empty bindings — every shortcut should have a value
-    if binding.trim().is_empty() {
-        return Err("Binding cannot be empty".to_string());
-    }
-
     let mut settings = settings::get_settings(&app);
+
+    // An empty value means "unassign this shortcut". Used by optional shortcuts
+    // whose default is empty (so Reset clears them) and lets the user remove a
+    // shortcut they no longer want. Unregister whatever is currently bound and
+    // persist the cleared value.
+    if binding.trim().is_empty() {
+        if let Some(existing) = settings.bindings.get(&id).cloned() {
+            let _ = unregister_shortcut(&app, existing.clone());
+            let mut cleared = existing;
+            cleared.current_binding = String::new();
+            settings.bindings.insert(id.clone(), cleared.clone());
+            settings::write_settings(&app, settings);
+            return Ok(BindingResponse {
+                success: true,
+                binding: Some(cleared),
+                error: None,
+            });
+        }
+        return Ok(BindingResponse {
+            success: true,
+            binding: None,
+            error: None,
+        });
+    }
 
     // Get the binding to modify, or create it from defaults if it doesn't exist
     let binding_to_modify = match settings.bindings.get(&id) {

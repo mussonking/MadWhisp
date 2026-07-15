@@ -619,6 +619,65 @@ impl ShortcutAction for CancelAction {
     }
 }
 
+// Paste Last Transcript Action
+//
+// Re-injects the most recent transcription into the active app using the same
+// output path as a fresh transcription (honours paste_method, auto_submit, etc.).
+struct PasteLastTranscriptAction;
+
+impl ShortcutAction for PasteLastTranscriptAction {
+    fn start(&self, _app: &AppHandle, _binding_id: &str, _shortcut_str: &str) {
+        // Intentionally a no-op: we paste on key RELEASE (see `stop`). Pasting on
+        // press would synthesize input while the user's shortcut modifiers
+        // (Ctrl/Shift/etc.) are still physically held, which corrupts the paste
+        // in terminals (a held Ctrl turns typed chars into control sequences).
+    }
+
+    fn stop(&self, app: &AppHandle, _binding_id: &str, _shortcut_str: &str) {
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move {
+            // Give the OS a moment to process the user releasing the shortcut
+            // keys, so no modifier is still down when we synthesize the paste.
+            // This mirrors the normal transcription path, which only pastes well
+            // after the keys are released.
+            tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+            let entry = {
+                let history_manager = app.state::<Arc<HistoryManager>>();
+                match history_manager.get_latest_entry() {
+                    Ok(Some(entry)) => entry,
+                    Ok(None) => {
+                        warn!("No transcription history available to paste.");
+                        return;
+                    }
+                    Err(err) => {
+                        error!("Failed to fetch last transcription entry: {}", err);
+                        return;
+                    }
+                }
+            };
+
+            // Prefer the post-processed text (what was actually produced) and
+            // fall back to the raw transcription.
+            let text = entry
+                .post_processed_text
+                .unwrap_or(entry.transcription_text);
+
+            // Enigo-based pasting must run on the main thread, and it honours the
+            // user's configured paste_method (direct, ctrl+v, etc.), mirroring
+            // the normal transcription output path.
+            let app_for_paste = app.clone();
+            if let Err(e) = app.run_on_main_thread(move || {
+                if let Err(e) = utils::paste(text, app_for_paste.clone()) {
+                    error!("Failed to paste last transcript: {}", e);
+                }
+            }) {
+                error!("Failed to schedule paste on main thread: {:?}", e);
+            }
+        });
+    }
+}
+
 // Test Action
 struct TestAction;
 
@@ -658,6 +717,10 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
     map.insert(
         "cancel".to_string(),
         Arc::new(CancelAction) as Arc<dyn ShortcutAction>,
+    );
+    map.insert(
+        "paste_last_transcript".to_string(),
+        Arc::new(PasteLastTranscriptAction) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "test".to_string(),

@@ -159,6 +159,7 @@
         "none": "Aucun raccourci configuré",
         "notFound": "Raccourci non trouvé",
         "pressKeys": "Appuyez sur les touches...",
+        "notSet": "Cliquer pour définir",
         "bindings": {
           "transcribe": {
             "name": "Raccourci de Transcription",
@@ -171,6 +172,10 @@
           "transcribe_with_post_process": {
             "name": "Raccourci de post-traitement",
             "description": "Facultatif : Un raccourci dédié qui applique toujours le post-traitement IA à votre transcription."
+          },
+          "paste_last_transcript": {
+            "name": "Coller la dernière dictée",
+            "description": "Facultatif : Un raccourci clavier pour coller votre dernière transcription dans l'application active."
           }
         },
         "errors": {

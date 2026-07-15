@@ -298,6 +298,13 @@ impl HandyKeysState {
     }
 
     pub fn register_raw(&self, binding_id: &str, hotkey_string: &str) -> Result<(), String> {
+        // An empty value means the shortcut is intentionally unassigned; nothing
+        // to register. Mirrors the Tauri implementation so optional shortcuts
+        // (empty by default) don't produce spurious errors at startup.
+        if hotkey_string.trim().is_empty() {
+            return Ok(());
+        }
+
         let (tx, rx) = mpsc::channel();
         self.command_sender
             .lock()

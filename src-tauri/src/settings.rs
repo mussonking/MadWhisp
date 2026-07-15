@@ -775,6 +775,20 @@ pub fn get_default_settings() -> AppSettings {
             current_binding: "escape".to_string(),
         },
     );
+    // Optional shortcut: re-pastes the most recent transcription into the active
+    // app (same output path as a fresh transcription). Ships unassigned (empty
+    // binding) so it never collides with a default; the user opts in by recording
+    // a key combo in the settings UI.
+    bindings.insert(
+        "paste_last_transcript".to_string(),
+        ShortcutBinding {
+            id: "paste_last_transcript".to_string(),
+            name: "Paste Last Transcript".to_string(),
+            description: "Pastes the most recent transcription into the active app.".to_string(),
+            default_binding: String::new(),
+            current_binding: String::new(),
+        },
+    );
 
     AppSettings {
         bindings,

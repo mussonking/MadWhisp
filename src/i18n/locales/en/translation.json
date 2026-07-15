@@ -159,6 +159,7 @@
         "none": "No shortcuts configured",
         "notFound": "Shortcut not found",
         "pressKeys": "Press keys...",
+        "notSet": "Click to set",
         "bindings": {
           "transcribe": {
             "name": "Transcribe Shortcut",
@@ -171,6 +172,10 @@
           "transcribe_with_post_process": {
             "name": "Post-Processing Hotkey",
             "description": "Optional: A dedicated hotkey that always applies AI post-processing to your transcription."
+          },
+          "paste_last_transcript": {
+            "name": "Paste Last Transcript",
+            "description": "Optional: A keyboard shortcut to paste your most recent transcription into the active app."
           }
         },
         "errors": {

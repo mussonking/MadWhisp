@@ -78,6 +78,12 @@ pub fn register_shortcut_value(
     binding_id: &str,
     shortcut_value: &str,
 ) -> Result<(), String> {
+    // An empty value means the shortcut is intentionally unassigned (e.g. an
+    // optional shortcut the user hasn't set). Skip it without logging an error.
+    if shortcut_value.trim().is_empty() {
+        return Ok(());
+    }
+
     // Validate for Tauri requirements
     if let Err(e) = validate_shortcut(shortcut_value) {
         warn!(
