@@ -5,31 +5,43 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use strsim::levenshtein;
 
-/// Normalizes a word fragment for correction matching.
-///
-/// Strips punctuation, lowercases, and joins whitespace-separated fragments.
-/// This lets aliases like "Charge B" match transcriptions like "charge b".
-fn normalize_correction_key(text: &str) -> String {
-    let words: Vec<&str> = text.split_whitespace().collect();
-    build_ngram(&words)
-}
-
-/// Builds an n-gram string by cleaning and concatenating words.
+/// Builds an n-gram string by cleaning and concatenating words (lowercased).
 ///
 /// Curly Unicode apostrophes (U+2019, U+02BC) are normalized to a straight
 /// ASCII apostrophe so transcriptions from Whisper (which often emits the
 /// curly form for French contractions like "l'app") still match aliases the
 /// user typed with a regular keyboard.
 fn build_ngram(words: &[&str]) -> String {
+    build_ngram_cased(words, true)
+}
+
+/// Like [`build_ngram`] but optionally preserves the original letter casing.
+///
+/// When `lowercase` is false the fragment keeps its case, which lets us match
+/// aliases and blacklist tokens the user typed with specific capitals (e.g.
+/// "xI" vs "Xi") exactly, instead of collapsing them together.
+fn build_ngram_cased(words: &[&str], lowercase: bool) -> String {
     words
         .iter()
         .map(|w| {
-            w.trim_matches(|c: char| !c.is_alphanumeric() && c != '\'')
-                .to_lowercase()
-                .replace(['\u{2019}', '\u{02BC}'], "'")
+            let fragment = w
+                .trim_matches(|c: char| !c.is_alphanumeric() && c != '\'')
+                .replace(['\u{2019}', '\u{02BC}'], "'");
+            if lowercase {
+                fragment.to_lowercase()
+            } else {
+                fragment
+            }
         })
         .collect::<Vec<_>>()
         .concat()
+}
+
+/// Whether a user-typed token carries explicit casing (has any uppercase).
+///
+/// Such tokens are matched exactly; all-lowercase tokens stay case-insensitive.
+fn has_explicit_case(token: &str) -> bool {
+    token.chars().any(|c| c.is_uppercase())
 }
 
 /// Finds the best matching custom word for a candidate string
@@ -38,15 +50,18 @@ fn build_ngram(words: &[&str]) -> String {
 /// the best match above the given threshold.
 fn find_best_match<'a>(
     candidate: &str,
+    candidate_cs: &str,
     candidate_first_upper: bool,
     word_strings: &'a [String],
     custom_words_nospace: &[String],
     custom_words_case_sensitive: &[bool],
     threshold: f64,
-    blacklist: &HashSet<String>,
+    blacklist_ci: &HashSet<String>,
+    blacklist_cs: &HashSet<String>,
 ) -> Option<(&'a String, f64)> {
-    // Skip if the candidate is blacklisted
-    if blacklist.contains(candidate) {
+    // Skip if the candidate is blacklisted. Lowercase-only tokens block any
+    // casing; tokens the user typed with a capital block only that exact casing.
+    if blacklist_ci.contains(candidate) || blacklist_cs.contains(candidate_cs) {
         return None;
     }
     if candidate.is_empty() || candidate.len() > 50 {
@@ -107,7 +122,8 @@ fn find_best_match<'a>(
 /// Applies custom word corrections to transcribed text.
 ///
 /// Two-phase correction:
-/// 1. **Hard aliases** — exact case-insensitive replacement (e.g., "Jiminy" → "Gemini")
+/// 1. **Hard aliases** — exact replacement; lowercase aliases match any casing,
+///    aliases with a capital match that exact casing (e.g. "jiminy" → "Gemini")
 /// 2. **Fuzzy matching** — Levenshtein + Soundex with blacklist protection
 ///
 /// # Arguments
@@ -119,8 +135,7 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
         return text.to_string();
     }
 
-    // Phase 0: hard alias replacement.
-    // Build alias map: lowercased alias → target word
+    // Phase 0: hard alias replacement (casing handled per-alias inside).
     let phase0_text = apply_custom_word_aliases(text, custom_words);
 
     // === Phase 1: Fuzzy matching with blacklist ===
@@ -137,11 +152,17 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
         .map(|w| w.chars().any(|c| c.is_uppercase()))
         .collect();
 
-    // Build global blacklist from all entries
-    let blacklist: HashSet<String> = custom_words
-        .iter()
-        .flat_map(|e| e.blacklist.iter().map(|b| b.to_lowercase()))
-        .collect();
+    // Build global blacklist from all entries, split by casing: lowercase-only
+    // tokens stay case-insensitive; tokens with a capital match that exact casing.
+    let mut blacklist_ci: HashSet<String> = HashSet::new();
+    let mut blacklist_cs: HashSet<String> = HashSet::new();
+    for token in custom_words.iter().flat_map(|e| e.blacklist.iter()) {
+        if has_explicit_case(token) {
+            blacklist_cs.insert(token.clone());
+        } else {
+            blacklist_ci.insert(token.to_lowercase());
+        }
+    }
 
     let phase0_words: Vec<&str> = phase0_text.split_whitespace().collect();
     let mut result = Vec::new();
@@ -158,6 +179,7 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
 
             let ngram_words = &phase0_words[j..j + n];
             let ngram = build_ngram(ngram_words);
+            let ngram_cs = build_ngram_cased(ngram_words, false);
             // First-letter case of the original n-gram (skipping leading punctuation).
             let candidate_first_upper = ngram_words[0]
                 .chars()
@@ -166,17 +188,20 @@ pub fn apply_custom_words(text: &str, custom_words: &[CustomWordEntry], threshol
 
             if let Some((replacement, _score)) = find_best_match(
                 &ngram,
+                &ngram_cs,
                 candidate_first_upper,
                 &word_strings,
                 &custom_words_nospace,
                 &custom_words_case_sensitive,
                 threshold,
-                &blacklist,
+                &blacklist_ci,
+                &blacklist_cs,
             ) {
                 let (prefix, _) = extract_punctuation(ngram_words[0]);
                 let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
-                let corrected = preserve_case_pattern(ngram_words[0], replacement);
-                result.push(format!("{}{}{}", prefix, corrected, suffix));
+                // Emit the user-typed word verbatim — never mirror the
+                // transcription's casing onto it.
+                result.push(format!("{}{}{}", prefix, replacement, suffix));
                 j += n;
                 matched = true;
                 break;
@@ -201,17 +226,28 @@ pub fn apply_custom_word_aliases(text: &str, custom_words: &[CustomWordEntry]) -
         return text.to_string();
     }
 
-    let mut alias_map: HashMap<String, &str> = HashMap::new();
+    // Aliases the user typed with a capital match that exact casing; lowercase-only
+    // aliases stay case-insensitive (they catch every casing the model emits).
+    let mut alias_map_ci: HashMap<String, &str> = HashMap::new();
+    let mut alias_map_cs: HashMap<String, &str> = HashMap::new();
     for entry in custom_words {
         for alias in &entry.aliases {
-            let key = normalize_correction_key(alias);
-            if !key.is_empty() {
-                alias_map.insert(key, &entry.word);
+            let words: Vec<&str> = alias.split_whitespace().collect();
+            if has_explicit_case(alias) {
+                let key = build_ngram_cased(&words, false);
+                if !key.is_empty() {
+                    alias_map_cs.insert(key, &entry.word);
+                }
+            } else {
+                let key = build_ngram_cased(&words, true);
+                if !key.is_empty() {
+                    alias_map_ci.insert(key, &entry.word);
+                }
             }
         }
     }
 
-    if alias_map.is_empty() {
+    if alias_map_ci.is_empty() && alias_map_cs.is_empty() {
         return text.to_string();
     }
 
@@ -228,13 +264,17 @@ pub fn apply_custom_word_aliases(text: &str, custom_words: &[CustomWordEntry]) -
                 continue;
             }
             let ngram_words = &words[i..i + n];
-            let ngram = build_ngram(ngram_words);
+            let ngram_cs = build_ngram_cased(ngram_words, false);
+            let ngram_ci = build_ngram(ngram_words);
+            let target = alias_map_cs
+                .get(&ngram_cs)
+                .or_else(|| alias_map_ci.get(&ngram_ci));
 
-            if let Some(target) = alias_map.get(&ngram) {
+            if let Some(target) = target {
                 let (prefix, _) = extract_punctuation(ngram_words[0]);
                 let (_, suffix) = extract_punctuation(ngram_words[n - 1]);
-                let corrected = preserve_case_pattern(ngram_words[0], target);
-                result.push(format!("{}{}{}", prefix, corrected, suffix));
+                // Emit the alias target verbatim, exactly as the user typed it.
+                result.push(format!("{}{}{}", prefix, target, suffix));
                 i += n;
                 alias_matched = true;
                 break;
@@ -248,29 +288,6 @@ pub fn apply_custom_word_aliases(text: &str, custom_words: &[CustomWordEntry]) -
     }
 
     result.join(" ")
-}
-
-/// Preserves the case pattern when applying a replacement.
-///
-/// If the replacement itself has any uppercase letters, it carries explicit
-/// casing chosen by the user (proper nouns like "Marc", brand names like
-/// "iPhone", acronyms like "NASA") and is returned as-is. Otherwise, the
-/// transcription's case is mirrored onto the replacement.
-fn preserve_case_pattern(original: &str, replacement: &str) -> String {
-    if replacement.chars().any(|c| c.is_uppercase()) {
-        return replacement.to_string();
-    }
-    if original.chars().all(|c| c.is_uppercase()) {
-        replacement.to_uppercase()
-    } else if original.chars().next().is_some_and(|c| c.is_uppercase()) {
-        let mut chars: Vec<char> = replacement.chars().collect();
-        if let Some(first_char) = chars.get_mut(0) {
-            *first_char = first_char.to_uppercase().next().unwrap_or(*first_char);
-        }
-        chars.into_iter().collect()
-    } else {
-        replacement.to_string()
-    }
 }
 
 /// Extracts punctuation prefix and suffix from a word
@@ -473,11 +490,12 @@ mod tests {
 
     #[test]
     fn test_apply_custom_words_lowercase_entry_matches_anywhere() {
-        // Lowercase-only entry remains case-insensitive.
+        // Lowercase-only entry matches any casing, and now outputs verbatim
+        // (the registered lowercase form), not the transcription's casing.
         let text = "Hello World";
         let custom_words = vec![word("hello"), word("world")];
         let result = apply_custom_words(text, &custom_words, 0.5);
-        assert_eq!(result, "Hello World");
+        assert_eq!(result, "hello world");
     }
 
     #[test]
@@ -489,14 +507,12 @@ mod tests {
     }
 
     #[test]
-    fn test_preserve_case_pattern() {
-        assert_eq!(preserve_case_pattern("HELLO", "world"), "WORLD");
-        assert_eq!(preserve_case_pattern("Hello", "world"), "World");
-        assert_eq!(preserve_case_pattern("hello", "WORLD"), "WORLD");
-        // Replacement carries explicit casing — keep it regardless of transcription case.
-        assert_eq!(preserve_case_pattern("marc", "Marc"), "Marc");
-        assert_eq!(preserve_case_pattern("iphone", "iPhone"), "iPhone");
-        assert_eq!(preserve_case_pattern("MARC", "Marc"), "Marc");
+    fn test_replacement_is_verbatim() {
+        // The registered word is emitted exactly as typed — the transcription's
+        // casing is never mirrored onto it.
+        let custom_words = vec![word("xhigh")];
+        assert_eq!(apply_custom_words("XHIGH now", &custom_words, 0.5), "xhigh now");
+        assert_eq!(apply_custom_words("Xhigh now", &custom_words, 0.5), "xhigh now");
     }
 
     #[test]
@@ -718,11 +734,64 @@ mod tests {
     }
 
     #[test]
-    fn test_hard_alias_case_insensitive() {
+    fn test_hard_alias_lowercase_is_case_insensitive() {
+        // A lowercase-only alias still catches every casing the model emits.
         let text = "ask JIMINY about this";
-        let custom_words = vec![word_with_aliases("Gemini", &["Jiminy"])];
+        let custom_words = vec![word_with_aliases("Gemini", &["jiminy"])];
         let result = apply_custom_words(text, &custom_words, 0.18);
         assert_eq!(result, "ask Gemini about this");
+    }
+
+    #[test]
+    fn test_hard_alias_uppercase_is_case_sensitive() {
+        // Aliases typed with a capital match only that exact casing, so distinct
+        // casings can map to the same target while others stay untouched.
+        let custom_words = vec![word_with_aliases("xhigh", &["xI"])];
+        // Exact casing is rewritten.
+        assert_eq!(
+            apply_custom_words("use xI here", &custom_words, 0.18),
+            "use xhigh here"
+        );
+        // Other casings are left untouched.
+        assert_eq!(
+            apply_custom_words("use xi here", &custom_words, 0.18),
+            "use xi here"
+        );
+        assert_eq!(
+            apply_custom_words("use XI here", &custom_words, 0.18),
+            "use XI here"
+        );
+    }
+
+    #[test]
+    fn test_hard_alias_distinct_casings_to_same_target() {
+        // Both "xI" and "Xi" map to xhigh; "xi"/"XI" are left alone.
+        let custom_words = vec![word_with_aliases("xhigh", &["xI", "Xi"])];
+        assert_eq!(
+            apply_custom_words("use xI here", &custom_words, 0.18),
+            "use xhigh here"
+        );
+        // "Xi" maps to the same target, emitted verbatim as typed -> "xhigh".
+        assert_eq!(
+            apply_custom_words("use Xi here", &custom_words, 0.18),
+            "use xhigh here"
+        );
+        assert_eq!(
+            apply_custom_words("use xi here", &custom_words, 0.18),
+            "use xi here"
+        );
+    }
+
+    #[test]
+    fn test_blacklist_case_sensitive_token() {
+        // Blacklist "Fotter" (has a capital) blocks only that exact casing; the
+        // lowercase "fotter" transcription can still fuzzy-match the entry.
+        let custom_words = vec![word_with_blacklist("FOOTER", &["Fotter"])];
+        // Exact-cased candidate is blocked -> stays as typed.
+        assert_eq!(
+            apply_custom_words("the Fotter here", &custom_words, 0.5),
+            "the Fotter here"
+        );
     }
 
     #[test]

@@ -96,11 +96,9 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
       const sanitizedWord = sanitizeText(newWord);
       if (!sanitizedWord || sanitizedWord.length > 80) return;
 
-      if (
-        customWords.some(
-          (entry) => entry.word.toLowerCase() === sanitizedWord.toLowerCase(),
-        )
-      ) {
+      // Case-sensitive: "Hello", "hello" and "heLlo" are distinct entries, so
+      // the user can register every casing variant they need.
+      if (customWords.some((entry) => entry.word === sanitizedWord)) {
         toast.error(
           t("settings.advanced.customWords.duplicate", {
             word: sanitizedWord,
@@ -145,9 +143,9 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
 
       updateEntry(word, (entry) => {
         const values = entry[field] ?? [];
-        const exists = values.some(
-          (value) => value.toLowerCase() === token.toLowerCase(),
-        );
+        // Case-sensitive: "xI" and "Xi" are distinct tokens, so both casings can
+        // coexist (e.g. to map several transcriptions onto the same target).
+        const exists = values.some((value) => value === token);
 
         if (exists) return entry;
         return { ...entry, [field]: [...values, token] };
