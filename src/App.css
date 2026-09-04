@@ -479,8 +479,8 @@ body,
 
 .words-list {
   display: grid;
-  gap: 10px;
-  padding: 8px 0 0;
+  gap: 14px;
+  padding: 12px 4px 0;
 }
 
 .words-entry-card {
@@ -495,7 +495,7 @@ body,
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 14px 16px;
 }
 
 .words-entry-toggle {
@@ -529,7 +529,7 @@ body,
 .words-entry-details {
   display: grid;
   gap: 12px;
-  padding: 12px;
+  padding: 16px;
   border-top: 1px solid color-mix(in srgb, var(--app-border) 62%, transparent);
   background: color-mix(in srgb, var(--app-surface) 56%, transparent);
 }
